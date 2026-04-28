@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/authStore';
 import Link from 'next/link';
 import type { MatchScore } from '@/types/match';
 
+// ── Main Dashboard Page ─────────────────────────────────────────────────────
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
 
@@ -114,4 +115,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

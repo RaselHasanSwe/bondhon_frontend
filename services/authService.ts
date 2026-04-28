@@ -15,6 +15,13 @@ export interface LoginData {
   password: string;
 }
 
+export interface ResetPasswordData {
+  token: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}
+
 export const authService = {
   register: (data: RegisterData) =>
     api.post<AuthResponse>('/auth/register', data),
@@ -30,5 +37,16 @@ export const authService = {
 
   resendVerification: () =>
     api.post<ApiResponse<null>>('/auth/email/resend'),
+
+  verifyEmail: (id: string, hash: string, expires: string, signature: string) =>
+    api.get<ApiResponse<null>>(`/auth/email/verify/${id}/${hash}`, {
+      params: { expires, signature },
+    }),
+
+  forgotPassword: (email: string) =>
+    api.post<ApiResponse<null>>('/auth/password/forgot', { email }),
+
+  resetPassword: (data: ResetPasswordData) =>
+    api.post<ApiResponse<null>>('/auth/password/reset', data),
 };
 
