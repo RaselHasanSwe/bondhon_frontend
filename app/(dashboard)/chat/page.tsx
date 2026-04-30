@@ -14,11 +14,11 @@ export default function ChatPage() {
   const totalUnread = conversations.reduce((sum, c) => sum + c.unread_count, 0);
 
   return (
-    <div className="max-w-4xl mx-auto pb-20 md:pb-6">
+    <div className="w-full max-w-2xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1F2937]">Messages 💬</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1F2937]">Messages 💬</h1>
           <p className="text-sm text-gray-500 mt-1">
             {totalUnread > 0
               ? `${totalUnread} unread message${totalUnread > 1 ? 's' : ''}`

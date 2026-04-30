@@ -1,6 +1,17 @@
-export type MessageType = 'text' | 'image' | 'document' | 'voice';
+export type MessageType = 'text' | 'image' | 'document' | 'voice' | 'video' | 'audio';
 
 export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read';
+
+export interface MediaItem {
+  id?: number;
+  file_path: string;
+  file_name?: string | null;
+  file_size?: number | null;
+  file_mime_type?: string | null;
+  sort_order?: number;
+  /** blob: URL for optimistic preview */
+  preview_url?: string;
+}
 
 export interface MessageSender {
   id: number;
@@ -21,6 +32,8 @@ export interface Message {
   sender_id: number;
   type: MessageType;
   body: string | null;
+  /** Optional caption/label for media messages */
+  label?: string | null;
   file_path: string | null;
   file_name?: string | null;
   file_size?: number | null;
@@ -30,6 +43,8 @@ export interface Message {
   reactions?: Record<string, number>;
   reply_to_message_id?: number | null;
   reply_to?: ReplyToMessage | null;
+  /** Multiple media items (images/docs) */
+  media_items?: MediaItem[];
   is_deleted: boolean;
   delivered_at: string | null;
   read_at: string | null;
@@ -63,8 +78,12 @@ export interface SendMessagePayload {
   conversation_id: number;
   type: MessageType;
   body?: string;
+  label?: string;
   reply_to_message_id?: number;
+  /** Single file (video/audio/voice) */
   file?: File;
+  /** Multiple files (images max 10, documents max 2) */
+  files?: File[];
 }
 
 /** Shape of the paginated messages response */

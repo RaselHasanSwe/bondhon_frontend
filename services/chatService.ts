@@ -57,16 +57,26 @@ export const chatService = {
     return res.data.data;
   },
 
-  /** Send a new message (supports text, image, document) */
+  /** Send a new message (supports text, single file, or multiple files) */
   async sendMessage(payload: SendMessagePayload): Promise<Message> {
-    if (payload.file) {
+    const hasMultiple = payload.files && payload.files.length > 0;
+    const hasSingle   = !!payload.file;
+
+    if (hasMultiple || hasSingle) {
       const formData = new FormData();
       formData.append('type', payload.type);
-      formData.append('file', payload.file);
-      if (payload.body) formData.append('body', payload.body);
+      if (payload.body)  formData.append('body',  payload.body);
+      if (payload.label) formData.append('label', payload.label);
       if (payload.reply_to_message_id) {
         formData.append('reply_to_message_id', String(payload.reply_to_message_id));
       }
+
+      if (hasMultiple) {
+        payload.files!.forEach((f) => formData.append('files[]', f));
+      } else if (hasSingle) {
+        formData.append('file', payload.file!);
+      }
+
       const res = await api.post<ApiResponse<Message>>(
         `/conversations/${payload.conversation_id}/messages`,
         formData,
@@ -75,11 +85,13 @@ export const chatService = {
       return res.data.data;
     }
 
+    // Text-only message
     const res = await api.post<ApiResponse<Message>>(
       `/conversations/${payload.conversation_id}/messages`,
       {
-        type: payload.type,
-        body: payload.body,
+        type:                payload.type,
+        body:                payload.body,
+        label:               payload.label,
         reply_to_message_id: payload.reply_to_message_id,
       }
     );

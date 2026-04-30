@@ -51,7 +51,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex min-h-screen bg-[#F8F9FB]">
       {/* Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-100 px-4 py-6 fixed h-full z-10">
+      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-100 px-3 lg:px-4 py-4 lg:py-6 fixed h-full z-10 overflow-y-auto">
         {/* Logo */}
         <div className="mb-8 px-2">
           <h1 className="text-2xl font-bold text-[#C9A227]">বন্ধন</h1>
@@ -87,7 +87,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <p className="text-sm font-medium text-[#1F2937] truncate">{user.name}</p>
               <p className="text-xs text-gray-400 capitalize">{user.subscription_plan} plan</p>
             </div>
-            <NotificationBell />
+            <NotificationBell placement="sidebar" />
           </div>
           <button
             onClick={handleLogout}
@@ -99,31 +99,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 md:ml-64">
+      <main className="flex-1 md:ml-64 min-w-0">
         {/* Mobile top bar */}
-        <div className="md:hidden bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between sticky top-0 z-10">
-          <h1 className="text-lg font-bold text-[#C9A227]">বন্ধন</h1>
+        <div className="md:hidden bg-white border-b border-gray-100 px-3 sm:px-4 py-3 flex items-center justify-between sticky top-0 z-10">
+          <h1 className="text-base sm:text-lg font-bold text-[#C9A227]">বন্ধন</h1>
           <div className="flex items-center gap-2">
             <NotificationBell />
-            <span className="text-sm text-gray-600">{user.name}</span>
+            <span className="text-xs sm:text-sm text-gray-600 truncate max-w-[120px]">{user.name}</span>
           </div>
         </div>
 
-        <div className="p-6">{children}</div>
+        <div className="p-2 sm:p-4 lg:p-6 pb-20 md:pb-4">{children}</div>
 
         {/* Mobile bottom nav */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around py-2 z-10">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around py-1.5 z-10 safe-area-pb">
           {NAV_ITEMS.slice(0, 5).map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                'flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs transition-colors',
+                'flex flex-col items-center gap-0.5 px-1 sm:px-2 py-1 rounded-lg text-[10px] sm:text-xs transition-colors min-w-0',
                 pathname === item.href ? 'text-[#C9A227]' : 'text-gray-500'
               )}
             >
-              <span className="text-xl">{item.icon}</span>
-              <span>{item.label}</span>
+              <span className="text-lg sm:text-xl">{item.icon}</span>
+              <span className="truncate w-full text-center leading-tight">{item.label}</span>
             </Link>
           ))}
         </nav>

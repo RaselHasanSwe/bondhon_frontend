@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { use } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { chatService } from '@/services/chatService';
-import { ChatList } from '@/components/chat/ChatList';
-import { ChatWindow } from '@/components/chat/ChatWindow';
-import { useAuthStore } from '@/store/authStore';
+import { use } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { chatService } from "@/services/chatService";
+import { ChatList } from "@/components/chat/ChatList";
+import { ChatWindow } from "@/components/chat/ChatWindow";
+import { useAuthStore } from "@/store/authStore";
 
 interface PageProps {
   params: Promise<{ conversationId: string }>;
@@ -17,38 +17,41 @@ export default function ConversationPage({ params }: PageProps) {
   const user = useAuthStore((s) => s.user);
 
   const { data: conversations = [], isLoading } = useQuery({
-    queryKey: ['conversations'],
+    queryKey: ["conversations"],
     queryFn: () => chatService.getConversations(),
   });
 
-  // Demo: current user id is 1
-  const currentUserId = user?.id ?? 1;
+  const currentUserId = user?.id ?? 0;
 
   return (
-    <div className="max-w-6xl mx-auto pb-20 md:pb-6">
-      {/* Mobile: just the chat window */}
-      <div className="md:hidden h-[calc(100vh-9rem)] flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden">
+    // Fill the space given by layout (layout now has p-2 sm:p-4 lg:p-6 pb-20 md:pb-4)
+    <div className="w-full max-w-[1400px] mx-auto">
+      {/* Mobile: full chat window */}
+      <div className="md:hidden h-[calc(100dvh-7rem)] flex flex-col bg-white rounded-xl sm:rounded-2xl border border-gray-100 overflow-hidden">
         <ChatWindow conversationId={convId} currentUserId={currentUserId} />
       </div>
 
       {/* Desktop: two-panel split */}
-      <div className="hidden md:flex h-[calc(100vh-8rem)] bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        {/* Left: conversation list */}
-        <div className="w-72 flex-shrink-0 flex flex-col border-r border-gray-100">
-          <div className="px-4 py-3.5 border-b border-gray-100">
+      <div className="hidden md:flex h-[calc(100vh-7rem)] bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        {/* Left: conversation list — narrower on medium screens */}
+        <div className="w-56 lg:w-72 shrink-0 flex flex-col border-r border-gray-100">
+          <div className="px-3 lg:px-4 py-3.5 border-b border-gray-100">
             <h2 className="text-sm font-semibold text-[#1F2937]">Messages 💬</h2>
           </div>
           <div className="flex-1 overflow-y-auto">
-            <ChatList conversations={conversations} activeId={convId} isLoading={isLoading} />
+            <ChatList
+              conversations={conversations}
+              activeId={convId}
+              isLoading={isLoading}
+            />
           </div>
         </div>
 
         {/* Right: chat window */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           <ChatWindow conversationId={convId} currentUserId={currentUserId} />
         </div>
       </div>
     </div>
   );
 }
-
