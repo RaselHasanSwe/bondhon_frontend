@@ -20,6 +20,22 @@ function minsAgo(n: number): string {
   return d.toISOString();
 }
 
+/** Build a demo message with all required fields */
+function msg(partial: Pick<Message, 'id' | 'conversation_id' | 'sender_id' | 'type' | 'body' | 'is_deleted' | 'delivered_at' | 'read_at' | 'created_at'> & { status?: Message['status'] }): Message {
+  return {
+    file_path: null,
+    file_name: null,
+    file_size: null,
+    file_mime_type: null,
+    duration_seconds: null,
+    thumbnail_path: null,
+    reactions: {},
+    reply_to_message_id: null,
+    reply_to: null,
+    ...partial,
+  };
+}
+
 // ─── Conversations ───────────────────────────────────────────────────────────
 
 export const DEMO_CONVERSATIONS: Conversation[] = [

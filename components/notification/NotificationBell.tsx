@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useNotificationStore } from '@/store/notificationStore';
+import { notificationService } from '@/services/notificationService';
+import { useAuthStore } from '@/store/authStore';
 import type { AppNotification } from '@/types/notification';
+import type { BackendNotification } from '@/types/notification';
 import { cn } from '@/lib/utils';
 
 function formatRelativeTime(iso: string): string {
@@ -23,7 +26,9 @@ const TYPE_ICONS: Record<AppNotification['type'], string> = {
   profile_viewed: '👀',
   new_message: '💬',
   match_suggestion: '💑',
+  match_digest: '💑',
   subscription_expiring: '⚠️',
+  subscription_expiry: '⚠️',
   photo_approved: '✅',
   photo_rejected: '❌',
   system: '📢',
@@ -31,7 +36,8 @@ const TYPE_ICONS: Record<AppNotification['type'], string> = {
 
 export function NotificationBell() {
   const router = useRouter();
-  const { notifications, unreadCount, fetchNotifications, markRead, markAllRead } =
+  const user = useAuthStore((s) => s.user);
+  const { notifications, unreadCount, fetchNotifications, markRead, markAllRead, addNotification } =
     useNotificationStore();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -40,6 +46,20 @@ export function NotificationBell() {
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
+
+  // Subscribe to real-time notifications via Laravel Echo
+  useEffect(() => {
+    if (!user?.id || typeof window === 'undefined') return;
+    import('@/lib/echo').then(({ getEcho }) => {
+      const echo = getEcho();
+      if (!echo) return;
+      echo.private(`user.${user.id}`)
+        .listen('.notification.created', (e: BackendNotification) => {
+          addNotification(notificationService.transformNotification(e));
+        });
+      return () => { echo.leave(`user.${user.id}`); };
+    });
+  }, [user?.id, addNotification]);
 
   // Close dropdown on outside click
   useEffect(() => {

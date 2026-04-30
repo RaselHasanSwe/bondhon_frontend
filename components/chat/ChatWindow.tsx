@@ -30,13 +30,13 @@ export function ChatWindow({ conversationId, currentUserId }: ChatWindowProps) {
     async function load() {
       setIsLoading(true);
       try {
-        const [conv, msgs] = await Promise.all([
+        const [conv, msgsResponse] = await Promise.all([
           chatService.getConversation(conversationId),
           chatService.getMessages(conversationId),
         ]);
         if (!active) return;
         setConversation(conv);
-        setMessages(msgs);
+        setMessages(msgsResponse.data);
         await chatService.markAsRead(conversationId);
       } finally {
         if (active) setIsLoading(false);
@@ -51,14 +51,43 @@ export function ChatWindow({ conversationId, currentUserId }: ChatWindowProps) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  // ── Simulate typing indicator (demo only) ────────────────────────────────
-  // In production this comes via Laravel Echo / WebSocket
-  const simulateTyping = useCallback(() => {
-    // Trigger a fake typing indicator ~2s after user sends a message
-    setIsTyping(true);
-    if (typingTimeout.current) clearTimeout(typingTimeout.current);
-    typingTimeout.current = setTimeout(() => setIsTyping(false), 3000);
-  }, []);
+  // ── Typing indicator (real-time via Laravel Echo) ────────────────────────
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    // Dynamically import echo to avoid SSR issues
+    import('@/lib/echo').then(({ getEcho }) => {
+      const echo = getEcho();
+      if (!echo) return;
+      const channel = echo.private(`conversation.${conversationId}`);
+      channel.listenForWhisper('typing', (e: { is_typing: boolean; user_id: number }) => {
+        if (e.user_id !== currentUserId) {
+          setIsTyping(e.is_typing);
+          if (e.is_typing) {
+            if (typingTimeout.current) clearTimeout(typingTimeout.current);
+            typingTimeout.current = setTimeout(() => setIsTyping(false), 4000);
+          }
+        }
+      });
+      return () => { echo.leave(`conversation.${conversationId}`); };
+    });
+  }, [conversationId, currentUserId]);
+
+  // ── Real-time new messages via Echo ──────────────────────────────────────
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    import('@/lib/echo').then(({ getEcho }) => {
+      const echo = getEcho();
+      if (!echo) return;
+      const channel = echo.private(`conversation.${conversationId}`);
+      channel.listen('MessageSent', (e: { message: Message }) => {
+        if (e.message.sender_id !== currentUserId) {
+          setMessages((prev) => [...prev, e.message]);
+          setIsTyping(false);
+          chatService.markAsRead(conversationId).catch(() => {});
+        }
+      });
+    });
+  }, [conversationId, currentUserId]);
 
   // ── Send message ─────────────────────────────────────────────────────────
   const handleSend = useCallback(async () => {
@@ -94,7 +123,9 @@ export function ChatWindow({ conversationId, currentUserId }: ChatWindowProps) {
         prev.map((m) => (m.id === optimistic.id ? sent : m))
       );
       // Simulate the other user typing a reply (demo)
-      simulateTyping();
+      // (removed — real typing now comes via WebSocket)
+      // Send typing indicator to backend
+      chatService.sendTyping(conversationId, false).catch(() => {});
     } catch {
       setMessages((prev) =>
         prev.map((m) => (m.id === optimistic.id ? { ...m, status: 'sent' as const } : m))
@@ -102,7 +133,16 @@ export function ChatWindow({ conversationId, currentUserId }: ChatWindowProps) {
     } finally {
       setIsSending(false);
     }
-  }, [text, isSending, conversationId, currentUserId, simulateTyping]);
+  }, [text, isSending, conversationId, currentUserId]);
+
+  const handleTypingChange = useCallback((value: string) => {
+    setText(value);
+    chatService.sendTyping(conversationId, true).catch(() => {});
+    if (typingTimeout.current) clearTimeout(typingTimeout.current);
+    typingTimeout.current = setTimeout(() => {
+      chatService.sendTyping(conversationId, false).catch(() => {});
+    }, 3000);
+  }, [conversationId]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -248,7 +288,7 @@ export function ChatWindow({ conversationId, currentUserId }: ChatWindowProps) {
           <textarea
             ref={inputRef}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => handleTypingChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a message… (Enter to send)"
             rows={1}

@@ -28,10 +28,13 @@ export const useNotificationStore = create<NotificationState>()((set) => ({
   fetchNotifications: async () => {
     set({ isLoading: true });
     try {
-      const data = await notificationService.getAll();
+      const [data, count] = await Promise.all([
+        notificationService.getAll(),
+        notificationService.getUnreadCount(),
+      ]);
       set({
         notifications: data,
-        unreadCount: data.filter((n) => !n.is_read).length,
+        unreadCount: count,
         isLoading: false,
       });
     } catch {
