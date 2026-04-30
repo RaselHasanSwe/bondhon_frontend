@@ -50,15 +50,15 @@ export function NotificationBell() {
   // Subscribe to real-time notifications via Laravel Echo
   useEffect(() => {
     if (!user?.id || typeof window === 'undefined') return;
-    import('@/lib/echo').then(({ getEcho }) => {
-      const echo = getEcho();
+    (async () => {
+      const { getEcho } = await import('@/lib/echo');
+      const echo = await getEcho();
       if (!echo) return;
       echo.private(`user.${user.id}`)
         .listen('.notification.created', (e: BackendNotification) => {
           addNotification(notificationService.transformNotification(e));
         });
-      return () => { echo.leave(`user.${user.id}`); };
-    });
+    })();
   }, [user?.id, addNotification]);
 
   // Close dropdown on outside click
