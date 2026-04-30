@@ -6,13 +6,16 @@ import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/services/authService';
 import { cn } from '@/lib/utils';
+import { NotificationBell } from '@/components/notification/NotificationBell';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: '🏠' },
   { href: '/matches', label: 'Matches', icon: '💑' },
   { href: '/search', label: 'Search', icon: '🔍' },
   { href: '/interests', label: 'Interests', icon: '💌' },
+  { href: '/chat', label: 'Messages', icon: '💬' },
   { href: '/shortlist', label: 'Shortlist', icon: '⭐' },
+  { href: '/notifications', label: 'Notifications', icon: '🔔' },
   { href: '/profile/edit', label: 'My Profile', icon: '👤' },
 ];
 
@@ -84,6 +87,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <p className="text-sm font-medium text-[#1F2937] truncate">{user.name}</p>
               <p className="text-xs text-gray-400 capitalize">{user.subscription_plan} plan</p>
             </div>
+            <NotificationBell />
           </div>
           <button
             onClick={handleLogout}
@@ -99,7 +103,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Mobile top bar */}
         <div className="md:hidden bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between sticky top-0 z-10">
           <h1 className="text-lg font-bold text-[#C9A227]">বন্ধন</h1>
-          <span className="text-sm text-gray-600">{user.name}</span>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <span className="text-sm text-gray-600">{user.name}</span>
+          </div>
         </div>
 
         <div className="p-6">{children}</div>
