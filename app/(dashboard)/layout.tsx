@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
@@ -21,11 +21,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const { isAuthenticated, user, clearAuth } = useAuthStore();
 
+  // Zustand persist hydrates from localStorage asynchronously after the first render.
+  // We must wait until the client is mounted before trusting isAuthenticated,
+  // otherwise the layout redirects to /login on every page refresh.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (mounted && !isAuthenticated) {
       router.replace('/login');
     }
-  }, [isAuthenticated, router]);
+  }, [mounted, isAuthenticated, router]);
 
   const handleLogout = async () => {
     try {
@@ -36,7 +42,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   };
 
-  if (!isAuthenticated || !user) return null;
+  // Render nothing until hydration is complete (avoids flash / false redirect)
+  if (!mounted || !isAuthenticated || !user) return null;
 
   return (
     <div className="flex min-h-screen bg-[#F8F9FB]">

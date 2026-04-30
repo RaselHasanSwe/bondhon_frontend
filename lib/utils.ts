@@ -5,6 +5,24 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * Resolve a photo path returned by the Laravel backend into a full URL
+ * that Next.js <Image> can load.
+ *
+ * The backend's Storage::url() returns a relative path like /storage/...
+ * when no ASSET_URL is configured.  We must prepend the API base-URL so
+ * Next.js loads from the backend server, not the frontend server.
+ */
+export function resolvePhotoUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  // Already an absolute URL (https://... or http://...)
+  if (/^https?:\/\//i.test(path)) return path;
+  // Remove accidental leading slash before joining with base URL
+  const base = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '');
+  const rel  = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${rel}`;
+}
+
 export function formatAge(dob: string | null | undefined): string {
   if (!dob) return 'N/A';
   const birth = new Date(dob);

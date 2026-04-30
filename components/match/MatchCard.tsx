@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { formatAge, formatHeight } from '@/lib/utils';
+import { formatAge, formatHeight, resolvePhotoUrl } from '@/lib/utils';
 import { CompatibilityScore } from './CompatibilityScore';
 import { interestService, shortlistService } from '@/services/profileService';
 import type { ProfileCard } from '@/types/profile';
@@ -55,9 +55,9 @@ export function MatchCard({ profile, score, showScore = true }: MatchCardProps) 
     <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200 group">
       {/* Photo */}
       <Link href={profileUrl} className="block relative aspect-[4/5] bg-gray-100">
-        {profile.primary_photo ? (
+        {resolvePhotoUrl(profile.primary_photo) ? (
           <Image
-            src={profile.primary_photo}
+            src={resolvePhotoUrl(profile.primary_photo)!}
             alt={`${profile.name}'s photo`}
             fill
             className="object-cover group-hover:scale-[1.02] transition-transform duration-300"

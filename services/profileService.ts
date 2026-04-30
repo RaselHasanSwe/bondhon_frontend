@@ -14,7 +14,7 @@ export const profileService = {
   getProfileById: (profileId: string) =>
     api.get<ApiResponse<FullProfile>>(`/profile/${profileId}`),
 
-  updatePreferences: (data: Partial<PartnerPreference>) =>
+  updatePreferences: (data: Partial<PartnerPreference> | Record<string, unknown>) =>
     api.put<ApiResponse<PartnerPreference>>('/preferences', data),
 
   getCompletionStatus: () =>
@@ -35,8 +35,13 @@ export const profileService = {
     const form = new FormData();
     form.append('photo', file);
     if (isPrivate) form.append('is_private', '1');
+    // Axios v1.x converts FormData to JSON when the instance default is
+    // Content-Type: application/json (via internal FormDataToJSON).
+    // Overriding transformRequest with a pass-through bypasses that conversion
+    // and lets the browser send the FormData natively with the correct
+    // multipart/form-data boundary in the Content-Type header.
     return api.post('/profile/photos', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      transformRequest: [(data: FormData) => data],
     });
   },
 

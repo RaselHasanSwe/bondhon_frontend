@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { interestService } from '@/services/profileService';
-import { formatAge } from '@/lib/utils';
+import { formatAge, resolvePhotoUrl } from '@/lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Interest } from '@/types/interest';
@@ -40,8 +40,8 @@ function InterestCard({
     <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-4">
       <Link href={profileUrl} className="flex-shrink-0">
         <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100">
-          {profile.primary_photo ? (
-            <Image src={profile.primary_photo} alt={profile.name} width={64} height={64} className="w-full h-full object-cover" />
+          {resolvePhotoUrl(profile.primary_photo) ? (
+            <Image src={resolvePhotoUrl(profile.primary_photo)!} alt={profile.name} width={64} height={64} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-2xl">
               {profile.gender === 'female' ? '👩' : '👨'}

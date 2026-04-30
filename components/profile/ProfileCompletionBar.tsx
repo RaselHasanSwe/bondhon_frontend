@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Progress } from '@/components/ui/progress';
 
 interface CompletionStatus {
@@ -16,14 +17,14 @@ interface CompletionStatus {
 }
 
 const STEPS = [
-  { key: 'has_basic_info', label: 'Basic Info', href: '/profile/edit' },
-  { key: 'has_photo', label: 'Photo', href: '/profile/edit' },
-  { key: 'has_religious_detail', label: 'Religion', href: '/profile/edit' },
-  { key: 'has_family_detail', label: 'Family', href: '/profile/edit' },
-  { key: 'has_education', label: 'Career', href: '/profile/edit' },
-  { key: 'has_lifestyle', label: 'Lifestyle', href: '/profile/edit' },
-  { key: 'has_preferences', label: 'Preferences', href: '/profile/edit' },
-  { key: 'has_about_me', label: 'About Me', href: '/profile/edit' },
+  { key: 'has_basic_info', label: 'Basic Info', href: '/profile/edit?tab=basic' },
+  { key: 'has_photo', label: 'Photo', href: '/profile/edit?tab=photo' },
+  { key: 'has_religious_detail', label: 'Religion', href: '/profile/edit?tab=religion' },
+  { key: 'has_family_detail', label: 'Family', href: '/profile/edit?tab=family' },
+  { key: 'has_education', label: 'Career', href: '/profile/edit?tab=career' },
+  { key: 'has_lifestyle', label: 'Lifestyle', href: '/profile/edit?tab=lifestyle' },
+  { key: 'has_preferences', label: 'Preferences', href: '/profile/edit?tab=preferences' },
+  { key: 'has_about_me', label: 'About Me', href: '/profile/edit?tab=basic' },
 ];
 
 export function ProfileCompletionBar({ status }: { status: CompletionStatus }) {
@@ -49,13 +50,13 @@ export function ProfileCompletionBar({ status }: { status: CompletionStatus }) {
           <p className="text-xs text-gray-500 mb-2">Complete to get more matches:</p>
           <div className="flex flex-wrap gap-2">
             {missing.map((step) => (
-              <a
+              <Link
                 key={step.key}
                 href={step.href}
                 className="text-xs bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-3 py-1 hover:bg-amber-100 transition-colors"
               >
                 + {step.label}
-              </a>
+              </Link>
             ))}
           </div>
         </div>
