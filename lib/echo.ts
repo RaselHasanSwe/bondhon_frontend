@@ -23,11 +23,6 @@ export async function getEcho(): Promise<any> {
   // Laravel Echo looks for Pusher on window
   (window as unknown as Record<string, unknown>).Pusher = Pusher;
 
-  const token =
-    typeof localStorage !== 'undefined'
-      ? (localStorage.getItem('auth_token') ?? undefined)
-      : undefined;
-
   echoInstance = new LaravelEcho({
     broadcaster: 'reverb',
     key: process.env.NEXT_PUBLIC_REVERB_APP_KEY,
@@ -36,10 +31,18 @@ export async function getEcho(): Promise<any> {
     wssPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT ?? 8080),
     forceTLS: (process.env.NEXT_PUBLIC_REVERB_SCHEME ?? 'http') === 'https',
     enabledTransports: ['ws', 'wss'],
+    // Use the base URL (not /api/v1) — broadcasting/auth is a top-level route
     authEndpoint: `${process.env.NEXT_PUBLIC_API_URL}/broadcasting/auth`,
+    // Always read the token fresh so it works after login
     auth: {
       headers: {
-        Authorization: token ? `Bearer ${token}` : '',
+        get Authorization() {
+          const t =
+            typeof localStorage !== 'undefined'
+              ? localStorage.getItem('auth_token')
+              : null;
+          return t ? `Bearer ${t}` : '';
+        },
         Accept: 'application/json',
       },
     },

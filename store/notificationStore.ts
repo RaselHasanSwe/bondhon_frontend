@@ -76,10 +76,14 @@ export const useNotificationStore = create<NotificationState>()((set) => ({
   },
 
   addNotification: (notification) => {
-    set((state) => ({
-      notifications: [notification, ...state.notifications],
-      unreadCount: state.unreadCount + (notification.is_read ? 0 : 1),
-    }));
+    set((state) => {
+      // Deduplicate — ignore if this id already exists
+      if (state.notifications.some((n) => n.id === notification.id)) return state;
+      return {
+        notifications: [notification, ...state.notifications],
+        unreadCount: state.unreadCount + (notification.is_read ? 0 : 1),
+      };
+    });
   },
 }));
 

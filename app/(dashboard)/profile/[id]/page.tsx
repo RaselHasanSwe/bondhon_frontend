@@ -5,6 +5,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { profileService, interestService, shortlistService, blockService, reportService } from '@/services/profileService';
+import { chatService } from '@/services/chatService';
 import { CompatibilityScore } from '@/components/match/CompatibilityScore';
 import { formatAge, formatHeight, timeAgo } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -65,6 +66,14 @@ export default function ProfileViewPage() {
   const blockMutation = useMutation({
     mutationFn: (id: number) => blockService.block(id),
     onSuccess: () => router.push('/matches'),
+  });
+
+  const [messageError, setMessageError] = useState<string | null>(null);
+
+  const messageMutation = useMutation({
+    mutationFn: (userId: number) => chatService.getOrCreateConversation(userId),
+    onSuccess: (conv) => router.push(`/chat/${conv.id}`),
+    onError: () => setMessageError('Chat is only available after a mutual interest is accepted.'),
   });
 
   const reportMutation = useMutation({
@@ -184,6 +193,19 @@ export default function ProfileViewPage() {
                 >
                   {interestSent ? '✓ Interest Sent' : '💌 Send Interest'}
                 </Button>
+
+                {/* Send Message — available for all; backend enforces mutual-interest requirement */}
+                <Button
+                  onClick={() => { setMessageError(null); messageMutation.mutate(p.id); }}
+                  disabled={messageMutation.isPending}
+                  className="rounded-xl bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {messageMutation.isPending ? '⌛ Opening…' : '💬 Send Message'}
+                </Button>
+
+                {messageError && (
+                  <p className="w-full text-xs text-red-500 mt-1">{messageError}</p>
+                )}
 
                 <Button
                   onClick={() => shortlistMutation.mutate(p.id)}

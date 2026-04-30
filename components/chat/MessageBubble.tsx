@@ -4,6 +4,17 @@ import { useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import type { Message } from '@/types/message';
 
+// ── Resolve file URLs ─────────────────────────────────────────────────────
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
+
+function resolveUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  // Already an absolute URL (http/https or blob:)
+  if (path.startsWith('http') || path.startsWith('blob:')) return path;
+  // Strip leading slash if present, then prepend storage URL
+  return `${API_URL}/storage/${path.replace(/^\//, '')}`;
+}
+
 interface MessageBubbleProps {
   message: Message;
   isMine: boolean;
@@ -255,19 +266,19 @@ export function MessageBubble({ message, isMine, senderName, showAvatar = true }
           )}
 
           {message.type === 'image' && message.file_path && (
-            <ImageMessage src={message.file_path} isMine={isMine} />
+            <ImageMessage src={resolveUrl(message.file_path)!} isMine={isMine} />
           )}
 
           {message.type === 'voice' && message.file_path && (
             <div className="px-3 py-2.5">
-              <AudioPlayer src={message.file_path} isMine={isMine} />
+              <AudioPlayer src={resolveUrl(message.file_path)!} isMine={isMine} />
             </div>
           )}
 
           {message.type === 'document' && message.file_path && (
             <div className="px-3 py-2.5">
               <DocumentMessage
-                src={message.file_path}
+                src={resolveUrl(message.file_path)!}
                 name={message.file_name}
                 size={message.file_size}
                 mime={message.file_mime_type}
