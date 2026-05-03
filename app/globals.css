@@ -180,6 +180,9 @@
 .stagger > *:nth-child(6) { animation-delay: 300ms; }
 
 /* ── Premium Component Classes ─────────────────────────────────────── */
+button {
+    cursor: pointer;
+}
 
 /* Gold gradient button */
 .btn-gold {
