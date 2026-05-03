@@ -3,6 +3,38 @@ import type {IceServer} from '@/types/call';
 
 type SignalType = 'offer' | 'answer' | 'ice-candidate';
 
+/**
+ * Sanitize SDP before setRemoteDescription / sendSignal.
+ *
+ * Removes attributes that cause "Invalid SDP line" across browsers:
+ *
+ *  a=ssrc:<id> msid:<value>    — Two-token msid value (stream-id + track-id) violates
+ *                                RFC 5576 grammar (unquoted space in attribute value).
+ *                                Strict parsers (Firefox, some Chrome versions) reject it.
+ *                                Safe to remove: modern Unified Plan already carries the
+ *                                stream→track binding via `a=msid` at the media-section level.
+ *  a=ssrc:<id> mslabel:<value> — Deprecated Plan-B attribute, not in RFC 8830.
+ *  a=ssrc:<id> label:<value>   — Deprecated Plan-B attribute, not in RFC 8830.
+ */
+function sanitizeSdp(sdp: string): string {
+    if (!sdp) return sdp;
+    const lines = sdp.split(/\r?\n/);
+    const filtered = lines.filter((line) => {
+        if (/^a=ssrc:\d+ msid:/.test(line))    return false;
+        if (/^a=ssrc:\d+ mslabel:/.test(line)) return false;
+        if (/^a=ssrc:\d+ label:/.test(line))   return false;
+        return true;
+    });
+    if (process.env.NODE_ENV === 'development' && filtered.length !== lines.length) {
+        console.debug(`[WebRTC] sanitizeSdp removed ${lines.length - filtered.length} line(s):`,
+            lines.filter((l) =>
+                /^a=ssrc:\d+ (msid|mslabel|label):/.test(l)
+            )
+        );
+    }
+    return filtered.join('\r\n');
+}
+
 interface WebRTCManagerOptions {
     callId: number;
     localUserId: number;
@@ -16,20 +48,11 @@ interface WebRTCManagerOptions {
 
 /**
  * WebRTCManager — handles the full peer-to-peer WebRTC lifecycle.
- *
- * Signal flow (via Laravel Reverb):
- *   Caller  → createOffer → sendSignal(offer)  → Receiver setRemoteDescription
- *   Receiver → createAnswer → sendSignal(answer) → Caller setRemoteDescription
- *   Both    → onIceCandidate → sendSignal(ice-candidate) → addIceCandidate
- *
- * NOTE: No WebRTC data channel is used. Mute/camera status is relayed
- *       through the Laravel signaling endpoint (type: 'media-status') to
- *       avoid SCTP SDP attributes (a=sctp-port, a=max-message-size) that
- *       cause cross-browser RTCPeerConnection parse errors.
  */
 export class WebRTCManager {
     private pc: RTCPeerConnection | null = null;
     private localStream: MediaStream | null = null;
+    private remoteStream: MediaStream | null = null;  // accumulated remote tracks (Chrome-safe)
     private pendingCandidates: RTCIceCandidateInit[] = [];
     private opts: WebRTCManagerOptions;
     private destroyed = false;
@@ -45,12 +68,21 @@ export class WebRTCManager {
     async startAsCaller(): Promise<void> {
         await this._initPeerConnection();
 
-        const offer = await this.pc!.createOffer({
-            offerToReceiveAudio: true,
-            offerToReceiveVideo: this.opts.callType === 'video',
-        });
+        // NOTE: Do NOT pass offerToReceiveAudio/Video — those are Plan-B era options
+        // deprecated in Unified Plan (Chrome M96+). Since we called addTrack() above,
+        // transceivers are already configured as sendrecv. Just createOffer().
+        const offer = await this.pc!.createOffer();
         await this.pc!.setLocalDescription(offer);
-        await this._sendSignal('offer', offer);
+
+        // Send sanitized offer — receiver may reject ssrc-level msid/mslabel/label lines
+        const cleanOffer: RTCSessionDescriptionInit = {
+            type: offer.type,
+            sdp: sanitizeSdp(offer.sdp ?? ''),
+        };
+        if (process.env.NODE_ENV === 'development') {
+            console.debug('[WebRTC] Sending offer:', cleanOffer.sdp?.split(/\r?\n/).length, 'lines');
+        }
+        await this._sendSignal('offer', cleanOffer);
     }
 
     /** Called by the RECEIVER after answering, before creating answer. */
@@ -66,14 +98,39 @@ export class WebRTCManager {
         if (this.destroyed || !this.pc) return;
 
         if (type === 'offer') {
-            await this.pc.setRemoteDescription(new RTCSessionDescription(payload as RTCSessionDescriptionInit));
+            const desc = payload as RTCSessionDescriptionInit;
+            const cleanSdp = sanitizeSdp(desc.sdp ?? '');
+            if (process.env.NODE_ENV === 'development') {
+                console.debug('[WebRTC] Received offer, setting remote description');
+            }
+            await this.pc.setRemoteDescription(new RTCSessionDescription({
+                type: desc.type,
+                sdp: cleanSdp,
+            }));
             await this._flushPendingCandidates();
             const answer = await this.pc.createAnswer();
             await this.pc.setLocalDescription(answer);
-            await this._sendSignal('answer', answer);
+
+            // Send sanitized answer
+            const cleanAnswer: RTCSessionDescriptionInit = {
+                type: answer.type,
+                sdp: sanitizeSdp(answer.sdp ?? ''),
+            };
+            if (process.env.NODE_ENV === 'development') {
+                console.debug('[WebRTC] Sending answer:', cleanAnswer.sdp?.split(/\r?\n/).length, 'lines');
+            }
+            await this._sendSignal('answer', cleanAnswer);
 
         } else if (type === 'answer') {
-            await this.pc.setRemoteDescription(new RTCSessionDescription(payload as RTCSessionDescriptionInit));
+            const desc = payload as RTCSessionDescriptionInit;
+            const cleanSdp = sanitizeSdp(desc.sdp ?? '');
+            if (process.env.NODE_ENV === 'development') {
+                console.debug('[WebRTC] Received answer, setting remote description');
+            }
+            await this.pc.setRemoteDescription(new RTCSessionDescription({
+                type: desc.type,
+                sdp: cleanSdp,
+            }));
             await this._flushPendingCandidates();
 
         } else if (type === 'ice-candidate') {
@@ -110,6 +167,9 @@ export class WebRTCManager {
         }
         this.localStream?.getTracks().forEach((t) => t.stop());
         this.localStream = null;
+        // Don't stop remote tracks — they're owned by the remote peer.
+        // Just clear our reference so the stream can be GC'd.
+        this.remoteStream = null;
         this.pc?.close();
         this.pc = null;
         this.pendingCandidates = [];
@@ -127,6 +187,10 @@ export class WebRTCManager {
 
         this.pc = new RTCPeerConnection(rtcConfig);
 
+        if (process.env.NODE_ENV === 'development') {
+            console.debug('[WebRTC] PeerConnection created');
+        }
+
         // Acquire local media
         try {
             this.localStream = await navigator.mediaDevices.getUserMedia({
@@ -139,6 +203,10 @@ export class WebRTCManager {
                     ? {width: {ideal: 1280}, height: {ideal: 720}, frameRate: {ideal: 30}}
                     : false,
             });
+            if (process.env.NODE_ENV === 'development') {
+                const tracks = this.localStream.getTracks().map((t) => `${t.kind}:${t.label}`);
+                console.debug('[WebRTC] Local media acquired:', tracks);
+            }
         } catch (err) {
             const name = (err instanceof Error) ? err.name : '';
             let message: string;
@@ -161,10 +229,33 @@ export class WebRTCManager {
         });
 
         // Remote stream
+        // ─────────────────────────────────────────────────────────────────
+        // Chrome (Unified Plan) fires ontrack with event.streams[0] as an
+        // EMPTY MediaStream object before the track is inserted into it —
+        // setting that empty stream as srcObject plays nothing.
+        // Firefox populates event.streams[0] correctly before firing ontrack.
+        //
+        // Fix: maintain our own remoteStream and add every received track to
+        // it ourselves. This is safe and idempotent across all browsers.
+        // ─────────────────────────────────────────────────────────────────
         this.pc.ontrack = (event) => {
-            if (event.streams[0]) {
-                this.opts.onRemoteStream(event.streams[0]);
+            if (this.destroyed) return;
+
+            if (!this.remoteStream) {
+                this.remoteStream = new MediaStream();
             }
+            // Guard against duplicate track events (Chrome can re-fire)
+            if (!this.remoteStream.getTrackById(event.track.id)) {
+                this.remoteStream.addTrack(event.track);
+            }
+
+            if (process.env.NODE_ENV === 'development') {
+                const kinds = this.remoteStream.getTracks().map((t) => t.kind);
+                console.debug('[WebRTC] Remote track added:', event.track.kind,
+                    '| remoteStream tracks now:', kinds);
+            }
+
+            this.opts.onRemoteStream(this.remoteStream);
         };
 
         // ICE candidates
@@ -178,6 +269,9 @@ export class WebRTCManager {
         this.pc.oniceconnectionstatechange = () => {
             if (!this.pc || this.destroyed) return;
             const state = this.pc.iceConnectionState;
+            if (process.env.NODE_ENV === 'development') {
+                console.debug('[WebRTC] ICE connection state:', state);
+            }
             this.opts.onIceConnectionChange(state);
 
             if (state === 'disconnected') {
@@ -197,6 +291,9 @@ export class WebRTCManager {
 
         this.pc.onconnectionstatechange = () => {
             if (!this.pc || this.destroyed) return;
+            if (process.env.NODE_ENV === 'development') {
+                console.debug('[WebRTC] Connection state:', this.pc.connectionState);
+            }
             if (this.pc.connectionState === 'failed') {
                 this.opts.onError(new Error('WebRTC connection failed.'));
             }
