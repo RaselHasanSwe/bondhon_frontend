@@ -19,20 +19,34 @@ type SignalType = 'offer' | 'answer' | 'ice-candidate';
 function sanitizeSdp(sdp: string): string {
     if (!sdp) return sdp;
     const lines = sdp.split(/\r?\n/);
+
     const filtered = lines.filter((line) => {
-        if (/^a=ssrc:\d+ msid:/.test(line))    return false;
-        if (/^a=ssrc:\d+ mslabel:/.test(line)) return false;
-        if (/^a=ssrc:\d+ label:/.test(line))   return false;
+        // Keep empty lines (including the trailing empty string after split)
+        if (line === '') return true;
+
+        if (line.startsWith('a=ssrc:') || line.startsWith('a=ssrc-group:')) {
+            return false;
+        }
+        if (line.includes('telephone-event')) {
+            return false;
+        }
+        if (line.includes('CN/')) {
+            return false;
+        }
         return true;
     });
+
     if (process.env.NODE_ENV === 'development' && filtered.length !== lines.length) {
-        console.debug(`[WebRTC] sanitizeSdp removed ${lines.length - filtered.length} line(s):`,
-            lines.filter((l) =>
-                /^a=ssrc:\d+ (msid|mslabel|label):/.test(l)
-            )
-        );
+        console.debug(`[WebRTC] sanitizeSdp removed ${lines.length - filtered.length} problematic lines`);
     }
-    return filtered.join('\r\n');
+
+    // SDP MUST end with \r\n — Chrome's parser rejects SDPs without the trailing CRLF.
+    // After split(/\r?\n/), the last element is '' (empty string from the trailing newline).
+    // join('\r\n') reconstructs it correctly only if that empty string is preserved above.
+    const result = filtered.join('\r\n');
+
+    // Belt-and-suspenders: ensure trailing CRLF is always present
+    return result.endsWith('\r\n') ? result : result + '\r\n';
 }
 
 interface WebRTCManagerOptions {
@@ -184,6 +198,8 @@ export class WebRTCManager {
             bundlePolicy: 'max-bundle',
             rtcpMuxPolicy: 'require',
         };
+
+        (rtcConfig as any).sdpSemantics = 'unified-plan';
 
         this.pc = new RTCPeerConnection(rtcConfig);
 
