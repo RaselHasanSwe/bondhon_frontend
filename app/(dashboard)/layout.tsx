@@ -7,6 +7,7 @@ import {useAuthStore} from '@/store/authStore';
 import {authService} from '@/services/authService';
 import {cn} from '@/lib/utils';
 import {NotificationBell} from '@/components/notification/NotificationBell';
+import {CallProvider} from '@/components/providers/CallProvider';
 import {
     HomeIcon, MatchesIcon, SearchIcon, InterestIcon, ChatIcon,
     StarIcon, BellIcon, UserIcon, LogOutIcon,
@@ -57,6 +58,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
 
     return (
         <div className="flex min-h-screen bg-background">
+            <CallProvider>
             {/* Sidebar */}
             <aside
                 className="hidden md:flex flex-col w-64 border-r border-[var(--sidebar-border)] px-3 lg:px-4 py-4 lg:py-6 fixed h-full z-10 overflow-y-auto"
@@ -160,6 +162,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                     })}
                 </nav>
             </main>
+        </CallProvider>
         </div>
     );
 }

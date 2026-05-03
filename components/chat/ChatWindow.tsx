@@ -5,7 +5,9 @@ import {useRouter} from 'next/navigation';
 import {MessageBubble} from './MessageBubble';
 import {TypingIndicator} from './TypingIndicator';
 import {chatService} from '@/services/chatService';
+import {CallButton} from '@/components/call/CallButton';
 import type {Conversation, Message, MessageType, MediaItem} from '@/types/message';
+import type {CallParticipant} from '@/types/call';
 
 interface ChatWindowProps {
     conversationId: number;
@@ -514,6 +516,34 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                     className="hidden sm:inline text-[10px] text-gray-400 bg-gray-100 px-2 py-1 rounded-full font-mono shrink-0">
           {participant.profile_id}
         </span>
+
+                {/* ── Call buttons ──────────────────────────────────────── */}
+                <div className="flex items-center gap-0.5 shrink-0" title={
+                    !['gold', 'platinum'].includes(participant.subscription_plan)
+                        ? 'Calls require Gold or Platinum plan'
+                        : 'Call'
+                }>
+                    <CallButton
+                        receiverId={participant.id}
+                        receiver={{
+                            id: participant.id,
+                            name: participant.name,
+                            avatar: participant.avatar,
+                            profile_id: participant.profile_id,
+                        } satisfies CallParticipant}
+                        type="audio"
+                    />
+                    <CallButton
+                        receiverId={participant.id}
+                        receiver={{
+                            id: participant.id,
+                            name: participant.name,
+                            avatar: participant.avatar,
+                            profile_id: participant.profile_id,
+                        } satisfies CallParticipant}
+                        type="video"
+                    />
+                </div>
             </div>
 
             {/* ── Messages ────────────────────────────────────────────────── */}
