@@ -3,11 +3,13 @@
 import {useState, useRef, useEffect, useCallback} from 'react';
 import {useRouter} from 'next/navigation';
 import {MessageBubble} from './MessageBubble';
+import {CallLogBubble} from './CallLogBubble';
 import {TypingIndicator} from './TypingIndicator';
 import {chatService} from '@/services/chatService';
+import {callService} from '@/services/callService';
 import {CallButton} from '@/components/call/CallButton';
 import type {Conversation, Message, MessageType, MediaItem} from '@/types/message';
-import type {CallParticipant} from '@/types/call';
+import type {CallLog, CallParticipant} from '@/types/call';
 
 interface ChatWindowProps {
     conversationId: number;
@@ -30,6 +32,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
     const router = useRouter();
     const [conversation, setConversation] = useState<Conversation | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
+    const [callLogs, setCallLogs] = useState<CallLog[]>([]);
     const [text, setText] = useState('');
     const [isSending, setIsSending] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
@@ -82,6 +85,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
     useEffect(() => {
         let active = true;
         setMessages([]);
+        setCallLogs([]);
         setHasMore(false);
         initialScrollDone.current = false;
 
@@ -96,6 +100,12 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                 setConversation(conv);
                 setMessages(msgsResponse.data);
                 setHasMore(msgsResponse.pagination.has_more);
+
+                // Load call logs for this conversation partner (for inline timeline display)
+                callService.getHistory(1, conv.participant.id)
+                    .then((res) => { if (active) setCallLogs(res.data ?? []); })
+                    .catch(() => {}); // non-blocking
+
                 await chatService.markAsRead(conversationId);
             } finally {
                 if (active) setIsLoading(false);
@@ -149,6 +159,19 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
             });
         });
     }, []);
+
+    // ── Refresh call logs when a call ends (from CallScreen/CallProvider) ─
+    useEffect(() => {
+        if (!conversation) return;
+        const participantId = conversation.participant.id;
+        const handler = () => {
+            callService.getHistory(1, participantId)
+                .then((res) => setCallLogs(res.data ?? []))
+                .catch(() => {});
+        };
+        window.addEventListener('call:ended', handler);
+        return () => window.removeEventListener('call:ended', handler);
+    }, [conversation]);
 
     // ── Real-time: subscribe to conversation channel ──────────────────────
     // Uses `cancelled` flag pattern — no race between echoRef + cleanup
@@ -417,15 +440,25 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
         }
     };
 
-    // ── Group messages by date ────────────────────────────────────────────
-    const grouped: { date: string; messages: Message[] }[] = [];
-    for (const msg of messages) {
-        const dateLabel = new Date(msg.created_at).toLocaleDateString('en-BD', {
+    // ── Merge messages + call logs into a time-sorted timeline ───────────
+    type TimelineItem =
+        | { kind: 'message'; id: string; created_at: string; data: Message }
+        | { kind: 'call';    id: string; created_at: string; data: CallLog };
+
+    const timeline: TimelineItem[] = [
+        ...messages.map((m) => ({kind: 'message' as const, id: `m-${m.id}`, created_at: m.created_at, data: m})),
+        ...callLogs.map((c) => ({kind: 'call' as const, id: `c-${c.id}`, created_at: c.created_at, data: c})),
+    ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+    // ── Group timeline items by date ──────────────────────────────────────
+    const grouped: { date: string; items: TimelineItem[] }[] = [];
+    for (const item of timeline) {
+        const dateLabel = new Date(item.created_at).toLocaleDateString('en-BD', {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
         });
         const last = grouped[grouped.length - 1];
-        if (last && last.date === dateLabel) last.messages.push(msg);
-        else grouped.push({date: dateLabel, messages: [msg]});
+        if (last && last.date === dateLabel) last.items.push(item);
+        else grouped.push({date: dateLabel, items: [item]});
     }
 
     // ── Loading skeleton ──────────────────────────────────────────────────
@@ -565,7 +598,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                     </p>
                 )}
 
-                {grouped.map(({date, messages: dayMsgs}) => (
+                {grouped.map(({date, items: dayItems}) => (
                     <div key={date}>
                         <div className="flex items-center gap-2 sm:gap-3 my-3 sm:my-4">
                             <div className="flex-1 h-px bg-gray-200"/>
@@ -574,13 +607,24 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                             <div className="flex-1 h-px bg-gray-200"/>
                         </div>
                         <div className="space-y-1.5 sm:space-y-2">
-                            {dayMsgs.map((msg, idx) => {
+                            {dayItems.map((item, idx) => {
+                                if (item.kind === 'call') {
+                                    return (
+                                        <CallLogBubble
+                                            key={item.id}
+                                            callLog={item.data}
+                                            currentUserId={currentUserId}
+                                        />
+                                    );
+                                }
+                                const msg = item.data;
                                 const isMine = msg.sender_id === currentUserId;
-                                const prevMsg = dayMsgs[idx - 1];
+                                const prevItem = dayItems[idx - 1];
+                                const prevMsg = prevItem?.kind === 'message' ? prevItem.data : null;
                                 const showAvatar = !isMine && (!prevMsg || prevMsg.sender_id !== msg.sender_id);
                                 return (
                                     <MessageBubble
-                                        key={msg.id}
+                                        key={item.id}
                                         message={msg}
                                         isMine={isMine}
                                         senderName={participant.name}

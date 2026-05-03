@@ -36,12 +36,19 @@ export function IncomingCallModal() {
 
         const playRing = () => {
             if (!AudioCtx) return;
+            // Don't attempt AudioContext before a user gesture — Chrome will warn
+            // and refuse to start. Check userActivation if available.
+            const nav = navigator as Navigator & {userActivation?: {hasBeenActive: boolean}};
+            if (nav.userActivation && !nav.userActivation.hasBeenActive) return;
             try {
                 if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
                     audioCtxRef.current = new AudioCtx();
                 }
                 const ctx = audioCtxRef.current;
-                if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+                if (ctx.state === 'suspended') {
+                    ctx.resume().catch(() => {});
+                }
+                if (ctx.state !== 'running') return;
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.connect(gain);

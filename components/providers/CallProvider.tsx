@@ -53,7 +53,11 @@ export function CallProvider({children}: {children: React.ReactNode}) {
                 if (cancelled) return;
                 const {incomingCall, activeCall: ac, clearIncomingCall, endCall} = useCallStore.getState();
                 if (incomingCall?.callId === e.call_id) clearIncomingCall();
-                if (ac?.callId === e.call_id) endCall();
+                if (ac?.callId === e.call_id) {
+                    endCall();
+                    // Notify chat windows to refresh call logs
+                    window.dispatchEvent(new CustomEvent('call:ended'));
+                }
             });
 
             // Caller cancelled / timed out while we haven't answered yet

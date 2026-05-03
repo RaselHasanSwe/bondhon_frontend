@@ -48,7 +48,7 @@ export interface IncomingCallPayload {
 export interface WebRTCSignalPayload {
     call_id: number;
     from_user_id: number;
-    type: 'offer' | 'answer' | 'ice-candidate';
-    payload: RTCSessionDescriptionInit | RTCIceCandidateInit;
+    type: 'offer' | 'answer' | 'ice-candidate' | 'media-status';
+    payload: RTCSessionDescriptionInit | RTCIceCandidateInit | Record<string, unknown>;
 }
 

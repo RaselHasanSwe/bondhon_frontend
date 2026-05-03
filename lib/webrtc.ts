@@ -12,7 +12,6 @@ interface WebRTCManagerOptions {
     onRemoteStream: (stream: MediaStream) => void;
     onIceConnectionChange: (state: RTCIceConnectionState) => void;
     onError: (err: Error) => void;
-    onRemoteMediaStatus?: (isMuted: boolean, isCameraOff: boolean) => void;
 }
 
 /**
@@ -22,32 +21,29 @@ interface WebRTCManagerOptions {
  *   Caller  → createOffer → sendSignal(offer)  → Receiver setRemoteDescription
  *   Receiver → createAnswer → sendSignal(answer) → Caller setRemoteDescription
  *   Both    → onIceCandidate → sendSignal(ice-candidate) → addIceCandidate
+ *
+ * NOTE: No WebRTC data channel is used. Mute/camera status is relayed
+ *       through the Laravel signaling endpoint (type: 'media-status') to
+ *       avoid SCTP SDP attributes (a=sctp-port, a=max-message-size) that
+ *       cause cross-browser RTCPeerConnection parse errors.
  */
 export class WebRTCManager {
     private pc: RTCPeerConnection | null = null;
     private localStream: MediaStream | null = null;
     private pendingCandidates: RTCIceCandidateInit[] = [];
-    private isCaller: boolean;
     private opts: WebRTCManagerOptions;
     private destroyed = false;
-    private dataChannel: RTCDataChannel | null = null;
     private disconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
     constructor(opts: WebRTCManagerOptions) {
         this.opts = opts;
-        this.isCaller = false; // set explicitly via start()
     }
 
     // ── Public API ──────────────────────────────────────────────────────────
 
     /** Called by the CALLER after receiving answerCall response. */
     async startAsCaller(): Promise<void> {
-        this.isCaller = true;
         await this._initPeerConnection();
-
-        // Create data channel BEFORE offer so it's negotiated in SDP
-        this.dataChannel = this.pc!.createDataChannel('media-status', {ordered: true});
-        this._setupDataChannel(this.dataChannel);
 
         const offer = await this.pc!.createOffer({
             offerToReceiveAudio: true,
@@ -59,7 +55,6 @@ export class WebRTCManager {
 
     /** Called by the RECEIVER after answering, before creating answer. */
     async startAsReceiver(): Promise<void> {
-        this.isCaller = false;
         await this._initPeerConnection();
     }
 
@@ -86,7 +81,6 @@ export class WebRTCManager {
             if (this.pc.remoteDescription) {
                 await this.pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(() => {});
             } else {
-                // Queue until remote description is set
                 this.pendingCandidates.push(candidate);
             }
         }
@@ -107,15 +101,6 @@ export class WebRTCManager {
         this.localStream?.getVideoTracks().forEach((t) => (t.enabled = enabled));
     }
 
-    /** Send local mute/camera status to remote peer via data channel */
-    sendMediaStatus(isMuted: boolean, isCameraOff: boolean): void {
-        if (this.dataChannel?.readyState === 'open') {
-            try {
-                this.dataChannel.send(JSON.stringify({type: 'media-status', isMuted, isCameraOff}));
-            } catch { /* ignore */ }
-        }
-    }
-
     /** Clean up everything. */
     destroy(): void {
         this.destroyed = true;
@@ -125,32 +110,12 @@ export class WebRTCManager {
         }
         this.localStream?.getTracks().forEach((t) => t.stop());
         this.localStream = null;
-        if (this.dataChannel) {
-            this.dataChannel.onmessage = null;
-            this.dataChannel.close();
-            this.dataChannel = null;
-        }
         this.pc?.close();
         this.pc = null;
         this.pendingCandidates = [];
     }
 
     // ── Private helpers ────────────────────────────────────────────────────
-
-    private _setupDataChannel(channel: RTCDataChannel): void {
-        channel.onmessage = (event) => {
-            if (this.destroyed) return;
-            try {
-                const msg = JSON.parse(event.data as string);
-                if (msg.type === 'media-status' && this.opts.onRemoteMediaStatus) {
-                    this.opts.onRemoteMediaStatus(
-                        Boolean(msg.isMuted),
-                        Boolean(msg.isCameraOff),
-                    );
-                }
-            } catch { /* ignore malformed messages */ }
-        };
-    }
 
     private async _initPeerConnection(): Promise<void> {
         const rtcConfig: RTCConfiguration = {
@@ -161,12 +126,6 @@ export class WebRTCManager {
         };
 
         this.pc = new RTCPeerConnection(rtcConfig);
-
-        // Receiver: accept data channel opened by caller
-        this.pc.ondatachannel = (event) => {
-            this.dataChannel = event.channel;
-            this._setupDataChannel(this.dataChannel);
-        };
 
         // Acquire local media
         try {
@@ -181,7 +140,18 @@ export class WebRTCManager {
                     : false,
             });
         } catch (err) {
-            this.opts.onError(new Error('Could not access microphone/camera. Please allow permissions.'));
+            const name = (err instanceof Error) ? err.name : '';
+            let message: string;
+            if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+                message = 'No microphone or camera device was found. Please connect a device and try again.';
+            } else if (name === 'NotReadableError' || name === 'TrackStartError') {
+                message = 'Your microphone or camera is already in use by another application.';
+            } else if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+                message = 'Could not access microphone/camera. Please allow permissions.';
+            } else {
+                message = 'Could not access microphone/camera. Please check your device and permissions.';
+            }
+            this.opts.onError(new Error(message));
             throw err;
         }
 
@@ -211,7 +181,6 @@ export class WebRTCManager {
             this.opts.onIceConnectionChange(state);
 
             if (state === 'disconnected') {
-                // Auto-end after 8 seconds if still disconnected (network loss)
                 this.disconnectTimer = setTimeout(() => {
                     if (this.pc?.iceConnectionState === 'disconnected' ||
                         this.pc?.iceConnectionState === 'failed') {
@@ -219,7 +188,6 @@ export class WebRTCManager {
                     }
                 }, 8000);
             } else {
-                // Reconnected or ended — clear the timer
                 if (this.disconnectTimer) {
                     clearTimeout(this.disconnectTimer);
                     this.disconnectTimer = null;
@@ -251,11 +219,4 @@ export class WebRTCManager {
         }
         this.pendingCandidates = [];
     }
-
-    // ── ICaller check ─────────────────────────────────────────────────────
-
-    get isCalling(): boolean {
-        return this.isCaller;
-    }
 }
-

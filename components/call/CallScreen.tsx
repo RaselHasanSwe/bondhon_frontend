@@ -22,13 +22,10 @@ interface CallScreenProps {
 export function CallScreen({currentUserId}: CallScreenProps) {
     const {
         activeCall,
-        setCallStatus,
         toggleMic,
         toggleCamera,
         toggleSpeaker,
-        tickDuration,
         endCall,
-        setRemoteMediaStatus,
     } = useCallStore();
 
     const managerRef = useRef<WebRTCManager | null>(null);
@@ -56,8 +53,18 @@ export function CallScreen({currentUserId}: CallScreenProps) {
         destroyManager();
         try {
             await callService.endCall(activeCall.callId);
+        } catch (err: unknown) {
+            // 409 means the call was already ended by the other party — that's fine, ignore it.
+            const status = (err as {response?: {status?: number}})?.response?.status;
+            if (status !== 409) {
+                // Any other error is unexpected but we still close the UI
+                console.error('[endCall]', err);
+            }
         } finally {
             endCall();
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('call:ended'));
+            }
         }
     }, [activeCall, isEnding, destroyManager, endCall]);
 
@@ -164,10 +171,14 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                         remoteVideoRef.current.srcObject = stream;
                         remoteVideoRef.current.play().catch(() => {});
                     }
-                    setCallStatus('active');
+                    // Ensure status is 'active' and timer is running
+                    useCallStore.getState().setCallStatus('active');
                     setConnectionState('Connected');
                     if (!durationIntervalRef.current) {
-                        durationIntervalRef.current = setInterval(tickDuration, 1000);
+                        durationIntervalRef.current = setInterval(
+                            () => useCallStore.getState().tickDuration(),
+                            1000,
+                        );
                     }
                 },
 
@@ -181,21 +192,31 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                         closed:       'Ended',
                     };
                     setConnectionState(labels[state] ?? state);
+
+                    // Fallback: start timer as soon as ICE connects in case ontrack fires late
+                    if (state === 'connected' || state === 'completed') {
+                        useCallStore.getState().setCallStatus('active');
+                        if (!durationIntervalRef.current) {
+                            durationIntervalRef.current = setInterval(
+                                () => useCallStore.getState().tickDuration(),
+                                1000,
+                            );
+                        }
+                    }
+
                     if (state === 'failed') handleEnd();
                 },
 
                 onError: async (err) => {
-                    const isPermission = err.message.toLowerCase().includes('permission') ||
-                        err.message.toLowerCase().includes('access') ||
-                        err.message.toLowerCase().includes('microphone') ||
-                        err.message.toLowerCase().includes('camera');
-                    const isLost = err.message.toLowerCase().includes('connection lost') ||
-                        err.message.toLowerCase().includes('connection failed');
+                    const msg = err.message.toLowerCase();
+                    const isDeviceError = msg.includes('device') || msg.includes('not found') || msg.includes('in use');
+                    const isPermission = isDeviceError || msg.includes('permission') ||
+                        msg.includes('access') || msg.includes('microphone') || msg.includes('camera');
+                    const isLost = msg.includes('connection lost') || msg.includes('connection failed');
 
-                    setConnectionState(isPermission ? 'Permission denied' : err.message);
+                    setConnectionState(isPermission ? 'Device error' : err.message);
 
                     if (isLost) {
-                        // Silent auto-end — no need to show a dialog for network drops
                         destroyManager();
                         try { await callService.endCall(activeCall.callId); } catch { /* ignore */ }
                         endCall();
@@ -203,7 +224,7 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                     }
 
                     await Swal.fire({
-                        title: isPermission ? 'Permission Required' : 'Call Error',
+                        title: isDeviceError ? 'Device Not Found' : isPermission ? 'Permission Required' : 'Call Error',
                         text: err.message,
                         icon: 'error',
                         confirmButtonColor: '#C9A227',
@@ -212,11 +233,6 @@ export function CallScreen({currentUserId}: CallScreenProps) {
 
                     if (isPermission) handleEnd();
                 },
-
-                // WhatsApp-style remote mute/camera sync via data channel
-                onRemoteMediaStatus: (isMuted, isCameraOff) => {
-                    useCallStore.getState().setRemoteMediaStatus(isMuted, isCameraOff);
-                },
             });
 
             managerRef.current = manager;
@@ -224,7 +240,21 @@ export function CallScreen({currentUserId}: CallScreenProps) {
             // Inbound WebRTC signals
             channel.listen('.webrtc.signal', async (e: WebRTCSignalPayload) => {
                 if (cancelled || e.call_id !== activeCall.callId) return;
-                await manager.handleRemoteSignal(e.type, e.payload);
+
+                // Media-status is relayed via signaling (no data channel)
+                if (e.type === 'media-status') {
+                    const ms = e.payload as {isMuted: boolean; isCameraOff: boolean};
+                    useCallStore.getState().setRemoteMediaStatus(
+                        Boolean(ms.isMuted),
+                        Boolean(ms.isCameraOff),
+                    );
+                    return;
+                }
+
+                await manager.handleRemoteSignal(
+                    e.type as 'offer' | 'answer' | 'ice-candidate',
+                    e.payload as RTCSessionDescriptionInit | RTCIceCandidateInit,
+                );
             });
 
             // Remote party ended
@@ -265,7 +295,7 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                 channel.listen('.call.answered', async (e: {call_id: number}) => {
                     if (cancelled || e.call_id !== activeCall.callId) return;
                     setConnectionState('Connecting…');
-                    setCallStatus('connecting');
+                    useCallStore.getState().setCallStatus('connecting');
                     await manager.startAsCaller();
                     const ls = manager.getLocalStream();
                     if (ls && localVideoRef.current) {
@@ -277,7 +307,7 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                 // Receiver: start immediately, offer will arrive
                 await manager.startAsReceiver();
                 setConnectionState('Connecting…');
-                setCallStatus('connecting');
+                useCallStore.getState().setCallStatus('connecting');
                 const ls = manager.getLocalStream();
                 if (ls && localVideoRef.current) {
                     localVideoRef.current.srcObject = ls;
@@ -313,14 +343,15 @@ export function CallScreen({currentUserId}: CallScreenProps) {
         managerRef.current?.setVideoEnabled(!(activeCall?.isCameraOff ?? false));
     }, [activeCall?.isCameraOff]);
 
-    // Send local media status to remote peer via data channel
+    // Broadcast local media status to remote peer via signaling server
     useEffect(() => {
-        if (activeCall?.status === 'active') {
-            managerRef.current?.sendMediaStatus(
-                activeCall.isMicMuted,
-                activeCall.isCameraOff,
-            );
-        }
+        if (!activeCall || activeCall.status !== 'active') return;
+        callService.sendSignal(
+            activeCall.callId,
+            activeCall.remoteParticipant.id,
+            'media-status',
+            {isMuted: activeCall.isMicMuted, isCameraOff: activeCall.isCameraOff},
+        ).catch(() => {});
     }, [activeCall?.isMicMuted, activeCall?.isCameraOff, activeCall?.status]);
 
     if (!activeCall) return null;
@@ -329,17 +360,9 @@ export function CallScreen({currentUserId}: CallScreenProps) {
     const isVideo = callType === 'video';
     const initials = remoteParticipant.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
 
-    // Wrapper handlers that also sync media status via data channel
-    const handleToggleMic = () => {
-        toggleMic();
-        // isMicMuted is current state; after toggle it will be !isMicMuted
-        managerRef.current?.sendMediaStatus(!isMicMuted, isCameraOff);
-    };
-
-    const handleToggleCamera = () => {
-        toggleCamera();
-        managerRef.current?.sendMediaStatus(isMicMuted, !isCameraOff);
-    };
+    // Wrapper handlers — toggle store state; the useEffect above broadcasts the change
+    const handleToggleMic = () => { toggleMic(); };
+    const handleToggleCamera = () => { toggleCamera(); };
 
     // ── Audio call layout ─────────────────────────────────────────────────
     if (!isVideo) {

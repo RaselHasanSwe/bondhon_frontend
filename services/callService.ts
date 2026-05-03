@@ -34,8 +34,8 @@ export const callService = {
     async sendSignal(
         callId: number,
         toUserId: number,
-        type: 'offer' | 'answer' | 'ice-candidate',
-        payload: RTCSessionDescriptionInit | RTCIceCandidateInit,
+        type: 'offer' | 'answer' | 'ice-candidate' | 'media-status',
+        payload: RTCSessionDescriptionInit | RTCIceCandidateInit | Record<string, unknown>,
     ): Promise<void> {
         await api.post(`/calls/${callId}/signal`, {
             to_user_id: toUserId,
@@ -44,9 +44,11 @@ export const callService = {
         });
     },
 
-    /** Fetch call history (paginated). */
-    async getHistory(page = 1): Promise<{data: CallLog[]; pagination: {has_more: boolean; total: number; current_page: number; last_page: number}}> {
-        const res = await api.get('/calls/history', {params: {page}});
+    /** Fetch call history (paginated). Pass participantId to filter by conversation partner. */
+    async getHistory(page = 1, participantId?: number): Promise<{data: CallLog[]; pagination: {has_more: boolean; total: number; current_page: number; last_page: number}}> {
+        const params: Record<string, number> = {page};
+        if (participantId) params.participant_id = participantId;
+        const res = await api.get('/calls/history', {params});
         return res.data.data;
     },
 };

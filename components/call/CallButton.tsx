@@ -28,10 +28,23 @@ export function CallButton({receiverId, receiver, type, className = ''}: CallBut
             const {call, ice_servers} = await callService.initiateCall(receiverId, type);
             startOutgoingCall(call.id, type, receiver, ice_servers);
         } catch (err: unknown) {
-            const msg =
-                err && typeof err === 'object' && 'response' in err
-                    ? (err as {response?: {data?: {message?: string}}}).response?.data?.message
-                    : null;
+            const errObj = err && typeof err === 'object' ? err as {response?: {status?: number; data?: {message?: string; data?: {active_call_id?: number}}}} : null;
+            const status = errObj?.response?.status;
+            const msg = errObj?.response?.data?.message ?? null;
+            const staleCallId = errObj?.response?.data?.data?.active_call_id ?? null;
+
+            // 409: stale call still "active" in the backend (e.g. after reload)
+            // Auto-end it silently and retry once
+            if (status === 409 && staleCallId) {
+                try {
+                    await callService.endCall(staleCallId);
+                    const {call, ice_servers} = await callService.initiateCall(receiverId, type);
+                    startOutgoingCall(call.id, type, receiver, ice_servers);
+                    return; // success — skip the error dialog
+                } catch {
+                    // Retry also failed — fall through to show generic error
+                }
+            }
 
             await Swal.fire({
                 title: type === 'video' ? 'Video Call Failed' : 'Audio Call Failed',
