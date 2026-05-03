@@ -1,44 +1,44 @@
 'use client';
 
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { User } from '@/types/user';
+import {create} from 'zustand';
+import {persist} from 'zustand/middleware';
+import type {User} from '@/types/user';
 
 interface AuthState {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  setAuth: (user: User, token: string) => void;
-  clearAuth: () => void;
-  updateUser: (user: Partial<User>) => void;
+    user: User | null;
+    token: string | null;
+    isAuthenticated: boolean;
+    setAuth: (user: User, token: string) => void;
+    clearAuth: () => void;
+    updateUser: (user: Partial<User>) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      token: null,
-      isAuthenticated: false,
+    persist(
+        (set) => ({
+            user: null,
+            token: null,
+            isAuthenticated: false,
 
-      setAuth: (user, token) => {
-        localStorage.setItem('auth_token', token);
-        set({ user, token, isAuthenticated: true });
-      },
+            setAuth: (user, token) => {
+                localStorage.setItem('auth_token', token);
+                set({user, token, isAuthenticated: true});
+            },
 
-      clearAuth: () => {
-        localStorage.removeItem('auth_token');
-        set({ user: null, token: null, isAuthenticated: false });
-      },
+            clearAuth: () => {
+                localStorage.removeItem('auth_token');
+                set({user: null, token: null, isAuthenticated: false});
+            },
 
-      updateUser: (partialUser) =>
-        set((state) => ({
-          user: state.user ? { ...state.user, ...partialUser } : null,
-        })),
-    }),
-    {
-      name: 'bondhon-auth',
-      partialize: (state) => ({ user: state.user, token: state.token, isAuthenticated: state.isAuthenticated }),
-    }
-  )
+            updateUser: (partialUser) =>
+                set((state) => ({
+                    user: state.user ? {...state.user, ...partialUser} : null,
+                })),
+        }),
+        {
+            name: 'bondhon-auth',
+            partialize: (state) => ({user: state.user, token: state.token, isAuthenticated: state.isAuthenticated}),
+        }
+    )
 );
 
