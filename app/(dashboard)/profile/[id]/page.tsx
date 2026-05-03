@@ -98,7 +98,7 @@ export default function ProfileViewPage() {
     if (isLoading) {
         return (
             <div className="max-w-4xl mx-auto">
-                <div className="bg-white rounded-2xl h-96 animate-pulse"/>
+                <div className="skeleton-gold h-96"/>
             </div>
         );
     }
@@ -124,11 +124,11 @@ export default function ProfileViewPage() {
     return (
         <div className="max-w-4xl mx-auto pb-20 md:pb-6 space-y-4">
             {/* Top card */}
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="card-premium overflow-hidden">
                 <div className="md:flex">
                     {/* Photo gallery */}
                     <div className="md:w-72 flex-shrink-0">
-                        <div className="relative aspect-square bg-gray-100">
+                        <div className="relative aspect-square bg-muted">
                             {activePhoto ? (
                                 <Image
                                     src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${activePhoto.file_path}`}
@@ -139,7 +139,7 @@ export default function ProfileViewPage() {
                                 />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                    <UserIcon size={80} className="text-gray-200" strokeWidth={1}/>
+                                    <UserIcon size={80} className="text-(--gold-200)" strokeWidth={1}/>
                                 </div>
                             )}
                             {p.profile?.is_verified && (
@@ -154,7 +154,7 @@ export default function ProfileViewPage() {
                             <div className="flex gap-1.5 p-2 overflow-x-auto">
                                 {photos.map((ph, i) => (
                                     <button key={ph.id} onClick={() => setActivePhotoIdx(i)}
-                                            className={`w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${i === activePhotoIdx ? 'border-[#C9A227]' : 'border-transparent'}`}>
+                                            className={`w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${i === activePhotoIdx ? 'border-primary' : 'border-transparent'}`}>
                                         <Image
                                             src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${ph.file_path}`}
                                             alt="thumbnail" width={56} height={56}
@@ -169,10 +169,10 @@ export default function ProfileViewPage() {
                     <div className="flex-1 p-6">
                         <div className="flex items-start justify-between flex-wrap gap-3">
                             <div>
-                                <h1 className="text-2xl font-bold text-[#1F2937]">{p.name}</h1>
-                                <p className="text-gray-500 text-sm mt-1">
+                                <h1 className="page-title">{p.name}</h1>
+                                <p className="text-muted-foreground text-sm mt-1">
                                     {p.profile?.profile_id && <span
-                                        className="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded mr-2">{p.profile.profile_id}</span>}
+                                        className="font-mono text-xs bg-muted px-2 py-0.5 rounded mr-2">{p.profile.profile_id}</span>}
                                     {formatAge(p.profile?.dob)}
                                     {p.profile?.city ? ` • ${p.profile.city}` : ''}
                                     {p.profile?.country ? `, ${p.profile.country}` : ''}
@@ -184,48 +184,48 @@ export default function ProfileViewPage() {
 
                         <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
                             {p.profile?.height_cm &&
-                                <div className="text-gray-600 flex items-center gap-1">
+                                <div className="text-muted-foreground flex items-center gap-1">
                                     <svg className="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3v18M5 3l3 3M5 3l-3 3M5 21l3-3M5 21l-3-3M19 3v18M19 3l3 3M19 3l-3 3M19 21l3-3M19 21l-3-3"/></svg>
                                     {formatHeight(p.profile.height_cm)}
                                 </div>}
                             {p.profile?.marital_status &&
-                                <div className="text-gray-600 flex items-center gap-1">
+                                <div className="text-muted-foreground flex items-center gap-1">
                                     <svg className="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 3"/></svg>
                                     {p.profile.marital_status.replace('_', ' ')}
                                 </div>}
                             {p.religious_detail?.religion &&
-                                <div className="text-gray-600 flex items-center gap-1">
-                                    <ReligionIcon size={14} strokeWidth={1.8} className="text-gray-400"/>
+                                <div className="text-muted-foreground flex items-center gap-1">
+                                    <ReligionIcon size={14} strokeWidth={1.8} className="text-muted-foreground/70"/>
                                     {p.religious_detail.religion}
                                 </div>}
                             {p.education_career?.highest_education &&
-                                <div className="text-gray-600 flex items-center gap-1">
-                                    <GraduationCapIcon size={14} strokeWidth={1.8} className="text-gray-400"/>
+                                <div className="text-muted-foreground flex items-center gap-1">
+                                    <GraduationCapIcon size={14} strokeWidth={1.8} className="text-muted-foreground/70"/>
                                     {p.education_career.highest_education}
                                 </div>}
                             {p.education_career?.profession &&
-                                <div className="text-gray-600 flex items-center gap-1">
+                                <div className="text-muted-foreground flex items-center gap-1">
                                     <svg className="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
                                     {p.education_career.profession}
                                 </div>}
                             {p.lifestyle?.diet &&
-                                <div className="text-gray-600 flex items-center gap-1">
+                                <div className="text-muted-foreground flex items-center gap-1">
                                     <svg className="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
                                     {p.lifestyle.diet.replace('_', '-')}
                                 </div>}
                             {p.family_detail?.family_type &&
-                                <div className="text-gray-600 flex items-center gap-1">
+                                <div className="text-muted-foreground flex items-center gap-1">
                                     <svg className="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
                                     {p.family_detail.family_type} family
                                 </div>}
-                            {p.profile?.last_seen_at && <div className="text-gray-400 text-xs flex items-center gap-1">
+                            {p.profile?.last_seen_at && <div className="text-muted-foreground/70 text-xs flex items-center gap-1">
                                 <ClockIcon size={12} strokeWidth={1.8} className="text-gray-300"/>
                                 Last seen: {timeAgo(p.profile.last_seen_at)}
                             </div>}
                         </div>
 
                         {p.profile?.about_me && (
-                            <div className="mt-4 p-4 bg-[#FBF6E8] rounded-xl">
+                            <div className="mt-4 p-4 bg-accent rounded-xl">
                                 <p className="text-sm text-gray-700 italic leading-relaxed">&ldquo;{p.profile.about_me}&rdquo;</p>
                             </div>
                         )}
@@ -299,7 +299,7 @@ export default function ProfileViewPage() {
 
                         {isOwnProfile && (
                             <div className="mt-5">
-                                <Button asChild className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl flex items-center gap-1.5">
+                                <Button asChild className="btn-gold rounded-xl flex items-center gap-1.5">
                                     <a href="/profile/edit">
                                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                         Edit Profile
@@ -314,14 +314,14 @@ export default function ProfileViewPage() {
             {/* Detail sections */}
             <div className="grid md:grid-cols-2 gap-4">
                 {p.religious_detail && (
-                    <DetailCard title="Religious Background" titleIcon={<ReligionIcon size={16} strokeWidth={1.8} className="text-[#C9A227]"/>}>
+                    <DetailCard title="Religious Background" titleIcon={<ReligionIcon size={16} strokeWidth={1.8} className="text-primary"/>}>
                         <Row label="Religion" value={p.religious_detail.religion}/>
                         <Row label="Caste" value={p.religious_detail.caste}/>
                         <Row label="Manglik Status" value={p.religious_detail.manglik_status}/>
                     </DetailCard>
                 )}
                 {p.family_detail && (
-                    <DetailCard title="Family Details" titleIcon={<svg className="w-4 h-4 text-[#C9A227]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>}>
+                    <DetailCard title="Family Details" titleIcon={<svg className="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>}>
                         <Row label="Family Type" value={p.family_detail.family_type}/>
                         <Row label="Family Status" value={p.family_detail.family_status?.replace('_', ' ')}/>
                         <Row label="Brothers" value={p.family_detail.brothers_count?.toString()}/>
@@ -329,7 +329,7 @@ export default function ProfileViewPage() {
                     </DetailCard>
                 )}
                 {p.education_career && (
-                    <DetailCard title="Education & Career" titleIcon={<GraduationCapIcon size={16} strokeWidth={1.8} className="text-[#C9A227]"/>}>
+                    <DetailCard title="Education & Career" titleIcon={<GraduationCapIcon size={16} strokeWidth={1.8} className="text-primary"/>}>
                         <Row label="Education" value={p.education_career.highest_education}/>
                         <Row label="University" value={p.education_career.college_university}/>
                         <Row label="Profession" value={p.education_career.profession}/>
@@ -337,7 +337,7 @@ export default function ProfileViewPage() {
                     </DetailCard>
                 )}
                 {p.lifestyle && (
-                    <DetailCard title="Lifestyle" titleIcon={<svg className="w-4 h-4 text-[#C9A227]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>}>
+                    <DetailCard title="Lifestyle" titleIcon={<svg className="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>}>
                         <Row label="Diet" value={p.lifestyle.diet}/>
                         <Row label="Smoking" value={p.lifestyle.smoking}/>
                         <Row label="Drinking" value={p.lifestyle.drinking}/>
@@ -405,7 +405,7 @@ export default function ProfileViewPage() {
 
 function DetailCard({title, titleIcon, children}: { title: string; titleIcon?: React.ReactNode; children: React.ReactNode }) {
     return (
-        <div className="bg-white rounded-2xl border border-gray-100 p-5">
+        <div className="card-premium p-5">
             <h3 className="font-semibold text-[#1F2937] mb-3 text-sm flex items-center gap-1.5">
                 {titleIcon}
                 {title}
@@ -419,7 +419,7 @@ function Row({label, value}: { label: string; value?: string | null }) {
     if (!value) return null;
     return (
         <div className="flex justify-between items-start text-sm">
-            <span className="text-gray-500">{label}</span>
+            <span className="text-muted-foreground">{label}</span>
             <span className="text-[#1F2937] font-medium capitalize text-right max-w-[60%]">{value}</span>
         </div>
     );

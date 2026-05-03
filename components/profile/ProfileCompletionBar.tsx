@@ -32,29 +32,29 @@ export function ProfileCompletionBar({status}: { status: CompletionStatus }) {
     const missing = STEPS.filter((s) => !status[s.key as keyof CompletionStatus]);
 
     return (
-        <div className="bg-white rounded-2xl p-5 border border-gray-100">
+        <div className="card-premium p-5 animate-fade-in-up">
             <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-[#1F2937]">Profile Completion</h3>
+                <h3 className="text-sm font-semibold text-foreground" style={{fontFamily:'var(--font-heading)'}}>Profile Completion</h3>
                 <span
                     className={`text-sm font-bold ${
-                        status.percentage >= 80 ? 'text-green-600' : status.percentage >= 50 ? 'text-amber-500' : 'text-red-500'
+                        status.percentage >= 80 ? 'text-green-600' : status.percentage >= 50 ? 'text-[var(--gold-600)]' : 'text-destructive'
                     }`}
                 >
           {status.percentage}%
         </span>
             </div>
 
-            <Progress value={status.percentage} className="h-2 mb-3 [&>div]:bg-[#C9A227]"/>
+            <Progress value={status.percentage} className="h-2 mb-3 [&>div]:bg-gradient-to-r [&>div]:from-[var(--gold-600)] [&>div]:to-[var(--gold-400)] [&>div]:transition-all [&>div]:duration-700"/>
 
             {missing.length > 0 && (
                 <div>
-                    <p className="text-xs text-gray-500 mb-2">Complete to get more matches:</p>
+                    <p className="text-xs text-muted-foreground mb-2">Complete to get more matches:</p>
                     <div className="flex flex-wrap gap-2">
                         {missing.map((step) => (
                             <Link
                                 key={step.key}
                                 href={step.href}
-                                className="text-xs bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-3 py-1 hover:bg-amber-100 transition-colors"
+                                className="text-xs bg-[var(--gold-50)] text-[var(--gold-700)] border border-[var(--gold-200)] rounded-full px-3 py-1 hover:bg-[var(--gold-100)] transition-colors"
                             >
                                 + {step.label}
                             </Link>

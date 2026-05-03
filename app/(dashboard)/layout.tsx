@@ -56,18 +56,29 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
     if (!mounted || !isAuthenticated || !user) return null;
 
     return (
-        <div className="flex min-h-screen bg-[#F8F9FB]">
+        <div className="flex min-h-screen bg-background">
             {/* Sidebar */}
             <aside
-                className="hidden md:flex flex-col w-64 bg-white border-r border-gray-100 px-3 lg:px-4 py-4 lg:py-6 fixed h-full z-10 overflow-y-auto">
+                className="hidden md:flex flex-col w-64 border-r border-[var(--sidebar-border)] px-3 lg:px-4 py-4 lg:py-6 fixed h-full z-10 overflow-y-auto"
+                style={{background: 'var(--gradient-sidebar)'}}>
                 {/* Logo */}
                 <div className="mb-8 px-2">
-                    <h1 className="text-2xl font-bold text-[#C9A227]">বন্ধন</h1>
-                    <p className="text-xs text-gray-400 mt-0.5">Bondhon Matrimony</p>
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                             style={{background: 'var(--gradient-gold-btn)', boxShadow: 'var(--shadow-btn)'}}>
+                            <svg className="w-4.5 h-4.5 text-white" style={{width:'18px',height:'18px'}} viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-bold leading-none text-gold-gradient">বন্ধন</h1>
+                            <p className="text-[10px] text-muted-foreground/70 tracking-widest uppercase mt-0.5">Matrimony</p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 space-y-1">
+                <nav className="flex-1 space-y-0.5">
                     {NAV_ITEMS.map((item) => {
                         const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
                         return (
@@ -76,7 +87,9 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                                 href={item.href}
                                 className={cn(
                                     'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
-                                    active ? 'bg-[#FBF6E8] text-[#C9A227]' : 'text-gray-600 hover:bg-gray-50 hover:text-[#1F2937]'
+                                    active
+                                        ? 'bg-[var(--sidebar-accent)] text-[var(--sidebar-primary)] border-l-2 border-[var(--primary)] pl-[10px]'
+                                        : 'text-[var(--sidebar-foreground)]/70 hover:bg-[var(--sidebar-accent)]/60 hover:text-[var(--sidebar-foreground)]'
                                 )}
                             >
                                 <item.Icon size={18} strokeWidth={active ? 2.2 : 1.8}/>
@@ -87,21 +100,22 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                 </nav>
 
                 {/* User section */}
-                <div className="border-t border-gray-100 pt-4 mt-4">
+                <div className="border-t border-[var(--sidebar-border)] pt-4 mt-4">
                     <div className="flex items-center gap-3 px-2 mb-3">
                         <div
-                            className="w-9 h-9 rounded-full bg-[#C9A227] flex items-center justify-center text-white text-sm font-bold">
+                            className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
+                            style={{background: 'var(--gradient-gold-btn)', boxShadow: '0 2px 8px rgba(201,162,39,0.3)'}}>
                             {user.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-[#1F2937] truncate">{user.name}</p>
-                            <p className="text-xs text-gray-400 capitalize">{user.subscription_plan} plan</p>
+                            <p className="text-sm font-medium text-[var(--sidebar-foreground)] truncate">{user.name}</p>
+                            <p className="text-xs text-muted-foreground capitalize">{user.subscription_plan} plan</p>
                         </div>
                         <NotificationBell placement="sidebar"/>
                     </div>
                     <button
                         onClick={handleLogout}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors flex items-center gap-2"
+                        className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-destructive hover:bg-red-50 rounded-xl transition-colors flex items-center gap-2"
                     >
                         <LogOutIcon size={16} strokeWidth={1.8}/>
                         Sign out
@@ -113,11 +127,12 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
             <main className="flex-1 md:ml-64 min-w-0">
                 {/* Mobile top bar */}
                 <div
-                    className="md:hidden bg-white border-b border-gray-100 px-3 sm:px-4 py-3 flex items-center justify-between sticky top-0 z-10">
-                    <h1 className="text-base sm:text-lg font-bold text-[#C9A227]">বন্ধন</h1>
+                    className="md:hidden border-b border-[var(--sidebar-border)] px-3 sm:px-4 py-3 flex items-center justify-between sticky top-0 z-10 backdrop-blur-sm"
+                    style={{background: 'rgba(255,255,255,0.95)'}}>
+                    <h1 className="text-base sm:text-lg font-bold text-gold-gradient">বন্ধন</h1>
                     <div className="flex items-center gap-2">
                         <NotificationBell/>
-                        <span className="text-xs sm:text-sm text-gray-600 truncate max-w-[120px]">{user.name}</span>
+                        <span className="text-xs sm:text-sm text-muted-foreground truncate max-w-[120px]">{user.name}</span>
                     </div>
                 </div>
 
@@ -125,7 +140,8 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
 
                 {/* Mobile bottom nav */}
                 <nav
-                    className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around py-1.5 z-10 safe-area-pb">
+                    className="md:hidden fixed bottom-0 left-0 right-0 border-t border-[var(--sidebar-border)] flex justify-around py-1.5 z-10 safe-area-pb backdrop-blur-sm"
+                    style={{background: 'rgba(255,255,255,0.97)'}}>
                 {NAV_ITEMS.slice(0, 5).map((item) => {
                         const active = pathname === item.href;
                         return (
@@ -134,7 +150,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                                 href={item.href}
                                 className={cn(
                                     'flex flex-col items-center gap-0.5 px-1 sm:px-2 py-1 rounded-lg text-[10px] sm:text-xs transition-colors min-w-0',
-                                    active ? 'text-[#C9A227]' : 'text-gray-500'
+                                    active ? 'text-[var(--primary)]' : 'text-muted-foreground'
                                 )}
                             >
                                 <item.Icon size={20} strokeWidth={active ? 2.2 : 1.8}/>

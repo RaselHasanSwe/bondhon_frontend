@@ -357,28 +357,28 @@ function ProfileEditInner() {
     if (isLoading) {
         return (
             <div className="max-w-3xl mx-auto">
-                <div className="bg-white rounded-2xl h-96 animate-pulse"/>
+                <div className="skeleton-gold h-96"/>
             </div>
         );
     }
 
     const selectClass =
-        'w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A227]';
+        'w-full border border-border bg-input rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring';
     const photos: ProfilePhoto[] = profile?.photos ?? [];
 
     return (
-        <div className="max-w-3xl mx-auto pb-20 md:pb-6 space-y-5">
-            <div>
-                <h1 className="text-2xl font-bold text-[#1F2937]">Edit Profile</h1>
-                <p className="text-sm text-gray-500 mt-0.5">Keep your profile up to date for the best matches</p>
+        <div className="max-w-3xl mx-auto pb-20 md:pb-6 space-y-5 animate-fade-in">
+            <div className="animate-fade-in-up">
+                <h1 className="page-title">Edit Profile</h1>
+                <p className="text-sm text-muted-foreground mt-0.5">Keep your profile up to date for the best matches</p>
             </div>
 
             {completionRes && <ProfileCompletionBar status={completionRes}/>}
 
             <Tabs defaultValue={initialTab} className="w-full">
                 {/* Scrollable tabs */}
-                <div className="overflow-x-auto pb-1">
-                    <TabsList className="flex min-w-max gap-1 h-auto p-1 rounded-xl bg-gray-100 mb-6">
+                <div className="overflow-x-auto pb-1 mb-5">
+                    <TabsList className="flex min-w-max gap-1 h-auto p-1 rounded-xl bg-muted">
                         {[
                             {value: 'basic', label: 'Basic'},
                             {value: 'religion', label: 'Religion'},
@@ -392,7 +392,7 @@ function ProfileEditInner() {
                             <TabsTrigger
                                 key={tab.value}
                                 value={tab.value}
-                                className="rounded-lg px-3 py-2 text-xs font-medium whitespace-nowrap data-[state=active]:bg-white data-[state=active]:text-[#C9A227]"
+                                className="rounded-lg px-3 py-2 text-xs font-medium whitespace-nowrap data-[state=active]:bg-card data-[state=active]:text-primary"
                             >
                                 {tab.label}
                             </TabsTrigger>
@@ -404,16 +404,16 @@ function ProfileEditInner() {
                 <TabsContent value="basic">
                     <form
                         onSubmit={basicForm.handleSubmit((d) => handleSave(d, 'basic'))}
-                        className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4"
+                        className="card-premium p-6 space-y-4"
                     >
                         <div className="flex items-center justify-between mb-2">
-                            <h2 className="font-semibold text-[#1F2937]">Basic Information</h2>
+                            <h2 className="font-semibold text-foreground">Basic Information</h2>
                             <SaveStatus saved={savedTab === 'basic'} saving={saveMutation.isPending}/>
                         </div>
                         <div className="grid sm:grid-cols-2 gap-4">
                             <FieldRow label="Date of Birth">
                                 <Input type="date"
-                                       className="focus-visible:ring-[#C9A227]" {...basicForm.register('dob')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...basicForm.register('dob')} />
                             </FieldRow>
                             <FieldRow label="Marital Status">
                                 <select {...basicForm.register('marital_status')} className={selectClass}>
@@ -426,11 +426,11 @@ function ProfileEditInner() {
                             </FieldRow>
                             <FieldRow label="Height (cm)">
                                 <Input type="number" placeholder="e.g. 165"
-                                       className="focus-visible:ring-[#C9A227]" {...basicForm.register('height_cm')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...basicForm.register('height_cm')} />
                             </FieldRow>
                             <FieldRow label="Weight (kg)">
                                 <Input type="number" placeholder="e.g. 60"
-                                       className="focus-visible:ring-[#C9A227]" {...basicForm.register('weight_kg')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...basicForm.register('weight_kg')} />
                             </FieldRow>
                             <FieldRow label="Complexion">
                                 <select {...basicForm.register('complexion')} className={selectClass}>
@@ -451,31 +451,31 @@ function ProfileEditInner() {
                             </FieldRow>
                             <FieldRow label="Mother Tongue">
                                 <Input placeholder="e.g. Bengali"
-                                       className="focus-visible:ring-[#C9A227]" {...basicForm.register('mother_tongue')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...basicForm.register('mother_tongue')} />
                             </FieldRow>
                             <FieldRow label="Nationality">
                                 <Input placeholder="e.g. Bangladeshi"
-                                       className="focus-visible:ring-[#C9A227]" {...basicForm.register('nationality')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...basicForm.register('nationality')} />
                             </FieldRow>
                             <FieldRow label="Country">
                                 <Input placeholder="e.g. Bangladesh"
-                                       className="focus-visible:ring-[#C9A227]" {...basicForm.register('country')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...basicForm.register('country')} />
                             </FieldRow>
                             <FieldRow label="City">
                                 <Input placeholder="e.g. Dhaka"
-                                       className="focus-visible:ring-[#C9A227]" {...basicForm.register('city')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...basicForm.register('city')} />
                             </FieldRow>
                         </div>
                         <FieldRow label="About Me (min. 50 characters for full score)">
                             <Textarea
                                 rows={4}
                                 placeholder="Tell potential matches about yourself…"
-                                className="resize-none focus-visible:ring-[#C9A227]"
+                                className="resize-none border-border bg-input focus-visible:ring-ring focus-visible:border-primary"
                                 {...basicForm.register('about_me')}
                             />
                         </FieldRow>
                         <Button type="submit" disabled={saveMutation.isPending}
-                                className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl">
+                                className="btn-gold" style={{height:"2.5rem",borderRadius:"0.75rem",padding:"0 1.25rem"}}>
                             {saveMutation.isPending ? 'Saving…' : 'Save Changes'}
                         </Button>
                     </form>
@@ -485,24 +485,24 @@ function ProfileEditInner() {
                 <TabsContent value="religion">
                     <form
                         onSubmit={religiousForm.handleSubmit((d) => handleSave(d, 'religion'))}
-                        className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4"
+                        className="card-premium p-6 space-y-4"
                     >
                         <div className="flex items-center justify-between mb-2">
-                            <h2 className="font-semibold text-[#1F2937]">Religious Background</h2>
+                            <h2 className="font-semibold text-foreground">Religious Background</h2>
                             <SaveStatus saved={savedTab === 'religion'} saving={saveMutation.isPending}/>
                         </div>
                         <div className="grid sm:grid-cols-2 gap-4">
                             <FieldRow label="Religion">
                                 <Input placeholder="e.g. Islam, Hindu"
-                                       className="focus-visible:ring-[#C9A227]" {...religiousForm.register('religion')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...religiousForm.register('religion')} />
                             </FieldRow>
                             <FieldRow label="Caste">
                                 <Input placeholder="e.g. Sunni"
-                                       className="focus-visible:ring-[#C9A227]" {...religiousForm.register('caste')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...religiousForm.register('caste')} />
                             </FieldRow>
                             <FieldRow label="Sub Caste">
                                 <Input placeholder="Optional"
-                                       className="focus-visible:ring-[#C9A227]" {...religiousForm.register('sub_caste')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...religiousForm.register('sub_caste')} />
                             </FieldRow>
                             <FieldRow label="Manglik Status">
                                 <select {...religiousForm.register('manglik_status')} className={selectClass}>
@@ -515,7 +515,7 @@ function ProfileEditInner() {
                             </FieldRow>
                         </div>
                         <Button type="submit" disabled={saveMutation.isPending}
-                                className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl">
+                                className="btn-gold" style={{height:"2.5rem",borderRadius:"0.75rem",padding:"0 1.25rem"}}>
                             Save Changes
                         </Button>
                     </form>
@@ -525,10 +525,10 @@ function ProfileEditInner() {
                 <TabsContent value="career">
                     <form
                         onSubmit={educationForm.handleSubmit((d) => handleSave(d, 'career'))}
-                        className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4"
+                        className="card-premium p-6 space-y-4"
                     >
                         <div className="flex items-center justify-between mb-2">
-                            <h2 className="font-semibold text-[#1F2937]">Education &amp; Career</h2>
+                            <h2 className="font-semibold text-foreground">Education &amp; Career</h2>
                             <SaveStatus saved={savedTab === 'career'} saving={saveMutation.isPending}/>
                         </div>
                         <div className="grid sm:grid-cols-2 gap-4">
@@ -544,11 +544,11 @@ function ProfileEditInner() {
                             </FieldRow>
                             <FieldRow label="College / University">
                                 <Input placeholder="University name"
-                                       className="focus-visible:ring-[#C9A227]" {...educationForm.register('college_university')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...educationForm.register('college_university')} />
                             </FieldRow>
                             <FieldRow label="Profession">
                                 <Input placeholder="e.g. Software Engineer"
-                                       className="focus-visible:ring-[#C9A227]" {...educationForm.register('profession')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...educationForm.register('profession')} />
                             </FieldRow>
                             <FieldRow label="Employed In">
                                 <select {...educationForm.register('employed_in')} className={selectClass}>
@@ -562,11 +562,11 @@ function ProfileEditInner() {
                             </FieldRow>
                             <FieldRow label="Annual Income (BDT)">
                                 <Input type="number" placeholder="e.g. 600000"
-                                       className="focus-visible:ring-[#C9A227]" {...educationForm.register('annual_income_bdt')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...educationForm.register('annual_income_bdt')} />
                             </FieldRow>
                         </div>
                         <Button type="submit" disabled={saveMutation.isPending}
-                                className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl">
+                                className="btn-gold" style={{height:"2.5rem",borderRadius:"0.75rem",padding:"0 1.25rem"}}>
                             Save Changes
                         </Button>
                     </form>
@@ -576,10 +576,10 @@ function ProfileEditInner() {
                 <TabsContent value="lifestyle">
                     <form
                         onSubmit={lifestyleForm.handleSubmit((d) => handleSave(d, 'lifestyle'))}
-                        className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4"
+                        className="card-premium p-6 space-y-4"
                     >
                         <div className="flex items-center justify-between mb-2">
-                            <h2 className="font-semibold text-[#1F2937]">Lifestyle</h2>
+                            <h2 className="font-semibold text-foreground">Lifestyle</h2>
                             <SaveStatus saved={savedTab === 'lifestyle'} saving={saveMutation.isPending}/>
                         </div>
                         <div className="grid sm:grid-cols-2 gap-4">
@@ -610,7 +610,7 @@ function ProfileEditInner() {
                             </FieldRow>
                         </div>
                         <Button type="submit" disabled={saveMutation.isPending}
-                                className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl">
+                                className="btn-gold" style={{height:"2.5rem",borderRadius:"0.75rem",padding:"0 1.25rem"}}>
                             Save Changes
                         </Button>
                     </form>
@@ -620,10 +620,10 @@ function ProfileEditInner() {
                 <TabsContent value="family">
                     <form
                         onSubmit={familyForm.handleSubmit((d) => handleSave(d, 'family'))}
-                        className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4"
+                        className="card-premium p-6 space-y-4"
                     >
                         <div className="flex items-center justify-between mb-2">
-                            <h2 className="font-semibold text-[#1F2937]">Family Details</h2>
+                            <h2 className="font-semibold text-foreground">Family Details</h2>
                             <SaveStatus saved={savedTab === 'family'} saving={saveMutation.isPending}/>
                         </div>
                         <div className="grid sm:grid-cols-2 gap-4">
@@ -648,29 +648,29 @@ function ProfileEditInner() {
                                 <Input
                                     type="number"
                                     placeholder="e.g. 80000"
-                                    className="focus-visible:ring-[#C9A227]"
+                                    className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary"
                                     {...familyForm.register('family_income_bdt_per_month')}
                                 />
                             </FieldRow>
                             <FieldRow label="Father's Occupation">
                                 <Input placeholder="e.g. Businessman"
-                                       className="focus-visible:ring-[#C9A227]" {...familyForm.register('father_occupation')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...familyForm.register('father_occupation')} />
                             </FieldRow>
                             <FieldRow label="Mother's Occupation">
                                 <Input placeholder="e.g. Homemaker"
-                                       className="focus-visible:ring-[#C9A227]" {...familyForm.register('mother_occupation')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...familyForm.register('mother_occupation')} />
                             </FieldRow>
                             <FieldRow label="Number of Brothers">
                                 <Input type="number" min="0" placeholder="0"
-                                       className="focus-visible:ring-[#C9A227]" {...familyForm.register('brothers_count')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...familyForm.register('brothers_count')} />
                             </FieldRow>
                             <FieldRow label="Number of Sisters">
                                 <Input type="number" min="0" placeholder="0"
-                                       className="focus-visible:ring-[#C9A227]" {...familyForm.register('sisters_count')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...familyForm.register('sisters_count')} />
                             </FieldRow>
                         </div>
                         <Button type="submit" disabled={saveMutation.isPending}
-                                className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl">
+                                className="btn-gold" style={{height:"2.5rem",borderRadius:"0.75rem",padding:"0 1.25rem"}}>
                             {saveMutation.isPending ? 'Saving…' : 'Save Changes'}
                         </Button>
                     </form>
@@ -680,12 +680,12 @@ function ProfileEditInner() {
                 <TabsContent value="horoscope">
                     <form
                         onSubmit={horoscopeForm.handleSubmit((d) => handleSave(d, 'horoscope'))}
-                        className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4"
+                        className="card-premium p-6 space-y-4"
                     >
                         <div className="flex items-center justify-between mb-2">
                             <div>
-                                <h2 className="font-semibold text-[#1F2937]">Horoscope Details</h2>
-                                <p className="text-xs text-gray-400 mt-0.5">
+                                <h2 className="font-semibold text-foreground">Horoscope Details</h2>
+                                <p className="text-xs text-muted-foreground mt-0.5">
                                     Filling at least one field here completes the Horoscope section (5%).
                                 </p>
                             </div>
@@ -694,28 +694,28 @@ function ProfileEditInner() {
                         <div className="grid sm:grid-cols-2 gap-4">
                             <FieldRow label="Birth Place">
                                 <Input placeholder="e.g. Dhaka"
-                                       className="focus-visible:ring-[#C9A227]" {...horoscopeForm.register('birth_place')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...horoscopeForm.register('birth_place')} />
                             </FieldRow>
                             <FieldRow label="Birth Time">
                                 <Input type="time"
-                                       className="focus-visible:ring-[#C9A227]" {...horoscopeForm.register('birth_time')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...horoscopeForm.register('birth_time')} />
                             </FieldRow>
                             <FieldRow label="Rashi (Moon Sign)">
                                 <Input placeholder="e.g. Aries, Taurus"
-                                       className="focus-visible:ring-[#C9A227]" {...horoscopeForm.register('rashi')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...horoscopeForm.register('rashi')} />
                             </FieldRow>
                             <FieldRow label="Nakshatra">
                                 <Input placeholder="e.g. Ashwini"
-                                       className="focus-visible:ring-[#C9A227]" {...horoscopeForm.register('nakshatra')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...horoscopeForm.register('nakshatra')} />
                             </FieldRow>
                         </div>
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox"
-                                   className="w-4 h-4 accent-[#C9A227]" {...horoscopeForm.register('manglik')} />
-                            <span className="text-sm text-gray-700">Manglik</span>
+                                   className="w-4 h-4 accent-primary" {...horoscopeForm.register('manglik')} />
+                            <span className="text-sm text-foreground">Manglik</span>
                         </label>
                         <Button type="submit" disabled={saveMutation.isPending}
-                                className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl">
+                                className="btn-gold" style={{height:"2.5rem",borderRadius:"0.75rem",padding:"0 1.25rem"}}>
                             {saveMutation.isPending ? 'Saving…' : 'Save Changes'}
                         </Button>
                     </form>
@@ -723,10 +723,10 @@ function ProfileEditInner() {
 
                 {/* ── Photos ─────────────────────────────────────────────────────── */}
                 <TabsContent value="photo">
-                    <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+                    <div className="card-premium p-6 space-y-5">
                         <div>
-                            <h2 className="font-semibold text-[#1F2937]">Profile Photos</h2>
-                            <p className="text-xs text-gray-400 mt-0.5">
+                            <h2 className="font-semibold text-foreground">Profile Photos</h2>
+                            <p className="text-xs text-muted-foreground mt-0.5">
                                 Upload clear, recent photos. Hover a photo to set it as primary or delete it.
                             </p>
                         </div>
@@ -744,7 +744,7 @@ function ProfileEditInner() {
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={uploadingPhoto}
-                                className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl"
+                                className="btn-gold" style={{height:"2.5rem",borderRadius:"0.75rem",padding:"0 1.25rem"}}
                             >
                                 {uploadingPhoto ? 'Uploading…' : '+ Upload Photo'}
                             </Button>
@@ -818,12 +818,12 @@ function ProfileEditInner() {
                 <TabsContent value="preferences">
                     <form
                         onSubmit={preferencesForm.handleSubmit(handleSavePreferences)}
-                        className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5"
+                        className="card-premium p-6 space-y-5"
                     >
                         <div className="flex items-center justify-between">
                             <div>
-                                <h2 className="font-semibold text-[#1F2937]">Partner Preferences</h2>
-                                <p className="text-xs text-gray-400 mt-0.5">
+                                <h2 className="font-semibold text-foreground">Partner Preferences</h2>
+                                <p className="text-xs text-muted-foreground mt-0.5">
                                     What you are looking for in a partner.
                                 </p>
                             </div>
@@ -835,28 +835,28 @@ function ProfileEditInner() {
                             <FieldRow label="Partner's Age Range">
                                 <div className="flex gap-2 items-center">
                                     <Input type="number" placeholder="Min (e.g. 22)"
-                                           className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('age_min')} />
-                                    <span className="text-gray-400 text-sm">–</span>
+                                           className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('age_min')} />
+                                    <span className="text-muted-foreground text-sm">–</span>
                                     <Input type="number" placeholder="Max (e.g. 30)"
-                                           className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('age_max')} />
+                                           className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('age_max')} />
                                 </div>
                             </FieldRow>
                             <FieldRow label="Partner's Height Range (cm)">
                                 <div className="flex gap-2 items-center">
                                     <Input type="number" placeholder="Min (e.g. 150)"
-                                           className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('height_min_cm')} />
-                                    <span className="text-gray-400 text-sm">–</span>
+                                           className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('height_min_cm')} />
+                                    <span className="text-muted-foreground text-sm">–</span>
                                     <Input type="number" placeholder="Max (e.g. 180)"
-                                           className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('height_max_cm')} />
+                                           className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('height_max_cm')} />
                                 </div>
                             </FieldRow>
                             <FieldRow label="Partner's Annual Income Range (BDT)">
                                 <div className="flex gap-2 items-center">
                                     <Input type="number" placeholder="Min"
-                                           className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('income_min_bdt')} />
-                                    <span className="text-gray-400 text-sm">–</span>
+                                           className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('income_min_bdt')} />
+                                    <span className="text-muted-foreground text-sm">–</span>
                                     <Input type="number" placeholder="Max"
-                                           className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('income_max_bdt')} />
+                                           className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('income_max_bdt')} />
                                 </div>
                             </FieldRow>
                         </div>
@@ -874,10 +874,10 @@ function ProfileEditInner() {
                                         <input
                                             type="checkbox"
                                             value={opt.value}
-                                            className="w-4 h-4 accent-[#C9A227]"
+                                            className="w-4 h-4 accent-primary"
                                             {...preferencesForm.register('pref_marital_status')}
                                         />
-                                        <span className="text-sm text-gray-700">{opt.label}</span>
+                                        <span className="text-sm text-foreground">{opt.label}</span>
                                     </label>
                                 ))}
                             </div>
@@ -896,10 +896,10 @@ function ProfileEditInner() {
                                         <input
                                             type="checkbox"
                                             value={opt.value}
-                                            className="w-4 h-4 accent-[#C9A227]"
+                                            className="w-4 h-4 accent-primary"
                                             {...preferencesForm.register('pref_diet')}
                                         />
-                                        <span className="text-sm text-gray-700">{opt.label}</span>
+                                        <span className="text-sm text-foreground">{opt.label}</span>
                                     </label>
                                 ))}
                             </div>
@@ -922,10 +922,10 @@ function ProfileEditInner() {
                                         <input
                                             type="checkbox"
                                             value={opt.value}
-                                            className="w-4 h-4 accent-[#C9A227]"
+                                            className="w-4 h-4 accent-primary"
                                             {...preferencesForm.register('pref_education')}
                                         />
-                                        <span className="text-sm text-gray-700">{opt.label}</span>
+                                        <span className="text-sm text-foreground">{opt.label}</span>
                                     </label>
                                 ))}
                             </div>
@@ -935,23 +935,23 @@ function ProfileEditInner() {
                         <div className="grid sm:grid-cols-2 gap-4">
                             <FieldRow label="Partner's Religion" hint="Comma-separated, e.g. Islam, Hindu">
                                 <Input placeholder="Islam, Hindu"
-                                       className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('pref_religion')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('pref_religion')} />
                             </FieldRow>
                             <FieldRow label="Partner's Caste" hint="Comma-separated, e.g. Sunni, Brahmin">
                                 <Input placeholder="Sunni, Brahmin"
-                                       className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('pref_caste')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('pref_caste')} />
                             </FieldRow>
                             <FieldRow label="Partner's Profession" hint="Comma-separated, e.g. Doctor, Engineer">
                                 <Input placeholder="Doctor, Engineer"
-                                       className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('pref_profession')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('pref_profession')} />
                             </FieldRow>
                             <FieldRow label="Partner's Country" hint="e.g. Bangladesh, India">
                                 <Input placeholder="Bangladesh, India"
-                                       className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('pref_country')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('pref_country')} />
                             </FieldRow>
                             <FieldRow label="Partner's City" hint="e.g. Dhaka, Chittagong">
                                 <Input placeholder="Dhaka, Chittagong"
-                                       className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('pref_city')} />
+                                       className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('pref_city')} />
                             </FieldRow>
                         </div>
 
@@ -959,20 +959,20 @@ function ProfileEditInner() {
                         <div className="flex gap-6 pt-1">
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox"
-                                       className="w-4 h-4 accent-[#C9A227]" {...preferencesForm.register('smoking_acceptable')} />
-                                <span className="text-sm text-gray-700">Smoking acceptable</span>
+                                       className="w-4 h-4 accent-primary" {...preferencesForm.register('smoking_acceptable')} />
+                                <span className="text-sm text-foreground">Smoking acceptable</span>
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox"
-                                       className="w-4 h-4 accent-[#C9A227]" {...preferencesForm.register('drinking_acceptable')} />
-                                <span className="text-sm text-gray-700">Drinking acceptable</span>
+                                       className="w-4 h-4 accent-primary" {...preferencesForm.register('drinking_acceptable')} />
+                                <span className="text-sm text-foreground">Drinking acceptable</span>
                             </label>
                         </div>
 
                         <Button
                             type="submit"
                             disabled={prefMutation.isPending}
-                            className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl"
+                            className="btn-gold" style={{height:"2.5rem",borderRadius:"0.75rem",padding:"0 1.25rem"}}
                         >
                             {prefMutation.isPending ? 'Saving…' : 'Save Preferences'}
                         </Button>
@@ -990,7 +990,7 @@ export default function ProfileEditPage() {
         <Suspense
             fallback={
                 <div className="max-w-3xl mx-auto">
-                    <div className="bg-white rounded-2xl h-96 animate-pulse"/>
+                    <div className="skeleton-gold h-96"/>
                 </div>
             }
         >

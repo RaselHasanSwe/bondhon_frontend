@@ -20,7 +20,7 @@ export default function ChatPage() {
                 <div>
                     <h1 className="text-xl sm:text-2xl font-bold text-[#1F2937] flex items-center gap-2">
                         Messages
-                        <svg className="w-5 h-5 text-[#C9A227]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                        <svg className="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                     </h1>
                     <p className="text-sm text-gray-500 mt-1">
                         {totalUnread > 0
@@ -31,13 +31,13 @@ export default function ChatPage() {
             </div>
 
             {/* Desktop: two-panel layout hint */}
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="card-premium overflow-hidden">
                 {/* Info banner */}
-                <div className="px-4 py-3 bg-[#FBF6E8] border-b border-[#C9A227]/20 flex items-center gap-2">
+                <div className="px-4 py-3 bg-accent border-b border-[#C9A227]/20 flex items-center gap-2">
                     <span className="text-sm">💡</span>
                     <p className="text-xs text-gray-600">
                         Chat is available only between users with{' '}
-                        <span className="font-semibold text-[#C9A227]">mutually accepted interests</span>.
+                        <span className="font-semibold text-primary">mutually accepted interests</span>.
                     </p>
                 </div>
 

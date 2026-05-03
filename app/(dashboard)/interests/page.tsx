@@ -41,15 +41,15 @@ function InterestCard({
     const status = STATUS_LABELS[interest.status] ?? STATUS_LABELS.pending;
 
     return (
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-4">
+        <div className="bg-white rounded-2xl border border-[var(--border)] overflow-hidden hover:shadow-[var(--shadow-card-hover)] transition-shadow duration-200 p-4 flex items-center gap-4">
             <Link href={profileUrl} className="flex-shrink-0">
-                <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100">
+                <div className="w-16 h-16 rounded-xl overflow-hidden bg-[var(--gold-50)]">
                     {resolvePhotoUrl(profile.primary_photo) ? (
                         <Image src={resolvePhotoUrl(profile.primary_photo)!} alt={profile.name} width={64} height={64}
                                className="w-full h-full object-cover"/>
                     ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                            <UserIcon size={28} className="text-gray-400" strokeWidth={1.5}/>
+                            <UserIcon size={28} className="text-[var(--gold-300)]" strokeWidth={1.5}/>
                         </div>
                     )}
                 </div>
@@ -59,20 +59,19 @@ function InterestCard({
                 <div className="flex items-start justify-between gap-2">
                     <div>
                         <Link href={profileUrl}
-                              className="font-semibold text-[#1F2937] hover:text-[#C9A227] transition-colors">
+                              className="font-semibold text-foreground hover:text-[var(--primary)] transition-colors" style={{fontFamily:'var(--font-heading)'}}>
                             {profile.name}
                         </Link>
-                        <p className="text-sm text-gray-500 mt-0.5">
+                        <p className="text-sm text-muted-foreground mt-0.5">
                             {formatAge(profile.profile?.dob)}
                             {profile.profile?.city ? ` • ${profile.profile.city}` : ''}
                             {profile.religion ? ` • ${profile.religion}` : ''}
                         </p>
-                        {profile.education && <p className="text-xs text-gray-400">{profile.education}</p>}
+                        {profile.education && <p className="text-xs text-muted-foreground/70">{profile.education}</p>}
                     </div>
-                    <span
-                        className={`text-xs border rounded-full px-2.5 py-1 font-medium flex-shrink-0 ${status.className}`}>
-            {status.label}
-          </span>
+                    <span className={`text-xs border rounded-full px-2.5 py-1 font-medium flex-shrink-0 ${status.className}`}>
+                        {status.label}
+                    </span>
                 </div>
 
                 {/* Actions for received pending interests */}
@@ -80,7 +79,8 @@ function InterestCard({
                     <div className="flex items-center gap-2 mt-3">
                         <button
                             onClick={() => onAction(interest.id, 'accept')}
-                            className="px-4 py-1.5 bg-[#C9A227] hover:bg-[#b8911f] text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
+                            className="btn-gold flex items-center gap-1"
+                            style={{height:'2rem', borderRadius:'0.5rem', padding:'0 0.875rem', fontSize:'0.75rem'}}
                         >
                             <CheckIcon size={12} strokeWidth={2.5}/> Accept
                         </button>
@@ -92,7 +92,7 @@ function InterestCard({
                         </button>
                         <button
                             onClick={() => onAction(interest.id, 'ignore')}
-                            className="px-3 py-1.5 border border-gray-200 text-gray-400 hover:bg-gray-50 text-xs rounded-lg transition-colors"
+                            className="px-3 py-1.5 border border-[var(--border)] text-muted-foreground hover:bg-[var(--muted)] text-xs rounded-lg transition-colors"
                         >
                             Ignore
                         </button>
@@ -146,23 +146,20 @@ export default function InterestsPage() {
 
     return (
         <div className="max-w-3xl mx-auto pb-20 md:pb-6">
-            <h1 className="text-2xl font-bold text-[#1F2937] mb-6">Interests</h1>
+            <h1 className="page-title mb-6 animate-fade-in-up">Interests</h1>
 
             {/* Tabs */}
-            <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6">
+            <div className="tab-pill-container flex gap-1 mb-6">
                 {(['received', 'sent'] as Tab[]).map((t) => (
                     <button
                         key={t}
                         onClick={() => handleTabChange(t)}
-                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors capitalize flex items-center justify-center gap-1.5 ${
-                            tab === t ? 'bg-white text-[#C9A227] shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                        }`}
+                        className={`tab-pill flex-1 flex items-center justify-center gap-1.5 capitalize ${tab === t ? 'active' : ''}`}
                     >
                         {t === 'received' ? <InboxIcon size={14} strokeWidth={2}/> : <OutboxIcon size={14} strokeWidth={2}/>}
                         {t}
                         {t === 'received' && total > 0 && tab === 'received' && (
-                            <span
-                                className="ml-1.5 bg-[#C9A227] text-white text-xs rounded-full px-1.5 py-0.5">{total}</span>
+                            <span className="ml-1.5 bg-[var(--primary)] text-white text-xs rounded-full px-1.5 py-0.5 leading-none">{total}</span>
                         )}
                     </button>
                 ))}
@@ -171,25 +168,25 @@ export default function InterestsPage() {
             {isLoading && (
                 <div className="space-y-3">
                     {Array.from({length: 5}).map((_, i) => (
-                        <div key={i} className="bg-white rounded-2xl border border-gray-100 h-24 animate-pulse"/>
+                        <div key={i} className="skeleton-gold h-24"/>
                     ))}
                 </div>
             )}
 
             {!isLoading && interests.length === 0 && (
-                <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
+                <div className="card-premium p-16 text-center animate-fade-in-up">
                     {tab === 'received'
-                        ? <InboxIcon size={48} className="mx-auto text-gray-200 mb-4" strokeWidth={1.2}/>
-                        : <OutboxIcon size={48} className="mx-auto text-gray-200 mb-4" strokeWidth={1.2}/>
+                        ? <InboxIcon size={48} className="mx-auto text-[var(--gold-200)] mb-4" strokeWidth={1.2}/>
+                        : <OutboxIcon size={48} className="mx-auto text-[var(--gold-200)] mb-4" strokeWidth={1.2}/>
                     }
-                    <p className="text-lg font-semibold text-gray-700">No {tab} interests yet</p>
-                    <p className="text-sm text-gray-400 mt-2">
+                    <p className="text-lg font-semibold text-foreground" style={{fontFamily:'var(--font-heading)'}}>No {tab} interests yet</p>
+                    <p className="text-sm text-muted-foreground mt-2">
                         {tab === 'received' ? 'When someone sends you an interest, it will appear here' : 'Interests you send will appear here'}
                     </p>
                 </div>
             )}
 
-            <div className="space-y-3">
+            <div className="space-y-3 stagger">
                 {interests.map((interest) => (
                     <InterestCard
                         key={interest.id}
@@ -202,15 +199,13 @@ export default function InterestsPage() {
 
             {lastPage > 1 && (
                 <div className="flex items-center justify-center gap-3 mt-6">
-                <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
-                        className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-[#C9A227] hover:text-[#C9A227] disabled:opacity-40 transition-colors flex items-center gap-1.5">
-                    <ArrowLeftIcon size={14} strokeWidth={2}/> Previous
-                </button>
-                <span className="text-sm text-gray-500">Page {page} of {lastPage}</span>
-                <button onClick={() => setPage((p) => Math.min(lastPage, p + 1))} disabled={page === lastPage}
-                        className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-[#C9A227] hover:text-[#C9A227] disabled:opacity-40 transition-colors flex items-center gap-1.5">
-                    Next <ArrowRightIcon size={14} strokeWidth={2}/>
-                </button>
+                    <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="btn-page">
+                        <ArrowLeftIcon size={14} strokeWidth={2}/> Previous
+                    </button>
+                    <span className="text-sm text-muted-foreground">Page {page} of {lastPage}</span>
+                    <button onClick={() => setPage((p) => Math.min(lastPage, p + 1))} disabled={page === lastPage} className="btn-page">
+                        Next <ArrowRightIcon size={14} strokeWidth={2}/>
+                    </button>
                 </div>
             )}
         </div>

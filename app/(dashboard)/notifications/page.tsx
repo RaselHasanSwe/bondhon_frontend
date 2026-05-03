@@ -72,20 +72,20 @@ export default function NotificationsPage() {
     return (
         <div className="max-w-2xl mx-auto pb-20 md:pb-6">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 animate-fade-in-up">
                 <div>
-                    <h1 className="text-2xl font-bold text-[#1F2937] flex items-center gap-2">
+                    <h1 className="page-title flex items-center gap-2">
                         Notifications
-                        <BellIcon size={22} className="text-[#C9A227]"/>
+                        <BellIcon size={22} className="text-primary"/>
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                         {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'}
                     </p>
                 </div>
                 {unreadCount > 0 && (
                     <button
                         onClick={() => markAllRead()}
-                        className="text-sm text-[#C9A227] font-semibold hover:underline"
+                        className="text-sm text-primary font-semibold hover:text-[var(--gold-600)] transition-colors"
                     >
                         Mark all as read
                     </button>
@@ -96,42 +96,34 @@ export default function NotificationsPage() {
             {isLoading ? (
                 <div className="space-y-3">
                     {[1, 2, 3, 4, 5].map((i) => (
-                        <div key={i}
-                             className="bg-white rounded-2xl border border-gray-100 p-4 flex gap-3 animate-pulse">
-                            <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0"/>
-                            <div className="flex-1 space-y-2">
-                                <div className="h-3 bg-gray-200 rounded w-3/4"/>
-                                <div className="h-2.5 bg-gray-200 rounded w-full"/>
-                                <div className="h-2 bg-gray-200 rounded w-1/4"/>
-                            </div>
-                        </div>
+                        <div key={i} className="skeleton-gold h-20"/>
                     ))}
                 </div>
             ) : notifications.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-gray-100 py-16 text-center">
-                    <BellIcon size={48} className="mx-auto text-gray-200 mb-3"/>
-                    <p className="text-lg font-semibold text-gray-700">No notifications yet</p>
-                    <p className="text-sm text-gray-400 mt-1">
+                <div className="card-premium py-16 text-center animate-fade-in-up">
+                    <BellIcon size={48} className="mx-auto text-(--gold-200) mb-3"/>
+                    <p className="text-lg font-semibold text-foreground" style={{fontFamily:'var(--font-heading)'}}>No notifications yet</p>
+                    <p className="text-sm text-muted-foreground mt-1">
                         You&apos;ll see activity here when something happens
                     </p>
                 </div>
             ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 stagger">
                     {notifications.map((n) => (
                         <div
                             key={n.id}
                             className={cn(
-                                'relative flex items-start gap-3 p-4 rounded-2xl border cursor-pointer transition-all hover:shadow-sm',
-                                !n.is_read ? 'bg-[#FBF6E8] border-[#C9A227]/20' : TYPE_COLORS[n.type]
+                                'relative flex items-start gap-3 p-4 rounded-2xl border cursor-pointer transition-all hover:shadow-[var(--shadow-card-hover)]',
+                                !n.is_read ? 'bg-[var(--accent)] border-[var(--primary)]/20' : TYPE_COLORS[n.type]
                             )}
                             onClick={() => handleClick(n)}
                         >
                             {/* Icon */}
                             <div
-                                className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center flex-shrink-0 shadow-sm">
                                 {(() => {
                                     const NIcon = TYPE_ICONS[n.type];
-                                    return <NIcon size={18} strokeWidth={1.8} className="text-gray-500"/>;
+                                    return <NIcon size={18} strokeWidth={1.8} className="text-muted-foreground"/>;
                                 })()}
                             </div>
 
@@ -140,19 +132,19 @@ export default function NotificationsPage() {
                                 <div className="flex items-start justify-between gap-2">
                                     <p
                                         className={cn(
-                                            'text-sm text-[#1F2937] leading-snug',
+                                            'text-sm text-foreground leading-snug',
                                             !n.is_read ? 'font-bold' : 'font-semibold'
                                         )}
                                     >
                                         {n.title}
                                     </p>
-                                    <span className="text-[11px] text-gray-400 flex-shrink-0 mt-0.5">
-                    {formatRelativeTime(n.created_at)}
-                  </span>
+                                    <span className="text-[11px] text-muted-foreground flex-shrink-0 mt-0.5">
+                        {formatRelativeTime(n.created_at)}
+                      </span>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{n.body}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{n.body}</p>
                                 {n.action_url && (
-                                    <p className="text-[11px] text-[#C9A227] mt-1.5 font-medium">
+                                    <p className="text-[11px] text-primary mt-1.5 font-medium">
                                         Tap to view →
                                     </p>
                                 )}
@@ -160,7 +152,7 @@ export default function NotificationsPage() {
 
                             {/* Unread dot */}
                             {!n.is_read && (
-                                <span className="absolute top-4 right-4 w-2 h-2 rounded-full bg-[#C9A227]"/>
+                                <span className="absolute top-4 right-4 w-2 h-2 rounded-full bg-primary animate-pulse-gold"/>
                             )}
 
                             {/* Delete button */}
@@ -169,7 +161,7 @@ export default function NotificationsPage() {
                                     e.stopPropagation();
                                     remove(n.id);
                                 }}
-                                className="absolute top-3 right-8 opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-opacity p-1"
+                                className="absolute top-3 right-8 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity p-1"
                                 aria-label="Delete notification"
                             >
                                 <XIcon size={14} strokeWidth={2}/>
