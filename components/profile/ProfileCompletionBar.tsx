@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import {Progress} from '@/components/ui/progress';
+import {CheckCircleIcon} from '@/components/ui/icons';
 
 interface CompletionStatus {
     percentage: number;
@@ -63,8 +64,9 @@ export function ProfileCompletionBar({status}: { status: CompletionStatus }) {
             )}
 
             {missing.length === 0 && (
-                <p className="text-xs text-green-600 font-medium">✓ Profile complete! You have the best chance of
-                    matching.</p>
+                <p className="text-xs text-green-600 font-medium flex items-center gap-1">
+                    <CheckCircleIcon size={14} strokeWidth={2}/> Profile complete! You have the best chance of matching.
+                </p>
             )}
         </div>
     );

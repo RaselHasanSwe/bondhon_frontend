@@ -7,6 +7,10 @@ import {formatAge, resolvePhotoUrl} from '@/lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
 import type {Interest} from '@/types/interest';
+import {
+    UserIcon, InboxIcon, OutboxIcon, CheckIcon, XIcon,
+    ArrowLeftIcon, ArrowRightIcon,
+} from '@/components/ui/icons';
 
 type Tab = 'received' | 'sent';
 
@@ -44,8 +48,8 @@ function InterestCard({
                         <Image src={resolvePhotoUrl(profile.primary_photo)!} alt={profile.name} width={64} height={64}
                                className="w-full h-full object-cover"/>
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-2xl">
-                            {profile.gender === 'female' ? '👩' : '👨'}
+                        <div className="w-full h-full flex items-center justify-center">
+                            <UserIcon size={28} className="text-gray-400" strokeWidth={1.5}/>
                         </div>
                     )}
                 </div>
@@ -76,15 +80,15 @@ function InterestCard({
                     <div className="flex items-center gap-2 mt-3">
                         <button
                             onClick={() => onAction(interest.id, 'accept')}
-                            className="px-4 py-1.5 bg-[#C9A227] hover:bg-[#b8911f] text-white text-xs font-semibold rounded-lg transition-colors"
+                            className="px-4 py-1.5 bg-[#C9A227] hover:bg-[#b8911f] text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
                         >
-                            ✓ Accept
+                            <CheckIcon size={12} strokeWidth={2.5}/> Accept
                         </button>
                         <button
                             onClick={() => onAction(interest.id, 'decline')}
-                            className="px-4 py-1.5 border border-red-200 text-red-500 hover:bg-red-50 text-xs font-semibold rounded-lg transition-colors"
+                            className="px-4 py-1.5 border border-red-200 text-red-500 hover:bg-red-50 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
                         >
-                            ✗ Decline
+                            <XIcon size={12} strokeWidth={2.5}/> Decline
                         </button>
                         <button
                             onClick={() => onAction(interest.id, 'ignore')}
@@ -150,11 +154,12 @@ export default function InterestsPage() {
                     <button
                         key={t}
                         onClick={() => handleTabChange(t)}
-                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
+                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors capitalize flex items-center justify-center gap-1.5 ${
                             tab === t ? 'bg-white text-[#C9A227] shadow-sm' : 'text-gray-500 hover:text-gray-700'
                         }`}
                     >
-                        {t === 'received' ? '📥 ' : '📤 '}{t}
+                        {t === 'received' ? <InboxIcon size={14} strokeWidth={2}/> : <OutboxIcon size={14} strokeWidth={2}/>}
+                        {t}
                         {t === 'received' && total > 0 && tab === 'received' && (
                             <span
                                 className="ml-1.5 bg-[#C9A227] text-white text-xs rounded-full px-1.5 py-0.5">{total}</span>
@@ -173,7 +178,10 @@ export default function InterestsPage() {
 
             {!isLoading && interests.length === 0 && (
                 <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
-                    <p className="text-5xl mb-4">{tab === 'received' ? '📥' : '📤'}</p>
+                    {tab === 'received'
+                        ? <InboxIcon size={48} className="mx-auto text-gray-200 mb-4" strokeWidth={1.2}/>
+                        : <OutboxIcon size={48} className="mx-auto text-gray-200 mb-4" strokeWidth={1.2}/>
+                    }
                     <p className="text-lg font-semibold text-gray-700">No {tab} interests yet</p>
                     <p className="text-sm text-gray-400 mt-2">
                         {tab === 'received' ? 'When someone sends you an interest, it will appear here' : 'Interests you send will appear here'}
@@ -194,15 +202,15 @@ export default function InterestsPage() {
 
             {lastPage > 1 && (
                 <div className="flex items-center justify-center gap-3 mt-6">
-                    <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
-                            className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-[#C9A227] hover:text-[#C9A227] disabled:opacity-40 transition-colors">
-                        ← Previous
-                    </button>
-                    <span className="text-sm text-gray-500">Page {page} of {lastPage}</span>
-                    <button onClick={() => setPage((p) => Math.min(lastPage, p + 1))} disabled={page === lastPage}
-                            className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-[#C9A227] hover:text-[#C9A227] disabled:opacity-40 transition-colors">
-                        Next →
-                    </button>
+                <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
+                        className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-[#C9A227] hover:text-[#C9A227] disabled:opacity-40 transition-colors flex items-center gap-1.5">
+                    <ArrowLeftIcon size={14} strokeWidth={2}/> Previous
+                </button>
+                <span className="text-sm text-gray-500">Page {page} of {lastPage}</span>
+                <button onClick={() => setPage((p) => Math.min(lastPage, p + 1))} disabled={page === lastPage}
+                        className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-[#C9A227] hover:text-[#C9A227] disabled:opacity-40 transition-colors flex items-center gap-1.5">
+                    Next <ArrowRightIcon size={14} strokeWidth={2}/>
+                </button>
                 </div>
             )}
         </div>

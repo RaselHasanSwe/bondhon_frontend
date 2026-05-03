@@ -9,6 +9,7 @@ import {Label} from '@/components/ui/label';
 import {Button} from '@/components/ui/button';
 import type {SearchFilters} from '@/types/match';
 import type {ProfileCard} from '@/types/profile';
+import {SearchIcon, FilterIcon, XIcon, ArrowLeftIcon, ArrowRightIcon} from '@/components/ui/icons';
 
 const RELIGION_OPTIONS = ['Islam', 'Hindu', 'Christian', 'Buddhist', 'Other'];
 const MARITAL_OPTIONS = [
@@ -204,9 +205,9 @@ export default function SearchPage() {
                 </div>
                 <button
                     onClick={() => setSidebarOpen(true)}
-                    className="md:hidden bg-[#C9A227] text-white px-4 py-2 rounded-xl text-sm font-medium"
+                    className="md:hidden bg-[#C9A227] text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-1.5"
                 >
-                    🔧 Filters
+                    <FilterIcon size={14} strokeWidth={2}/> Filters
                 </button>
             </div>
 
@@ -226,7 +227,9 @@ export default function SearchPage() {
                         <div className="absolute right-0 top-0 bottom-0 w-80 bg-white shadow-xl p-5 overflow-y-auto">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="font-semibold text-[#1F2937]">Filters</h2>
-                                <button onClick={() => setSidebarOpen(false)} className="text-gray-500">✕</button>
+                                <button onClick={() => setSidebarOpen(false)} className="text-gray-500 p-1 hover:text-gray-700">
+                                    <XIcon size={18} strokeWidth={2}/>
+                                </button>
                             </div>
                             {FilterPanel}
                         </div>
@@ -251,7 +254,7 @@ export default function SearchPage() {
 
                     {!isLoading && !isError && results.length === 0 && (
                         <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
-                            <p className="text-5xl mb-4">🔍</p>
+                            <SearchIcon size={56} className="mx-auto text-gray-200 mb-4" strokeWidth={1.2}/>
                             <p className="text-lg font-semibold text-gray-700">No profiles found</p>
                             <p className="text-sm text-gray-400 mt-2">Try adjusting your filters for more results</p>
                         </div>
@@ -268,14 +271,14 @@ export default function SearchPage() {
                             {lastPage > 1 && (
                                 <div className="flex items-center justify-center gap-3 mt-8">
                                     <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
-                                            className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-[#C9A227] hover:text-[#C9A227] disabled:opacity-40 transition-colors">
-                                        ← Previous
+                                            className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-[#C9A227] hover:text-[#C9A227] disabled:opacity-40 transition-colors flex items-center gap-1.5">
+                                        <ArrowLeftIcon size={14} strokeWidth={2}/> Previous
                                     </button>
                                     <span className="text-sm text-gray-500">Page {page} of {lastPage}</span>
                                     <button onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
                                             disabled={page === lastPage}
-                                            className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-[#C9A227] hover:text-[#C9A227] disabled:opacity-40 transition-colors">
-                                        Next →
+                                            className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-[#C9A227] hover:text-[#C9A227] disabled:opacity-40 transition-colors flex items-center gap-1.5">
+                                        Next <ArrowRightIcon size={14} strokeWidth={2}/>
                                     </button>
                                 </div>
                             )}

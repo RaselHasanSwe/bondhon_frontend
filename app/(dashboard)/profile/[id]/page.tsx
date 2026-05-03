@@ -19,6 +19,10 @@ import {Button} from '@/components/ui/button';
 import {Textarea} from '@/components/ui/textarea';
 import {useAuthStore} from '@/store/authStore';
 import type {FullProfile} from '@/types/profile';
+import {
+    ReligionIcon, GraduationCapIcon, MapPinIcon, MailIcon, ChatIcon,
+    StarIcon, StarFilledIcon, CheckIcon, ClockIcon, UserIcon,
+} from '@/components/ui/icons';
 
 const REPORT_REASONS = [
     {value: 'fake_profile', label: 'Fake Profile'},
@@ -102,7 +106,9 @@ export default function ProfileViewPage() {
     if (isError || !profileRes?.data) {
         return (
             <div className="max-w-4xl mx-auto bg-white rounded-2xl border border-red-100 p-16 text-center">
-                <p className="text-5xl mb-4">❌</p>
+                <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-5 h-5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                </div>
                 <p className="text-lg font-semibold text-gray-700">Profile not found</p>
                 <Button onClick={() => router.back()} variant="outline" className="mt-4">Go back</Button>
             </div>
@@ -132,14 +138,15 @@ export default function ProfileViewPage() {
                                     sizes="288px"
                                 />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center text-8xl text-gray-300">
-                                    {p.gender === 'female' ? '👩' : '👨'}
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <UserIcon size={80} className="text-gray-200" strokeWidth={1}/>
                                 </div>
                             )}
                             {p.profile?.is_verified && (
                                 <div
-                                    className="absolute top-3 left-3 bg-white/90 backdrop-blur rounded-full px-3 py-1 text-xs text-green-600 font-medium">
-                                    ✓ Verified
+                                    className="absolute top-3 left-3 bg-white/90 backdrop-blur rounded-full px-3 py-1 text-xs text-green-600 font-medium flex items-center gap-1">
+                                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                    Verified
                                 </div>
                             )}
                         </div>
@@ -177,21 +184,44 @@ export default function ProfileViewPage() {
 
                         <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
                             {p.profile?.height_cm &&
-                                <div className="text-gray-600">📏 {formatHeight(p.profile.height_cm)}</div>}
+                                <div className="text-gray-600 flex items-center gap-1">
+                                    <svg className="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3v18M5 3l3 3M5 3l-3 3M5 21l3-3M5 21l-3-3M19 3v18M19 3l3 3M19 3l-3 3M19 21l3-3M19 21l-3-3"/></svg>
+                                    {formatHeight(p.profile.height_cm)}
+                                </div>}
                             {p.profile?.marital_status &&
-                                <div className="text-gray-600">💍 {p.profile.marital_status.replace('_', ' ')}</div>}
+                                <div className="text-gray-600 flex items-center gap-1">
+                                    <svg className="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 3"/></svg>
+                                    {p.profile.marital_status.replace('_', ' ')}
+                                </div>}
                             {p.religious_detail?.religion &&
-                                <div className="text-gray-600">🕌 {p.religious_detail.religion}</div>}
+                                <div className="text-gray-600 flex items-center gap-1">
+                                    <ReligionIcon size={14} strokeWidth={1.8} className="text-gray-400"/>
+                                    {p.religious_detail.religion}
+                                </div>}
                             {p.education_career?.highest_education &&
-                                <div className="text-gray-600">🎓 {p.education_career.highest_education}</div>}
+                                <div className="text-gray-600 flex items-center gap-1">
+                                    <GraduationCapIcon size={14} strokeWidth={1.8} className="text-gray-400"/>
+                                    {p.education_career.highest_education}
+                                </div>}
                             {p.education_career?.profession &&
-                                <div className="text-gray-600">💼 {p.education_career.profession}</div>}
+                                <div className="text-gray-600 flex items-center gap-1">
+                                    <svg className="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+                                    {p.education_career.profession}
+                                </div>}
                             {p.lifestyle?.diet &&
-                                <div className="text-gray-600">🍽 {p.lifestyle.diet.replace('_', '-')}</div>}
+                                <div className="text-gray-600 flex items-center gap-1">
+                                    <svg className="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+                                    {p.lifestyle.diet.replace('_', '-')}
+                                </div>}
                             {p.family_detail?.family_type &&
-                                <div className="text-gray-600">👨‍👩‍👧 {p.family_detail.family_type} family</div>}
-                            {p.profile?.last_seen_at && <div className="text-gray-400 text-xs">Last
-                                seen: {timeAgo(p.profile.last_seen_at)}</div>}
+                                <div className="text-gray-600 flex items-center gap-1">
+                                    <svg className="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                                    {p.family_detail.family_type} family
+                                </div>}
+                            {p.profile?.last_seen_at && <div className="text-gray-400 text-xs flex items-center gap-1">
+                                <ClockIcon size={12} strokeWidth={1.8} className="text-gray-300"/>
+                                Last seen: {timeAgo(p.profile.last_seen_at)}
+                            </div>}
                         </div>
 
                         {p.profile?.about_me && (
@@ -206,9 +236,12 @@ export default function ProfileViewPage() {
                                 <Button
                                     onClick={() => sendInterestMutation.mutate(p.id)}
                                     disabled={interestSent || sendInterestMutation.isPending}
-                                    className={`rounded-xl ${interestSent ? 'bg-green-100 text-green-700 border-green-200' : 'bg-[#C9A227] hover:bg-[#b8911f] text-white'}`}
+                                    className={`rounded-xl flex items-center gap-1.5 ${interestSent ? 'bg-green-100 text-green-700 border-green-200' : 'bg-[#C9A227] hover:bg-[#b8911f] text-white'}`}
                                 >
-                                    {interestSent ? '✓ Interest Sent' : '💌 Send Interest'}
+                                    {interestSent
+                                        ? <><CheckIcon size={14} strokeWidth={2.5}/> Interest Sent</>
+                                        : <><MailIcon size={14} strokeWidth={1.8}/> Send Interest</>
+                                    }
                                 </Button>
 
                                 {/* Send Message — available for all; backend enforces mutual-interest requirement */}
@@ -218,9 +251,12 @@ export default function ProfileViewPage() {
                                         messageMutation.mutate(p.id);
                                     }}
                                     disabled={messageMutation.isPending}
-                                    className="rounded-xl bg-green-600 hover:bg-green-700 text-white"
+                                    className="rounded-xl bg-green-600 hover:bg-green-700 text-white flex items-center gap-1.5"
                                 >
-                                    {messageMutation.isPending ? '⌛ Opening…' : '💬 Send Message'}
+                                    {messageMutation.isPending
+                                        ? <><ClockIcon size={14} strokeWidth={1.8}/> Opening…</>
+                                        : <><ChatIcon size={14} strokeWidth={1.8}/> Send Message</>
+                                    }
                                 </Button>
 
                                 {messageError && (
@@ -231,17 +267,21 @@ export default function ProfileViewPage() {
                                     onClick={() => shortlistMutation.mutate(p.id)}
                                     disabled={shortlistMutation.isPending}
                                     variant="outline"
-                                    className={`rounded-xl ${shortlisted ? 'border-[#C9A227] text-[#C9A227]' : 'border-gray-200'}`}
+                                    className={`rounded-xl flex items-center gap-1.5 ${shortlisted ? 'border-[#C9A227] text-[#C9A227]' : 'border-gray-200'}`}
                                 >
-                                    {shortlisted ? '⭐ Shortlisted' : '☆ Shortlist'}
+                                    {shortlisted
+                                        ? <><StarFilledIcon size={14} strokeWidth={1.8}/> Shortlisted</>
+                                        : <><StarIcon size={14} strokeWidth={1.8}/> Shortlist</>
+                                    }
                                 </Button>
 
                                 <Button
                                     onClick={() => setReportOpen(true)}
                                     variant="outline"
-                                    className="rounded-xl border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200"
+                                    className="rounded-xl border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 flex items-center gap-1.5"
                                 >
-                                    🚩 Report
+                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                                    Report
                                 </Button>
 
                                 <Button
@@ -249,17 +289,21 @@ export default function ProfileViewPage() {
                                         if (confirm('Block this user? They will not be able to see your profile.')) blockMutation.mutate(p.id);
                                     }}
                                     variant="outline"
-                                    className="rounded-xl border-gray-200 text-gray-400 hover:text-red-600"
+                                    className="rounded-xl border-gray-200 text-gray-400 hover:text-red-600 flex items-center gap-1.5"
                                 >
-                                    🚫 Block
+                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                                    Block
                                 </Button>
                             </div>
                         )}
 
                         {isOwnProfile && (
                             <div className="mt-5">
-                                <Button asChild className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl">
-                                    <a href="/profile/edit">✏️ Edit Profile</a>
+                                <Button asChild className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl flex items-center gap-1.5">
+                                    <a href="/profile/edit">
+                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                        Edit Profile
+                                    </a>
                                 </Button>
                             </div>
                         )}
@@ -270,14 +314,14 @@ export default function ProfileViewPage() {
             {/* Detail sections */}
             <div className="grid md:grid-cols-2 gap-4">
                 {p.religious_detail && (
-                    <DetailCard title="🕌 Religious Background">
+                    <DetailCard title="Religious Background" titleIcon={<ReligionIcon size={16} strokeWidth={1.8} className="text-[#C9A227]"/>}>
                         <Row label="Religion" value={p.religious_detail.religion}/>
                         <Row label="Caste" value={p.religious_detail.caste}/>
                         <Row label="Manglik Status" value={p.religious_detail.manglik_status}/>
                     </DetailCard>
                 )}
                 {p.family_detail && (
-                    <DetailCard title="👨‍👩‍👧 Family Details">
+                    <DetailCard title="Family Details" titleIcon={<svg className="w-4 h-4 text-[#C9A227]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>}>
                         <Row label="Family Type" value={p.family_detail.family_type}/>
                         <Row label="Family Status" value={p.family_detail.family_status?.replace('_', ' ')}/>
                         <Row label="Brothers" value={p.family_detail.brothers_count?.toString()}/>
@@ -285,7 +329,7 @@ export default function ProfileViewPage() {
                     </DetailCard>
                 )}
                 {p.education_career && (
-                    <DetailCard title="🎓 Education & Career">
+                    <DetailCard title="Education & Career" titleIcon={<GraduationCapIcon size={16} strokeWidth={1.8} className="text-[#C9A227]"/>}>
                         <Row label="Education" value={p.education_career.highest_education}/>
                         <Row label="University" value={p.education_career.college_university}/>
                         <Row label="Profession" value={p.education_career.profession}/>
@@ -293,7 +337,7 @@ export default function ProfileViewPage() {
                     </DetailCard>
                 )}
                 {p.lifestyle && (
-                    <DetailCard title="🌿 Lifestyle">
+                    <DetailCard title="Lifestyle" titleIcon={<svg className="w-4 h-4 text-[#C9A227]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>}>
                         <Row label="Diet" value={p.lifestyle.diet}/>
                         <Row label="Smoking" value={p.lifestyle.smoking}/>
                         <Row label="Drinking" value={p.lifestyle.drinking}/>
@@ -359,10 +403,13 @@ export default function ProfileViewPage() {
     );
 }
 
-function DetailCard({title, children}: { title: string; children: React.ReactNode }) {
+function DetailCard({title, titleIcon, children}: { title: string; titleIcon?: React.ReactNode; children: React.ReactNode }) {
     return (
         <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <h3 className="font-semibold text-[#1F2937] mb-3 text-sm">{title}</h3>
+            <h3 className="font-semibold text-[#1F2937] mb-3 text-sm flex items-center gap-1.5">
+                {titleIcon}
+                {title}
+            </h3>
             <div className="space-y-2">{children}</div>
         </div>
     );

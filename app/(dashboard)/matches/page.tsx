@@ -5,6 +5,7 @@ import {useQuery} from '@tanstack/react-query';
 import {matchService} from '@/services/profileService';
 import {MatchCard} from '@/components/match/MatchCard';
 import type {MatchScore} from '@/types/match';
+import {HeartIcon, ArrowLeftIcon, ArrowRightIcon} from '@/components/ui/icons';
 
 export default function MatchesPage() {
     const [page, setPage] = useState(1);
@@ -46,7 +47,7 @@ export default function MatchesPage() {
 
             {!isLoading && !isError && matches.length === 0 && (
                 <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
-                    <p className="text-5xl mb-4">💭</p>
+                    <HeartIcon size={56} className="mx-auto text-gray-200 mb-4" strokeWidth={1.2}/>
                     <p className="text-lg font-semibold text-gray-700">No matches yet</p>
                     <p className="text-sm text-gray-400 mt-2 max-w-sm mx-auto">
                         Match scores are calculated nightly. Complete your profile and preferences to see matches
@@ -69,9 +70,9 @@ export default function MatchesPage() {
                             <button
                                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                                 disabled={page === 1}
-                                className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-[#C9A227] hover:text-[#C9A227] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-[#C9A227] hover:text-[#C9A227] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
                             >
-                                ← Previous
+                                <ArrowLeftIcon size={14} strokeWidth={2}/> Previous
                             </button>
                             <span className="text-sm text-gray-500">
                 Page {page} of {lastPage}
@@ -79,9 +80,9 @@ export default function MatchesPage() {
                             <button
                                 onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
                                 disabled={page === lastPage}
-                                className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-[#C9A227] hover:text-[#C9A227] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-[#C9A227] hover:text-[#C9A227] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
                             >
-                                Next →
+                                Next <ArrowRightIcon size={14} strokeWidth={2}/>
                             </button>
                         </div>
                     )}

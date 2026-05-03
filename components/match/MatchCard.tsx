@@ -7,6 +7,7 @@ import {formatAge, formatHeight, resolvePhotoUrl} from '@/lib/utils';
 import {CompatibilityScore} from './CompatibilityScore';
 import {interestService, shortlistService} from '@/services/profileService';
 import type {ProfileCard} from '@/types/profile';
+import {MapPinIcon, ReligionIcon, GraduationCapIcon, MailIcon, StarIcon, StarFilledIcon, UserIcon, CheckIcon} from '@/components/ui/icons';
 
 interface MatchCardProps {
     profile: ProfileCard;
@@ -65,8 +66,8 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                         sizes="(max-width: 768px) 50vw, 25vw"
                     />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center text-6xl text-gray-300">
-                        {profile.gender === 'female' ? '👩' : '👨'}
+                    <div className="w-full h-full flex items-center justify-center">
+                        <UserIcon size={48} className="text-gray-300" strokeWidth={1.2}/>
                     </div>
                 )}
 
@@ -80,8 +81,9 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                 {/* Verified badge */}
                 {profile.profile?.is_verified && (
                     <div
-                        className="absolute top-3 left-3 bg-white/90 rounded-full px-2 py-0.5 text-xs text-green-600 font-medium">
-                        ✓ Verified
+                        className="absolute top-3 left-3 bg-white/90 rounded-full px-2 py-0.5 text-xs text-green-600 font-medium flex items-center gap-1">
+                        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Verified
                     </div>
                 )}
             </Link>
@@ -100,13 +102,22 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                         {formatHeight(profile.profile?.height_cm)}
                     </p>
                     {profile.profile?.city && (
-                        <p className="text-xs text-gray-400">📍 {profile.profile.city}{profile.profile.country ? `, ${profile.profile.country}` : ''}</p>
+                        <p className="text-xs text-gray-400 flex items-center gap-1">
+                            <MapPinIcon size={12} strokeWidth={1.8}/>
+                            {profile.profile.city}{profile.profile.country ? `, ${profile.profile.country}` : ''}
+                        </p>
                     )}
                     {profile.religion && (
-                        <p className="text-xs text-gray-400">🕌 {profile.religion}</p>
+                        <p className="text-xs text-gray-400 flex items-center gap-1">
+                            <ReligionIcon size={12} strokeWidth={1.8}/>
+                            {profile.religion}
+                        </p>
                     )}
                     {profile.education && (
-                        <p className="text-xs text-gray-400">🎓 {profile.education}</p>
+                        <p className="text-xs text-gray-400 flex items-center gap-1">
+                            <GraduationCapIcon size={12} strokeWidth={1.8}/>
+                            {profile.education}
+                        </p>
                     )}
                 </div>
 
@@ -115,13 +126,16 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                     <button
                         onClick={handleSendInterest}
                         disabled={loading || interestSent}
-                        className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                        className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
                             interestSent
                                 ? 'bg-green-50 text-green-600 border border-green-200'
                                 : 'bg-[#C9A227] hover:bg-[#b8911f] text-white'
                         }`}
                     >
-                        {interestSent ? '✓ Sent' : '💌 Interest'}
+                        {interestSent
+                            ? <><CheckIcon size={12} strokeWidth={2.5}/> Sent</>
+                            : <><MailIcon size={12} strokeWidth={2}/> Interest</>
+                        }
                     </button>
                     <button
                         onClick={handleShortlist}
@@ -133,7 +147,10 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                                 : 'border-gray-200 text-gray-400 hover:border-[#C9A227] hover:text-[#C9A227]'
                         }`}
                     >
-                        ⭐
+                        {shortlisted
+                            ? <StarFilledIcon size={16} strokeWidth={1.8}/>
+                            : <StarIcon size={16} strokeWidth={1.8}/>
+                        }
                     </button>
                 </div>
             </div>

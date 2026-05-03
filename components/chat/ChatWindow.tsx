@@ -496,7 +496,11 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                 <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-[#1F2937] truncate">{participant.name}</p>
                     <p className="text-xs text-gray-400 truncate">
-                        {participant.is_online ? '🟢 Online'
+                        {participant.is_online
+                            ? <span className="flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full bg-green-400 inline-block"/>
+                                Online
+                              </span>
                             : participant.last_seen_at
                                 ? `Last seen ${new Date(participant.last_seen_at).toLocaleTimeString('en-BD', {
                                     hour: '2-digit',
@@ -525,7 +529,10 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                     </div>
                 )}
                 {!hasMore && messages.length > 0 && (
-                    <p className="text-center text-[11px] text-gray-400 py-1">✦ Beginning of conversation</p>
+                    <p className="text-center text-[11px] text-gray-400 py-1">
+                        <span className="inline-block w-1 h-1 rounded-full bg-gray-300 mx-0.5 align-middle"/>
+                        Beginning of conversation
+                    </p>
                 )}
 
                 {grouped.map(({date, messages: dayMsgs}) => (
@@ -573,8 +580,9 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                                         <img src={url} alt="" className="w-full h-full object-cover"/>
                                         <button
                                             onClick={() => removeImage(i)}
-                                            className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white text-[9px] leading-none"
-                                        >✕
+                                            className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white leading-none"
+                                        >
+                                            <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                         </button>
                                     </div>
                                 ))}
@@ -604,9 +612,10 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                                 <p className="text-xs font-semibold text-[#1F2937] truncate">{pendingVideo.name}</p>
                                 <p className="text-[11px] text-gray-400">{formatFileSize(pendingVideo.size)}</p>
                             </div>
-                            <button onClick={clearPending}
-                                    className="w-6 h-6 rounded-full bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-500 flex items-center justify-center text-xs transition-colors shrink-0">✕
-                            </button>
+                             <button onClick={clearPending}
+                                     className="w-6 h-6 rounded-full bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-500 flex items-center justify-center transition-colors shrink-0">
+                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                             </button>
                         </div>
                     )}
 
@@ -625,8 +634,9 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                                         <p className="text-xs font-semibold text-[#1F2937] truncate">{f.name}</p>
                                         <p className="text-[10px] text-gray-400">{formatFileSize(f.size)}</p>
                                     </div>
-                                    <button onClick={() => removeDoc(i)}
-                                            className="w-5 h-5 rounded-full hover:bg-red-100 text-gray-400 hover:text-red-500 flex items-center justify-center text-[10px] transition-colors">✕
+                                     <button onClick={() => removeDoc(i)}
+                                             className="w-5 h-5 rounded-full hover:bg-red-100 text-gray-400 hover:text-red-500 flex items-center justify-center transition-colors">
+                                        <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     </button>
                                 </div>
                             ))}
@@ -754,7 +764,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                 </div>
 
                 <p className="text-[9px] sm:text-[10px] text-gray-400 mt-1 text-center">
-                    💌 Chat only available between users with mutually accepted interests
+                    Chat only available between users with mutually accepted interests
                 </p>
             </div>
         </div>

@@ -110,7 +110,12 @@ type PreferencesForm = z.infer<typeof preferencesSchema>;
 
 function SaveStatus({saved, saving}: { saved: boolean; saving: boolean }) {
     if (saving) return <span className="text-xs text-gray-400">Saving…</span>;
-    if (saved) return <span className="text-xs text-green-600">✓ Saved</span>;
+    if (saved) return (
+        <span className="text-xs text-green-600 flex items-center gap-1">
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Saved
+        </span>
+    );
     return null;
 }
 
@@ -375,14 +380,14 @@ function ProfileEditInner() {
                 <div className="overflow-x-auto pb-1">
                     <TabsList className="flex min-w-max gap-1 h-auto p-1 rounded-xl bg-gray-100 mb-6">
                         {[
-                            {value: 'basic', label: '👤 Basic'},
-                            {value: 'religion', label: '🕌 Religion'},
-                            {value: 'career', label: '🎓 Career'},
-                            {value: 'lifestyle', label: '🌿 Lifestyle'},
-                            {value: 'family', label: '👨‍👩‍👧 Family'},
-                            {value: 'horoscope', label: '🔯 Horoscope'},
-                            {value: 'photo', label: '📷 Photos'},
-                            {value: 'preferences', label: '💑 Preferences'},
+                            {value: 'basic', label: 'Basic'},
+                            {value: 'religion', label: 'Religion'},
+                            {value: 'career', label: 'Career'},
+                            {value: 'lifestyle', label: 'Lifestyle'},
+                            {value: 'family', label: 'Family'},
+                            {value: 'horoscope', label: 'Horoscope'},
+                            {value: 'photo', label: 'Photos'},
+                            {value: 'preferences', label: 'Preferences'},
                         ].map((tab) => (
                             <TabsTrigger
                                 key={tab.value}
@@ -797,7 +802,10 @@ function ProfileEditInner() {
                             </div>
                         ) : (
                             <div className="border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center">
-                                <p className="text-4xl mb-3">📷</p>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 mx-auto text-gray-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                                    <circle cx="12" cy="13" r="4"/>
+                                </svg>
                                 <p className="text-gray-500 font-medium text-sm">No photos yet</p>
                                 <p className="text-xs text-gray-400 mt-1">Upload your first photo to attract more
                                     matches</p>

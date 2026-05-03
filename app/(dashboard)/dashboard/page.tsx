@@ -7,6 +7,10 @@ import {MatchCard} from '@/components/match/MatchCard';
 import {useAuthStore} from '@/store/authStore';
 import Link from 'next/link';
 import type {MatchScore} from '@/types/match';
+import {MailIcon, EyeIcon, HeartIcon, CrownIcon, MatchesIcon} from '@/components/ui/icons';
+import type {ComponentType, SVGProps} from 'react';
+
+type IconProps = SVGProps<SVGSVGElement> & { size?: number; strokeWidth?: number };
 
 // ── Main Dashboard Page ─────────────────────────────────────────────────────
 export default function DashboardPage() {
@@ -47,8 +51,8 @@ export default function DashboardPage() {
         <div className="max-w-6xl mx-auto space-y-6 pb-20 md:pb-6">
             {/* Header */}
             <div>
-                <h1 className="text-2xl font-bold text-[#1F2937]">
-                    {greeting()}, {user?.name?.split(' ')[0]}! 👋
+                <h1 className="text-2xl font-bold text-[#1F2937] flex items-center gap-2">
+                    {greeting()}, {user?.name?.split(' ')[0]}!
                 </h1>
                 <p className="text-gray-500 text-sm mt-1">Here&apos;s what&apos;s happening in your matrimony
                     journey</p>
@@ -56,41 +60,45 @@ export default function DashboardPage() {
 
             {/* Stats row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
+                {([
                     {
                         label: 'Pending Interests',
                         value: pendingInterests,
-                        icon: '💌',
+                        Icon: MailIcon,
                         href: '/interests',
-                        color: 'text-[#C9A227]'
+                        color: 'text-[#C9A227]',
+                        iconColor: 'text-[#C9A227]',
                     },
                     {
                         label: 'Profile Viewers',
                         value: totalViewers,
-                        icon: '👀',
+                        Icon: EyeIcon,
                         href: '/profile-views',
-                        color: 'text-blue-500'
+                        color: 'text-blue-500',
+                        iconColor: 'text-blue-400',
                     },
                     {
                         label: 'Your Matches',
                         value: (matchesData?.data as { total?: number })?.total ?? 0,
-                        icon: '💑',
+                        Icon: HeartIcon,
                         href: '/matches',
-                        color: 'text-pink-500'
+                        color: 'text-pink-500',
+                        iconColor: 'text-pink-400',
                     },
                     {
                         label: 'Plan',
                         value: user?.subscription_plan ?? 'free',
-                        icon: '✨',
+                        Icon: CrownIcon,
                         href: '/subscription',
-                        color: 'text-purple-500'
+                        color: 'text-purple-500',
+                        iconColor: 'text-purple-400',
                     },
-                ].map((stat) => (
+                ] as { label: string; value: string | number; Icon: ComponentType<IconProps>; href: string; color: string; iconColor: string }[]).map((stat) => (
                     <Link key={stat.label} href={stat.href}>
                         <div
                             className="bg-white rounded-2xl p-4 border border-gray-100 hover:border-[#C9A227]/30 transition-colors cursor-pointer">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-2xl">{stat.icon}</span>
+                                <stat.Icon size={24} strokeWidth={1.6} className={stat.iconColor}/>
                             </div>
                             <p className={`text-xl font-bold capitalize ${stat.color}`}>{stat.value}</p>
                             <p className="text-xs text-gray-500 mt-0.5">{stat.label}</p>
@@ -124,7 +132,7 @@ export default function DashboardPage() {
                     </div>
                 ) : (
                     <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-                        <p className="text-4xl mb-3">💑</p>
+                        <MatchesIcon size={56} className="mx-auto text-gray-200 mb-3" strokeWidth={1.2}/>
                         <p className="text-gray-500 font-medium">No matches yet</p>
                         <p className="text-sm text-gray-400 mt-1">
                             Complete your profile to get personalized matches

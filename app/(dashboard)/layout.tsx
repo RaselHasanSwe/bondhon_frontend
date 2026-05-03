@@ -7,16 +7,23 @@ import {useAuthStore} from '@/store/authStore';
 import {authService} from '@/services/authService';
 import {cn} from '@/lib/utils';
 import {NotificationBell} from '@/components/notification/NotificationBell';
+import {
+    HomeIcon, MatchesIcon, SearchIcon, InterestIcon, ChatIcon,
+    StarIcon, BellIcon, UserIcon, LogOutIcon,
+} from '@/components/ui/icons';
+import type {ComponentType, SVGProps} from 'react';
 
-const NAV_ITEMS = [
-    {href: '/dashboard', label: 'Dashboard', icon: '🏠'},
-    {href: '/matches', label: 'Matches', icon: '💑'},
-    {href: '/search', label: 'Search', icon: '🔍'},
-    {href: '/interests', label: 'Interests', icon: '💌'},
-    {href: '/chat', label: 'Messages', icon: '💬'},
-    {href: '/shortlist', label: 'Shortlist', icon: '⭐'},
-    {href: '/notifications', label: 'Notifications', icon: '🔔'},
-    {href: '/profile/edit', label: 'My Profile', icon: '👤'},
+type NavIconProps = SVGProps<SVGSVGElement> & { size?: number; strokeWidth?: number };
+
+const NAV_ITEMS: { href: string; label: string; Icon: ComponentType<NavIconProps> }[] = [
+    {href: '/dashboard', label: 'Dashboard', Icon: HomeIcon},
+    {href: '/matches', label: 'Matches', Icon: MatchesIcon},
+    {href: '/search', label: 'Search', Icon: SearchIcon},
+    {href: '/interests', label: 'Interests', Icon: InterestIcon},
+    {href: '/chat', label: 'Messages', Icon: ChatIcon},
+    {href: '/shortlist', label: 'Shortlist', Icon: StarIcon},
+    {href: '/notifications', label: 'Notifications', Icon: BellIcon},
+    {href: '/profile/edit', label: 'My Profile', Icon: UserIcon},
 ];
 
 export default function DashboardLayout({children}: { children: React.ReactNode }) {
@@ -61,21 +68,22 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
 
                 {/* Navigation */}
                 <nav className="flex-1 space-y-1">
-                    {NAV_ITEMS.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={cn(
-                                'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
-                                pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
-                                    ? 'bg-[#FBF6E8] text-[#C9A227]'
-                                    : 'text-gray-600 hover:bg-gray-50 hover:text-[#1F2937]'
-                            )}
-                        >
-                            <span className="text-base">{item.icon}</span>
-                            {item.label}
-                        </Link>
-                    ))}
+                    {NAV_ITEMS.map((item) => {
+                        const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={cn(
+                                    'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
+                                    active ? 'bg-[#FBF6E8] text-[#C9A227]' : 'text-gray-600 hover:bg-gray-50 hover:text-[#1F2937]'
+                                )}
+                            >
+                                <item.Icon size={18} strokeWidth={active ? 2.2 : 1.8}/>
+                                {item.label}
+                            </Link>
+                        );
+                    })}
                 </nav>
 
                 {/* User section */}
@@ -93,9 +101,10 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                     </div>
                     <button
                         onClick={handleLogout}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                        className="w-full text-left px-3 py-2 text-sm text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors flex items-center gap-2"
                     >
-                        🚪 Sign out
+                        <LogOutIcon size={16} strokeWidth={1.8}/>
+                        Sign out
                     </button>
                 </div>
             </aside>
@@ -117,19 +126,22 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                 {/* Mobile bottom nav */}
                 <nav
                     className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around py-1.5 z-10 safe-area-pb">
-                    {NAV_ITEMS.slice(0, 5).map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={cn(
-                                'flex flex-col items-center gap-0.5 px-1 sm:px-2 py-1 rounded-lg text-[10px] sm:text-xs transition-colors min-w-0',
-                                pathname === item.href ? 'text-[#C9A227]' : 'text-gray-500'
-                            )}
-                        >
-                            <span className="text-lg sm:text-xl">{item.icon}</span>
-                            <span className="truncate w-full text-center leading-tight">{item.label}</span>
-                        </Link>
-                    ))}
+                {NAV_ITEMS.slice(0, 5).map((item) => {
+                        const active = pathname === item.href;
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={cn(
+                                    'flex flex-col items-center gap-0.5 px-1 sm:px-2 py-1 rounded-lg text-[10px] sm:text-xs transition-colors min-w-0',
+                                    active ? 'text-[#C9A227]' : 'text-gray-500'
+                                )}
+                            >
+                                <item.Icon size={20} strokeWidth={active ? 2.2 : 1.8}/>
+                                <span className="truncate w-full text-center leading-tight">{item.label}</span>
+                            </Link>
+                        );
+                    })}
                 </nav>
             </main>
         </div>

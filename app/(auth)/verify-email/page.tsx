@@ -56,7 +56,9 @@ function VerifyCallback({vUrl}: { vUrl: string }) {
         return (
             <>
                 <CardHeader>
-                    <div className="mx-auto text-5xl mb-3 animate-pulse">📧</div>
+                    <div className="mx-auto mb-3 w-14 h-14 rounded-full bg-[#FBF6E8] flex items-center justify-center animate-pulse">
+                        <svg className="w-7 h-7 text-[#C9A227]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    </div>
                     <CardTitle className="text-2xl font-bold text-center">Verifying your email…</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -71,7 +73,9 @@ function VerifyCallback({vUrl}: { vUrl: string }) {
         return (
             <>
                 <CardHeader>
-                    <div className="mx-auto text-5xl mb-3">✅</div>
+                    <div className="mx-auto mb-3 w-14 h-14 rounded-full bg-green-50 flex items-center justify-center">
+                        <svg className="w-7 h-7 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
                     <CardTitle className="text-2xl font-bold text-center text-green-700">
                         Email Verified!
                     </CardTitle>
@@ -82,9 +86,9 @@ function VerifyCallback({vUrl}: { vUrl: string }) {
                         <span className="font-semibold text-[#C9A227]">Bondhon</span>!
                     </p>
                     <Link href="/login">
-                        <Button
-                            className="w-full bg-[#C9A227] hover:bg-[#b8911f] text-white font-semibold rounded-xl h-11">
-                            Sign In to Continue →
+                        <Button className="w-full bg-[#C9A227] hover:bg-[#b8911f] text-white font-semibold rounded-xl h-11 flex items-center justify-center gap-1.5">
+                            Sign In to Continue
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                         </Button>
                     </Link>
                 </CardContent>
@@ -97,15 +101,17 @@ function VerifyCallback({vUrl}: { vUrl: string }) {
         return (
             <>
                 <CardHeader>
-                    <div className="mx-auto text-5xl mb-3">☑️</div>
+                    <div className="mx-auto mb-3 w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center">
+                        <svg className="w-7 h-7 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
                     <CardTitle className="text-2xl font-bold text-center">Already Verified</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 text-center">
                     <p className="text-gray-500 text-sm">Your email address is already verified.</p>
                     <Link href="/login">
-                        <Button
-                            className="w-full bg-[#C9A227] hover:bg-[#b8911f] text-white font-semibold rounded-xl h-11">
-                            Go to Sign In →
+                        <Button className="w-full bg-[#C9A227] hover:bg-[#b8911f] text-white font-semibold rounded-xl h-11 flex items-center justify-center gap-1.5">
+                            Go to Sign In
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                         </Button>
                     </Link>
                 </CardContent>
@@ -117,7 +123,9 @@ function VerifyCallback({vUrl}: { vUrl: string }) {
     return (
         <>
             <CardHeader>
-                <div className="mx-auto text-5xl mb-3">❌</div>
+                <div className="mx-auto mb-3 w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
+                    <svg className="w-7 h-7 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                </div>
                 <CardTitle className="text-2xl font-bold text-center text-red-600">
                     Verification Failed
                 </CardTitle>
@@ -165,7 +173,9 @@ function CheckInbox() {
     return (
         <>
             <CardHeader>
-                <div className="mx-auto text-5xl mb-3">📧</div>
+                <div className="mx-auto mb-3 w-14 h-14 rounded-full bg-[#FBF6E8] flex items-center justify-center">
+                    <svg className="w-7 h-7 text-[#C9A227]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </div>
                 <CardTitle className="text-2xl font-bold text-center">Verify your email</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-center">
@@ -175,8 +185,9 @@ function CheckInbox() {
                 </p>
 
                 {resent && (
-                    <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-600">
-                        ✓ Verification email resent successfully!
+                    <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-600 flex items-center justify-center gap-1.5">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Verification email resent successfully!
                     </div>
                 )}
 

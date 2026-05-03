@@ -5,6 +5,14 @@ import {useRouter} from 'next/navigation';
 import {useNotificationStore} from '@/store/notificationStore';
 import type {AppNotification} from '@/types/notification';
 import {cn} from '@/lib/utils';
+import {
+    BellIcon, MailIcon, CelebrationIcon, ClockIcon, EyeIcon,
+    MessageSquareIcon, HeartIcon, AlertTriangleIcon, CheckCircleIcon,
+    XCircleIcon, MegaphoneIcon, XIcon,
+} from '@/components/ui/icons';
+import type {ComponentType, SVGProps} from 'react';
+
+type IconProps = SVGProps<SVGSVGElement> & { size?: number; strokeWidth?: number };
 
 function formatRelativeTime(iso: string): string {
     const diff = Date.now() - new Date(iso).getTime();
@@ -17,19 +25,19 @@ function formatRelativeTime(iso: string): string {
     return days === 1 ? 'Yesterday' : `${days} days ago`;
 }
 
-const TYPE_ICONS: Record<AppNotification['type'], string> = {
-    interest_received: '💌',
-    interest_accepted: '🎉',
-    interest_expired: '⌛',
-    profile_viewed: '👀',
-    new_message: '💬',
-    match_suggestion: '💑',
-    match_digest: '💑',
-    subscription_expiring: '⚠️',
-    subscription_expiry: '⚠️',
-    photo_approved: '✅',
-    photo_rejected: '❌',
-    system: '📢',
+const TYPE_ICONS: Record<AppNotification['type'], ComponentType<IconProps>> = {
+    interest_received: MailIcon,
+    interest_accepted: CelebrationIcon,
+    interest_expired: ClockIcon,
+    profile_viewed: EyeIcon,
+    new_message: MessageSquareIcon,
+    match_suggestion: HeartIcon,
+    match_digest: HeartIcon,
+    subscription_expiring: AlertTriangleIcon,
+    subscription_expiry: AlertTriangleIcon,
+    photo_approved: CheckCircleIcon,
+    photo_rejected: XCircleIcon,
+    system: MegaphoneIcon,
 };
 
 const TYPE_COLORS: Record<AppNotification['type'], string> = {
@@ -66,7 +74,10 @@ export default function NotificationsPage() {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-[#1F2937]">Notifications 🔔</h1>
+                    <h1 className="text-2xl font-bold text-[#1F2937] flex items-center gap-2">
+                        Notifications
+                        <BellIcon size={22} className="text-[#C9A227]"/>
+                    </h1>
                     <p className="text-sm text-gray-500 mt-1">
                         {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'}
                     </p>
@@ -98,7 +109,7 @@ export default function NotificationsPage() {
                 </div>
             ) : notifications.length === 0 ? (
                 <div className="bg-white rounded-2xl border border-gray-100 py-16 text-center">
-                    <p className="text-4xl mb-3">🔔</p>
+                    <BellIcon size={48} className="mx-auto text-gray-200 mb-3"/>
                     <p className="text-lg font-semibold text-gray-700">No notifications yet</p>
                     <p className="text-sm text-gray-400 mt-1">
                         You&apos;ll see activity here when something happens
@@ -117,8 +128,11 @@ export default function NotificationsPage() {
                         >
                             {/* Icon */}
                             <div
-                                className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center text-xl flex-shrink-0 shadow-sm">
-                                {TYPE_ICONS[n.type]}
+                                className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                {(() => {
+                                    const NIcon = TYPE_ICONS[n.type];
+                                    return <NIcon size={18} strokeWidth={1.8} className="text-gray-500"/>;
+                                })()}
                             </div>
 
                             {/* Content */}
@@ -158,7 +172,7 @@ export default function NotificationsPage() {
                                 className="absolute top-3 right-8 opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-opacity p-1"
                                 aria-label="Delete notification"
                             >
-                                ✕
+                                <XIcon size={14} strokeWidth={2}/>
                             </button>
                         </div>
                     ))}

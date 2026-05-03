@@ -9,6 +9,14 @@ import {useAuthStore} from '@/store/authStore';
 import type {AppNotification} from '@/types/notification';
 import type {BackendNotification} from '@/types/notification';
 import {cn} from '@/lib/utils';
+import {
+    BellIcon, MailIcon, CelebrationIcon, ClockIcon, EyeIcon,
+    MessageSquareIcon, HeartIcon, AlertTriangleIcon, CheckCircleIcon,
+    XCircleIcon, MegaphoneIcon,
+} from '@/components/ui/icons';
+import type {ComponentType, SVGProps} from 'react';
+
+type IconProps = SVGProps<SVGSVGElement> & { size?: number; strokeWidth?: number };
 
 function formatRelativeTime(iso: string): string {
     const diff = Date.now() - new Date(iso).getTime();
@@ -20,19 +28,19 @@ function formatRelativeTime(iso: string): string {
     return `${Math.floor(hrs / 24)}d ago`;
 }
 
-const TYPE_ICONS: Record<AppNotification['type'], string> = {
-    interest_received: '💌',
-    interest_accepted: '🎉',
-    interest_expired: '⌛',
-    profile_viewed: '👀',
-    new_message: '💬',
-    match_suggestion: '💑',
-    match_digest: '💑',
-    subscription_expiring: '⚠️',
-    subscription_expiry: '⚠️',
-    photo_approved: '✅',
-    photo_rejected: '❌',
-    system: '📢',
+const TYPE_ICONS: Record<AppNotification['type'], ComponentType<IconProps>> = {
+    interest_received: MailIcon,
+    interest_accepted: CelebrationIcon,
+    interest_expired: ClockIcon,
+    profile_viewed: EyeIcon,
+    new_message: MessageSquareIcon,
+    match_suggestion: HeartIcon,
+    match_digest: HeartIcon,
+    subscription_expiring: AlertTriangleIcon,
+    subscription_expiry: AlertTriangleIcon,
+    photo_approved: CheckCircleIcon,
+    photo_rejected: XCircleIcon,
+    system: MegaphoneIcon,
 };
 
 export function NotificationBell({placement = 'default'}: { placement?: 'default' | 'sidebar' }) {
@@ -139,7 +147,7 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
             <div className="max-h-80 overflow-y-auto divide-y divide-gray-50">
                 {preview.length === 0 ? (
                     <div className="py-10 text-center">
-                        <p className="text-2xl mb-1">🔔</p>
+                        <BellIcon size={32} className="mx-auto text-gray-300 mb-1"/>
                         <p className="text-sm text-gray-400">No notifications yet</p>
                     </div>
                 ) : (
@@ -149,7 +157,10 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
                             onClick={() => handleNotificationClick(n)}
                             className={cn('w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors', !n.is_read && 'bg-[#FBF6E8]')}
                         >
-                            <span className="text-xl shrink-0 mt-0.5">{TYPE_ICONS[n.type]}</span>
+                            {(() => {
+                                const NIcon = TYPE_ICONS[n.type];
+                                return <NIcon size={20} strokeWidth={1.8} className="shrink-0 mt-0.5 text-gray-500"/>;
+                            })()}
                             <div className="flex-1 min-w-0">
                                 <p className={cn('text-xs font-semibold text-[#1F2937] leading-tight', !n.is_read && 'font-bold')}>{n.title}</p>
                                 <p className="text-[11px] text-gray-500 mt-0.5 leading-snug line-clamp-2">{n.body}</p>

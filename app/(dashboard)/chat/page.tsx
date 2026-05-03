@@ -18,7 +18,10 @@ export default function ChatPage() {
             {/* Header */}
             <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-[#1F2937]">Messages 💬</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold text-[#1F2937] flex items-center gap-2">
+                        Messages
+                        <svg className="w-5 h-5 text-[#C9A227]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                    </h1>
                     <p className="text-sm text-gray-500 mt-1">
                         {totalUnread > 0
                             ? `${totalUnread} unread message${totalUnread > 1 ? 's' : ''}`

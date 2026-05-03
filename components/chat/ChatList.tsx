@@ -42,7 +42,7 @@ export function ChatList({conversations, activeId, isLoading}: ChatListProps) {
     if (conversations.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center h-48 text-center px-6">
-                <p className="text-3xl mb-2">💬</p>
+                <svg className="w-10 h-10 text-gray-200 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                 <p className="text-sm font-medium text-gray-600">No conversations yet</p>
                 <p className="text-xs text-gray-400 mt-1">Accept an interest to start chatting</p>
             </div>

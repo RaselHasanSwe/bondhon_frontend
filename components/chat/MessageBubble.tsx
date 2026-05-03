@@ -37,10 +37,29 @@ function formatSize(bytes: number | null | undefined): string {
 
 function StatusIcon({status}: { status: Message['status'] }) {
     if (!status) return null;
-    if (status === 'sending') return <span className="text-gray-300">●</span>;
-    if (status === 'sent') return <span className="text-gray-400">✓</span>;
-    if (status === 'delivered') return <span className="text-gray-400">✓✓</span>;
-    return <span className="text-[#C9A227]">✓✓</span>;
+    if (status === 'sending') return (
+        <svg className="w-3 h-3 text-gray-300 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/>
+        </svg>
+    );
+    if (status === 'sent') return (
+        <svg className="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+        </svg>
+    );
+    if (status === 'delivered') return (
+        <svg className="w-4 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="17 6 7 16 3 12"/>
+            <polyline points="22 6 13 15"/>
+        </svg>
+    );
+    // read
+    return (
+        <svg className="w-4 h-3.5 text-[#C9A227]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="17 6 7 16 3 12"/>
+            <polyline points="22 6 13 15"/>
+        </svg>
+    );
 }
 
 // ── Fancy Lightbox ────────────────────────────────────────────────────────
@@ -69,8 +88,9 @@ function Lightbox({images, startIndex, onClose}: LightboxProps) {
     return (
         <div className="fixed inset-0 z-[999] bg-black/90 flex flex-col items-center justify-center" onClick={onClose}>
             <button onClick={onClose}
-                    className="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/25 rounded-full flex items-center justify-center text-white text-xl z-10 transition-colors"
-                    aria-label="Close">✕
+                    className="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/25 rounded-full flex items-center justify-center text-white z-10 transition-colors"
+                    aria-label="Close">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
             {images.length > 1 && (
                 <div
@@ -95,13 +115,15 @@ function Lightbox({images, startIndex, onClose}: LightboxProps) {
                         e.stopPropagation();
                         prev();
                     }}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/10 hover:bg-white/25 rounded-full flex items-center justify-center text-white text-2xl transition-colors">‹
+                            className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/10 hover:bg-white/25 rounded-full flex items-center justify-center text-white transition-colors">
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
                     <button onClick={(e) => {
                         e.stopPropagation();
                         next();
                     }}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/10 hover:bg-white/25 rounded-full flex items-center justify-center text-white text-2xl transition-colors">›
+                            className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/10 hover:bg-white/25 rounded-full flex items-center justify-center text-white transition-colors">
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                     <div
                         className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 overflow-x-auto max-w-sm p-1">
