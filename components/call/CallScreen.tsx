@@ -19,20 +19,27 @@ interface CallScreenProps {
     currentUserId: number;
 }
 
-/**
- * CallScreen — Full-screen WhatsApp-style audio/video call UI.
- * Fully responsive from 320px to 1800px.
- */
 export function CallScreen({currentUserId}: CallScreenProps) {
-    const {activeCall, setCallStatus, toggleMic, toggleCamera, toggleSpeaker, tickDuration, endCall} = useCallStore();
+    const {
+        activeCall,
+        setCallStatus,
+        toggleMic,
+        toggleCamera,
+        toggleSpeaker,
+        tickDuration,
+        endCall,
+        setRemoteMediaStatus,
+    } = useCallStore();
 
     const managerRef = useRef<WebRTCManager | null>(null);
     const localVideoRef = useRef<HTMLVideoElement | null>(null);
     const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
     const durationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const ringbackCtxRef = useRef<AudioContext | null>(null);
+    const ringbackIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [connectionState, setConnectionState] = useState<string>('Connecting…');
     const [isEnding, setIsEnding] = useState(false);
-    const [isPipSwapped, setIsPipSwapped] = useState(false); // swap local/remote pip
+    const [isPipSwapped, setIsPipSwapped] = useState(false);
 
     const destroyManager = useCallback(() => {
         managerRef.current?.destroy();
@@ -53,6 +60,82 @@ export function CallScreen({currentUserId}: CallScreenProps) {
             endCall();
         }
     }, [activeCall, isEnding, destroyManager, endCall]);
+
+    // ── beforeunload: end call when browser/tab closes ────────────────────
+    useEffect(() => {
+        if (!activeCall?.callId) return;
+        const callId = activeCall.callId;
+        const handleBeforeUnload = () => {
+            const token = typeof localStorage !== 'undefined' ? localStorage.getItem('auth_token') : null;
+            const url = `${process.env.NEXT_PUBLIC_API_URL}/calls/${callId}/end`;
+            // fetch with keepalive is reliable in beforeunload
+            fetch(url, {
+                method: 'PUT',
+                headers: {
+                    Authorization: token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                },
+                keepalive: true,
+            }).catch(() => {});
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [activeCall?.callId]);
+
+    // ── Ringback tone for caller (plays while status === 'ringing') ───────
+    useEffect(() => {
+        const isRinging = activeCall?.isCaller && activeCall?.status === 'ringing';
+        if (!isRinging) {
+            // Stop ringback
+            if (ringbackIntervalRef.current) clearInterval(ringbackIntervalRef.current);
+            ringbackIntervalRef.current = null;
+            if (ringbackCtxRef.current) {
+                ringbackCtxRef.current.close().catch(() => {});
+                ringbackCtxRef.current = null;
+            }
+            return;
+        }
+
+        const AudioCtx =
+            window.AudioContext ||
+            (window as typeof window & {webkitAudioContext: typeof AudioContext}).webkitAudioContext;
+        if (!AudioCtx) return;
+
+        const playRingback = () => {
+            try {
+                if (!ringbackCtxRef.current || ringbackCtxRef.current.state === 'closed') {
+                    ringbackCtxRef.current = new AudioCtx();
+                }
+                const ctx = ringbackCtxRef.current;
+                if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+                // Two-tone ringback (440 Hz + 480 Hz blend, 1.5s on / 2s off pattern)
+                [440, 480].forEach((freq) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.09, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 1.5);
+                });
+            } catch { /* ignore */ }
+        };
+
+        playRingback();
+        ringbackIntervalRef.current = setInterval(playRingback, 3500);
+
+        return () => {
+            if (ringbackIntervalRef.current) clearInterval(ringbackIntervalRef.current);
+            ringbackIntervalRef.current = null;
+            if (ringbackCtxRef.current) {
+                ringbackCtxRef.current.close().catch(() => {});
+                ringbackCtxRef.current = null;
+            }
+        };
+    }, [activeCall?.isCaller, activeCall?.status]);
 
     // ── Set up WebRTC + Reverb signaling ─────────────────────────────────
     useEffect(() => {
@@ -106,8 +189,18 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                         err.message.toLowerCase().includes('access') ||
                         err.message.toLowerCase().includes('microphone') ||
                         err.message.toLowerCase().includes('camera');
+                    const isLost = err.message.toLowerCase().includes('connection lost') ||
+                        err.message.toLowerCase().includes('connection failed');
 
                     setConnectionState(isPermission ? 'Permission denied' : err.message);
+
+                    if (isLost) {
+                        // Silent auto-end — no need to show a dialog for network drops
+                        destroyManager();
+                        try { await callService.endCall(activeCall.callId); } catch { /* ignore */ }
+                        endCall();
+                        return;
+                    }
 
                     await Swal.fire({
                         title: isPermission ? 'Permission Required' : 'Call Error',
@@ -118,6 +211,11 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                     });
 
                     if (isPermission) handleEnd();
+                },
+
+                // WhatsApp-style remote mute/camera sync via data channel
+                onRemoteMediaStatus: (isMuted, isCameraOff) => {
+                    useCallStore.getState().setRemoteMediaStatus(isMuted, isCameraOff);
                 },
             });
 
@@ -132,6 +230,8 @@ export function CallScreen({currentUserId}: CallScreenProps) {
             // Remote party ended
             channel.listen('.call.ended', (e: {call_id: number}) => {
                 if (cancelled || e.call_id !== activeCall.callId) return;
+                destroyManager();
+                endCall();
                 Swal.fire({
                     title: 'Call Ended',
                     text: 'The other party has ended the call.',
@@ -140,9 +240,22 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                     timerProgressBar: true,
                     showConfirmButton: false,
                     customClass: {popup: 'rounded-2xl'},
-                }).then(() => {
-                    destroyManager();
-                    endCall();
+                });
+            });
+
+            // Remote party declined (while caller is ringing)
+            channel.listen('.call.declined', (e: {call_id: number}) => {
+                if (cancelled || e.call_id !== activeCall.callId) return;
+                destroyManager();
+                endCall();
+                Swal.fire({
+                    title: 'Call Declined',
+                    text: 'The other party declined the call.',
+                    icon: 'info',
+                    timer: 2500,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    customClass: {popup: 'rounded-2xl'},
                 });
             });
 
@@ -182,6 +295,7 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                 if (channel) {
                     channel.stopListening('.webrtc.signal');
                     channel.stopListening('.call.ended');
+                    channel.stopListening('.call.declined');
                     channel.stopListening('.call.answered');
                 }
                 echo;
@@ -190,7 +304,7 @@ export function CallScreen({currentUserId}: CallScreenProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeCall?.callId]);
 
-    // Sync mute/camera to WebRTC tracks
+    // Sync local mute/camera to WebRTC tracks
     useEffect(() => {
         managerRef.current?.setAudioEnabled(!(activeCall?.isMicMuted ?? false));
     }, [activeCall?.isMicMuted]);
@@ -199,11 +313,33 @@ export function CallScreen({currentUserId}: CallScreenProps) {
         managerRef.current?.setVideoEnabled(!(activeCall?.isCameraOff ?? false));
     }, [activeCall?.isCameraOff]);
 
+    // Send local media status to remote peer via data channel
+    useEffect(() => {
+        if (activeCall?.status === 'active') {
+            managerRef.current?.sendMediaStatus(
+                activeCall.isMicMuted,
+                activeCall.isCameraOff,
+            );
+        }
+    }, [activeCall?.isMicMuted, activeCall?.isCameraOff, activeCall?.status]);
+
     if (!activeCall) return null;
 
-    const {callType, remoteParticipant, isMicMuted, isCameraOff, isSpeakerOff, durationSeconds, status} = activeCall;
+    const {callType, remoteParticipant, isMicMuted, isCameraOff, isSpeakerOff, durationSeconds, status, remoteMicMuted, remoteCameraOff} = activeCall;
     const isVideo = callType === 'video';
     const initials = remoteParticipant.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+
+    // Wrapper handlers that also sync media status via data channel
+    const handleToggleMic = () => {
+        toggleMic();
+        // isMicMuted is current state; after toggle it will be !isMicMuted
+        managerRef.current?.sendMediaStatus(!isMicMuted, isCameraOff);
+    };
+
+    const handleToggleCamera = () => {
+        toggleCamera();
+        managerRef.current?.sendMediaStatus(isMicMuted, !isCameraOff);
+    };
 
     // ── Audio call layout ─────────────────────────────────────────────────
     if (!isVideo) {
@@ -251,7 +387,7 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                         {status === 'active' ? formatDuration(durationSeconds) : connectionState}
                     </p>
 
-                    {/* Mic muted indicator */}
+                    {/* Local mic muted indicator */}
                     {isMicMuted && (
                         <div className="mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/20 border border-red-500/30">
                             <svg className="w-3.5 h-3.5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -259,7 +395,19 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                                 <path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/>
                                 <path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23M12 19v3M8 23h8"/>
                             </svg>
-                            <span className="text-xs text-red-400 font-medium">Muted</span>
+                            <span className="text-xs text-red-400 font-medium">You are muted</span>
+                        </div>
+                    )}
+
+                    {/* Remote mic muted indicator (WhatsApp-style) */}
+                    {remoteMicMuted && status === 'active' && (
+                        <div className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/20 border border-orange-500/30">
+                            <svg className="w-3.5 h-3.5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                                <path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/>
+                                <path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23M12 19v3M8 23h8"/>
+                            </svg>
+                            <span className="text-xs text-orange-400 font-medium">{remoteParticipant.name} muted</span>
                         </div>
                     )}
                 </div>
@@ -271,8 +419,8 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                     isCameraOff={isCameraOff}
                     isSpeakerOff={isSpeakerOff}
                     isEnding={isEnding}
-                    onToggleMic={toggleMic}
-                    onToggleCamera={toggleCamera}
+                    onToggleMic={handleToggleMic}
+                    onToggleCamera={handleToggleCamera}
                     onToggleSpeaker={toggleSpeaker}
                     onEnd={handleEnd}
                 />
@@ -309,6 +457,22 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                     </div>
                 )}
 
+                {/* Remote camera-off overlay (WhatsApp-style) */}
+                {remoteCameraOff && status === 'active' && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1a1a2e]/90">
+                        {remoteParticipant.avatar ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={remoteParticipant.avatar} alt={remoteParticipant.name}
+                                 className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-2 border-white/20 mb-3"/>
+                        ) : (
+                            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-linear-to-br from-[#C9A227] to-[#D4AF37] flex items-center justify-center mb-3">
+                                <span className="text-3xl sm:text-4xl font-bold text-white">{initials}</span>
+                            </div>
+                        )}
+                        <p className="text-white/60 text-sm">Camera off</p>
+                    </div>
+                )}
+
                 {/* Local video PiP — tappable to swap */}
                 <div
                     className={`absolute z-20 border-2 border-white/20 bg-black rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl cursor-pointer transition-all active:scale-95
@@ -330,7 +494,6 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                             <span className="text-sm font-bold text-white/50">OFF</span>
                         </div>
                     )}
-                    {/* Swap hint */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity">
                         <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
@@ -342,9 +505,20 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                 <div className="absolute top-0 left-0 right-0 px-3 sm:px-4 pt-safe py-3 sm:py-4 flex items-center justify-between
                                 bg-linear-to-b from-black/60 to-transparent">
                     <div className="min-w-0">
-                        <p className="text-white font-semibold text-base sm:text-lg leading-tight truncate max-w-[180px] sm:max-w-xs">
-                            {remoteParticipant.name}
-                        </p>
+                        <div className="flex items-center gap-2">
+                            <p className="text-white font-semibold text-base sm:text-lg leading-tight truncate max-w-[180px] sm:max-w-xs">
+                                {remoteParticipant.name}
+                            </p>
+                            {/* Remote muted badge in HUD */}
+                            {remoteMicMuted && status === 'active' && (
+                                <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-orange-500/30 border border-orange-500/40">
+                                    <svg className="w-3 h-3 text-orange-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <line x1="1" y1="1" x2="23" y2="23"/>
+                                        <path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23M12 19v3M8 23h8"/>
+                                    </svg>
+                                </span>
+                            )}
+                        </div>
                         <p className="text-white/65 text-xs sm:text-sm tabular-nums">
                             {status === 'active' ? formatDuration(durationSeconds) : connectionState}
                         </p>
@@ -360,8 +534,8 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                 isCameraOff={isCameraOff}
                 isSpeakerOff={isSpeakerOff}
                 isEnding={isEnding}
-                onToggleMic={toggleMic}
-                onToggleCamera={toggleCamera}
+                onToggleMic={handleToggleMic}
+                onToggleCamera={handleToggleCamera}
                 onToggleSpeaker={toggleSpeaker}
                 onEnd={handleEnd}
             />

@@ -12,6 +12,7 @@ interface WebRTCManagerOptions {
     onRemoteStream: (stream: MediaStream) => void;
     onIceConnectionChange: (state: RTCIceConnectionState) => void;
     onError: (err: Error) => void;
+    onRemoteMediaStatus?: (isMuted: boolean, isCameraOff: boolean) => void;
 }
 
 /**
@@ -29,6 +30,8 @@ export class WebRTCManager {
     private isCaller: boolean;
     private opts: WebRTCManagerOptions;
     private destroyed = false;
+    private dataChannel: RTCDataChannel | null = null;
+    private disconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
     constructor(opts: WebRTCManagerOptions) {
         this.opts = opts;
@@ -41,6 +44,11 @@ export class WebRTCManager {
     async startAsCaller(): Promise<void> {
         this.isCaller = true;
         await this._initPeerConnection();
+
+        // Create data channel BEFORE offer so it's negotiated in SDP
+        this.dataChannel = this.pc!.createDataChannel('media-status', {ordered: true});
+        this._setupDataChannel(this.dataChannel);
+
         const offer = await this.pc!.createOffer({
             offerToReceiveAudio: true,
             offerToReceiveVideo: this.opts.callType === 'video',
@@ -53,7 +61,6 @@ export class WebRTCManager {
     async startAsReceiver(): Promise<void> {
         this.isCaller = false;
         await this._initPeerConnection();
-        // Answer is created after receiving the offer — see handleRemoteSignal()
     }
 
     /** Called when a WebRTC signal arrives from Reverb. */
@@ -100,17 +107,50 @@ export class WebRTCManager {
         this.localStream?.getVideoTracks().forEach((t) => (t.enabled = enabled));
     }
 
+    /** Send local mute/camera status to remote peer via data channel */
+    sendMediaStatus(isMuted: boolean, isCameraOff: boolean): void {
+        if (this.dataChannel?.readyState === 'open') {
+            try {
+                this.dataChannel.send(JSON.stringify({type: 'media-status', isMuted, isCameraOff}));
+            } catch { /* ignore */ }
+        }
+    }
+
     /** Clean up everything. */
     destroy(): void {
         this.destroyed = true;
+        if (this.disconnectTimer) {
+            clearTimeout(this.disconnectTimer);
+            this.disconnectTimer = null;
+        }
         this.localStream?.getTracks().forEach((t) => t.stop());
         this.localStream = null;
+        if (this.dataChannel) {
+            this.dataChannel.onmessage = null;
+            this.dataChannel.close();
+            this.dataChannel = null;
+        }
         this.pc?.close();
         this.pc = null;
         this.pendingCandidates = [];
     }
 
     // ── Private helpers ────────────────────────────────────────────────────
+
+    private _setupDataChannel(channel: RTCDataChannel): void {
+        channel.onmessage = (event) => {
+            if (this.destroyed) return;
+            try {
+                const msg = JSON.parse(event.data as string);
+                if (msg.type === 'media-status' && this.opts.onRemoteMediaStatus) {
+                    this.opts.onRemoteMediaStatus(
+                        Boolean(msg.isMuted),
+                        Boolean(msg.isCameraOff),
+                    );
+                }
+            } catch { /* ignore malformed messages */ }
+        };
+    }
 
     private async _initPeerConnection(): Promise<void> {
         const rtcConfig: RTCConfiguration = {
@@ -121,6 +161,12 @@ export class WebRTCManager {
         };
 
         this.pc = new RTCPeerConnection(rtcConfig);
+
+        // Receiver: accept data channel opened by caller
+        this.pc.ondatachannel = (event) => {
+            this.dataChannel = event.channel;
+            this._setupDataChannel(this.dataChannel);
+        };
 
         // Acquire local media
         try {
@@ -161,7 +207,24 @@ export class WebRTCManager {
         // Connection state
         this.pc.oniceconnectionstatechange = () => {
             if (!this.pc || this.destroyed) return;
-            this.opts.onIceConnectionChange(this.pc.iceConnectionState);
+            const state = this.pc.iceConnectionState;
+            this.opts.onIceConnectionChange(state);
+
+            if (state === 'disconnected') {
+                // Auto-end after 8 seconds if still disconnected (network loss)
+                this.disconnectTimer = setTimeout(() => {
+                    if (this.pc?.iceConnectionState === 'disconnected' ||
+                        this.pc?.iceConnectionState === 'failed') {
+                        this.opts.onError(new Error('Connection lost. The call has ended.'));
+                    }
+                }, 8000);
+            } else {
+                // Reconnected or ended — clear the timer
+                if (this.disconnectTimer) {
+                    clearTimeout(this.disconnectTimer);
+                    this.disconnectTimer = null;
+                }
+            }
         };
 
         this.pc.onconnectionstatechange = () => {

@@ -15,6 +15,8 @@ export interface ActiveCallState {
     isSpeakerOff: boolean;
     durationSeconds: number;
     startedAt: number | null; // timestamp ms
+    remoteMicMuted: boolean;
+    remoteCameraOff: boolean;
 }
 
 export interface IncomingCall {
@@ -52,6 +54,9 @@ interface CallStore {
     tickDuration: () => void;
 
     endCall: () => void;
+
+    /** Update the remote participant's media status (from data channel) */
+    setRemoteMediaStatus: (isMuted: boolean, isCameraOff: boolean) => void;
 }
 
 export const useCallStore = create<CallStore>()((set, get) => ({
@@ -81,6 +86,8 @@ export const useCallStore = create<CallStore>()((set, get) => ({
                 isSpeakerOff: false,
                 durationSeconds: 0,
                 startedAt: null,
+                remoteMicMuted: false,
+                remoteCameraOff: false,
             },
         });
     },
@@ -104,6 +111,8 @@ export const useCallStore = create<CallStore>()((set, get) => ({
                 isSpeakerOff: false,
                 durationSeconds: 0,
                 startedAt: null,
+                remoteMicMuted: false,
+                remoteCameraOff: false,
             },
         });
     },
@@ -140,5 +149,11 @@ export const useCallStore = create<CallStore>()((set, get) => ({
     },
 
     endCall: () => set({activeCall: null, incomingCall: null}),
+
+    setRemoteMediaStatus: (isMuted, isCameraOff) => {
+        const ac = get().activeCall;
+        if (!ac) return;
+        set({activeCall: {...ac, remoteMicMuted: isMuted, remoteCameraOff: isCameraOff}});
+    },
 }));
 

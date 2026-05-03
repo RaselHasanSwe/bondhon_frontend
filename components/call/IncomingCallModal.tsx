@@ -19,10 +19,13 @@ export function IncomingCallModal() {
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const audioCtxRef = useRef<AudioContext | null>(null);
     const ringIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    // Track callId to detect re-use of handleDecline after timer fires
+    const callIdRef = useRef<number | null>(null);
 
     // ── Oscillator ringtone + countdown ───────────────────────────────────
     useEffect(() => {
         if (!incomingCall) return;
+        callIdRef.current = incomingCall.callId;
         setRemainingSeconds(45);
         setIsAnswering(false);
         setIsDeclining(false);
@@ -34,8 +37,11 @@ export function IncomingCallModal() {
         const playRing = () => {
             if (!AudioCtx) return;
             try {
-                const ctx = new AudioCtx();
-                audioCtxRef.current = ctx;
+                if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+                    audioCtxRef.current = new AudioCtx();
+                }
+                const ctx = audioCtxRef.current;
+                if (ctx.state === 'suspended') ctx.resume().catch(() => {});
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.connect(gain);
@@ -53,29 +59,38 @@ export function IncomingCallModal() {
         playRing();
         ringIntervalRef.current = setInterval(playRing, 1800);
 
+        // Countdown: just decrement — don't call any store action inside the updater
         intervalRef.current = setInterval(() => {
-            setRemainingSeconds((s) => {
-                if (s <= 1) { clearIncomingCall(); return 0; }
-                return s - 1;
-            });
+            setRemainingSeconds((s) => (s <= 1 ? 0 : s - 1));
         }, 1000);
-
-        timeoutRef.current = setTimeout(() => clearIncomingCall(), 45_000);
 
         return () => {
             if (ringIntervalRef.current) clearInterval(ringIntervalRef.current);
             if (intervalRef.current) clearInterval(intervalRef.current);
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
             audioCtxRef.current?.close().catch(() => {});
+            audioCtxRef.current = null;
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [incomingCall?.callId]);
+
+    // ── Auto-decline when timer reaches 0 ────────────────────────────────
+    // Separate effect so we never update Zustand inside a React state updater
+    useEffect(() => {
+        if (remainingSeconds === 0 && incomingCall && !isAnswering && !isDeclining) {
+            // Notify backend so caller's side also closes
+            callService.declineCall(incomingCall.callId).catch(() => {});
+            clearIncomingCall();
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [remainingSeconds]);
 
     const stopRing = useCallback(() => {
         if (ringIntervalRef.current) clearInterval(ringIntervalRef.current);
         if (intervalRef.current) clearInterval(intervalRef.current);
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         audioCtxRef.current?.close().catch(() => {});
+        audioCtxRef.current = null;
     }, []);
 
     const handleAnswer = useCallback(async () => {

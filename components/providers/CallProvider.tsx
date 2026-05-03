@@ -15,11 +15,13 @@ import type {IncomingCallPayload} from '@/types/call';
  *
  * Handles:
  *  - call.initiated  → shows IncomingCallModal
- *  - call.ended      → dismisses any active call UI
+ *  - call.ended      → dismisses any active call/incoming UI
+ *  - call.declined   → dismisses incoming call UI (if we're still ringing)
  */
 export function CallProvider({children}: {children: React.ReactNode}) {
     const user = useAuthStore((s) => s.user);
-    const {setIncomingCall, activeCall, endCall, clearIncomingCall, incomingCall} = useCallStore();
+    // Only read activeCall for rendering — event handlers use getState() to avoid stale closures
+    const activeCall = useCallStore((s) => s.activeCall);
 
     useEffect(() => {
         if (!user?.id || typeof window === 'undefined') return;
@@ -35,26 +37,30 @@ export function CallProvider({children}: {children: React.ReactNode}) {
 
             channel = echo.private(`user.${user.id}`);
 
-            // Incoming call
+            // Incoming call — show ring modal
             channel.listen('.call.initiated', (e: IncomingCallPayload) => {
                 if (cancelled) return;
-                // Don't overwrite an active call
-                setIncomingCall({
+                useCallStore.getState().setIncomingCall({
                     callId: e.call_id,
                     callType: e.type,
                     caller: e.caller,
                 });
             });
 
-            // Remote party ended call (while we were ringing or in call)
+            // Remote party ended call (covers: caller cancels while we're ringing,
+            // or other side ends while we're in CallScreen)
             channel.listen('.call.ended', (e: {call_id: number}) => {
                 if (cancelled) return;
-                if (incomingCall?.callId === e.call_id) {
-                    clearIncomingCall();
-                }
-                if (activeCall?.callId === e.call_id) {
-                    endCall();
-                }
+                const {incomingCall, activeCall: ac, clearIncomingCall, endCall} = useCallStore.getState();
+                if (incomingCall?.callId === e.call_id) clearIncomingCall();
+                if (ac?.callId === e.call_id) endCall();
+            });
+
+            // Caller cancelled / timed out while we haven't answered yet
+            channel.listen('.call.declined', (e: {call_id: number}) => {
+                if (cancelled) return;
+                const {incomingCall, clearIncomingCall} = useCallStore.getState();
+                if (incomingCall?.callId === e.call_id) clearIncomingCall();
             });
         })();
 
@@ -66,12 +72,13 @@ export function CallProvider({children}: {children: React.ReactNode}) {
                 if (channel) {
                     channel.stopListening('.call.initiated');
                     channel.stopListening('.call.ended');
+                    channel.stopListening('.call.declined');
                 }
-                // Don't leave user channel here — other components (ChatWindow, CallScreen) also use it
-                echo; // keep reference for cleanup
+                echo;
             })();
         };
-    }, [user?.id, setIncomingCall, clearIncomingCall, endCall, activeCall, incomingCall]);
+    // Re-subscribe only when the logged-in user changes
+    }, [user?.id]);
 
     return (
         <>
@@ -85,4 +92,3 @@ export function CallProvider({children}: {children: React.ReactNode}) {
         </>
     );
 }
-
