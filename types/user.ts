@@ -7,7 +7,7 @@ export interface User {
     role: 'user' | 'admin';
     is_active: boolean;
     is_banned: boolean;
-    subscription_plan: 'free' | 'silver' | 'gold' | 'platinum';
+    subscription_plan: string;   // free-text tier: free | silver | gold | platinum | vip …
     subscription_expires_at: string | null;
     email_verified_at: string | null;
 }

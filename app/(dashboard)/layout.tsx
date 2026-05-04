@@ -13,24 +13,37 @@ import {
     StarIcon, BellIcon, UserIcon, LogOutIcon,
 } from '@/components/ui/icons';
 import type {ComponentType, SVGProps} from 'react';
+import {planLabel, planBadgeClass, planIcon} from '@/lib/plan-utils';
 
 type NavIconProps = SVGProps<SVGSVGElement> & { size?: number; strokeWidth?: number };
 
+// Crown icon for subscription
+function CrownIcon({size = 24, strokeWidth = 1.8, ...props}: NavIconProps) {
+    return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M2 20h20M5 20V9l7-5 7 5v11"/>
+            <path d="M9 20v-5h6v5"/>
+        </svg>
+    );
+}
+
+
 const NAV_ITEMS: { href: string; label: string; Icon: ComponentType<NavIconProps> }[] = [
-    {href: '/dashboard', label: 'Dashboard', Icon: HomeIcon},
-    {href: '/matches', label: 'Matches', Icon: MatchesIcon},
-    {href: '/search', label: 'Search', Icon: SearchIcon},
-    {href: '/interests', label: 'Interests', Icon: InterestIcon},
-    {href: '/chat', label: 'Messages', Icon: ChatIcon},
-    {href: '/shortlist', label: 'Shortlist', Icon: StarIcon},
-    {href: '/notifications', label: 'Notifications', Icon: BellIcon},
-    {href: '/profile/edit', label: 'My Profile', Icon: UserIcon},
+    {href: '/dashboard',    label: 'Dashboard',    Icon: HomeIcon},
+    {href: '/matches',      label: 'Matches',      Icon: MatchesIcon},
+    {href: '/search',       label: 'Search',       Icon: SearchIcon},
+    {href: '/interests',    label: 'Interests',    Icon: InterestIcon},
+    {href: '/chat',         label: 'Messages',     Icon: ChatIcon},
+    {href: '/shortlist',    label: 'Shortlist',    Icon: StarIcon},
+    {href: '/notifications',label: 'Notifications',Icon: BellIcon},
+    {href: '/subscription', label: 'Upgrade Plan', Icon: CrownIcon},
+    {href: '/profile/edit', label: 'My Profile',   Icon: UserIcon},
 ];
 
 export default function DashboardLayout({children}: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
-    const {isAuthenticated, user, clearAuth} = useAuthStore();
+    const {isAuthenticated, user, clearAuth, updateUser} = useAuthStore();
 
     // Zustand persist hydrates from localStorage asynchronously after the first render.
     // We must wait until the client is mounted before trusting isAuthenticated,
@@ -43,6 +56,20 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
             router.replace('/login');
         }
     }, [mounted, isAuthenticated, router]);
+
+    // ── Sync fresh user data from the server on every mount so the sidebar
+    //    always shows the latest subscription_plan (auth store can be stale
+    //    if the plan was purchased after the last login).
+    useEffect(() => {
+        if (!mounted || !isAuthenticated) return;
+        authService.me()
+            .then(res => {
+                const freshUser = res.data?.data?.user;
+                if (freshUser) updateUser(freshUser);
+            })
+            .catch(() => {/* silently ignore — stale store data is acceptable fallback */});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [mounted, isAuthenticated]);
 
     const handleLogout = async () => {
         try {
@@ -111,7 +138,12 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-[var(--sidebar-foreground)] truncate">{user.name}</p>
-                            <p className="text-xs text-muted-foreground capitalize">{user.subscription_plan} plan</p>
+                            <p className="text-xs">
+                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${planBadgeClass(user.subscription_plan)}`}>
+                                    <span aria-hidden>{planIcon(user.subscription_plan)}</span>
+                                    <span className="truncate">{planLabel(user.subscription_plan)}</span>
+                                </span>
+                            </p>
                         </div>
                         <NotificationBell placement="sidebar"/>
                     </div>
