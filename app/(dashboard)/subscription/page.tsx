@@ -55,7 +55,7 @@ const FEATURE_LABELS: Record<string, { label: string; type: 'bool' | 'qty' | 'en
 // Helpers
 // ---------------------------------------------------------------------------
 function formatDate(iso: string | null | undefined) {
-    if (!iso) return '—';
+    if (!iso) return 'Forever ∞';
     return new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
@@ -138,8 +138,14 @@ function PlanCard({
             </div>
 
             <div className="mb-4">
-                <div className="text-3xl font-extrabold text-gray-900">৳{plan.price_bdt.toLocaleString()}</div>
-                <div className="text-xs text-gray-500">for {formatDuration(plan)}</div>
+                <div className="text-3xl font-extrabold text-gray-900">
+                    {plan.price_bdt === 0 ? (
+                        <span className="text-green-600">Free</span>
+                    ) : `৳${plan.price_bdt.toLocaleString()}`}
+                </div>
+                <div className="text-xs text-gray-500">
+                    {plan.price_bdt === 0 ? 'Forever — no expiry' : `for ${formatDuration(plan)}`}
+                </div>
             </div>
 
             <ul className="flex-1 space-y-1.5 mb-6">
@@ -166,7 +172,11 @@ function PlanCard({
                 <button
                     onClick={() => onBuy(plan)}
                     disabled={loadingId !== null}
-                    className="w-full py-2.5 rounded-xl font-semibold text-sm bg-gray-900 hover:bg-gray-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                        plan.price_bdt === 0
+                            ? 'bg-green-600 hover:bg-green-700 text-white'
+                            : 'bg-gray-900 hover:bg-gray-700 text-white'
+                    }`}
                 >
                     {loadingId === plan.id ? (
                         <span className="flex items-center justify-center gap-2">
@@ -174,9 +184,9 @@ function PlanCard({
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
                             </svg>
-                            Redirecting…
+                            {plan.price_bdt === 0 ? 'Activating…' : 'Redirecting…'}
                         </span>
-                    ) : 'Buy / Upgrade'}
+                    ) : plan.price_bdt === 0 ? '🆓 Subscribe Free' : 'Buy / Upgrade'}
                 </button>
             )}
         </div>
@@ -245,7 +255,11 @@ function SwitchBanner({
 // Current Plan Snapshot
 // ---------------------------------------------------------------------------
 function CurrentPlanSnapshot({ status }: { status: SubscriptionStatus | undefined }) {
-    const isActive = !!(status?.is_active && status.expires_at && new Date(status.expires_at) > new Date());
+    // A subscription is active when: is_active=true AND (expires_at is null = forever, OR expires_at is in the future)
+    const isActive = !!(status?.is_active && (
+        status.expires_at === null || (status.expires_at && new Date(status.expires_at) > new Date())
+    ));
+    const isFree = status?.subscription?.amount_bdt === 0 || status?.plan === 'free';
     const plan     = status?.subscription?.subscription_plan as SubscriptionPlan | undefined;
     // status.features is always a proper key-value dict from SubscriptionFeatureService
     const features = getEnabledFeatures((status?.features ?? {}) as PlanFeatures);
@@ -281,11 +295,15 @@ function CurrentPlanSnapshot({ status }: { status: SubscriptionStatus | undefine
                     {plan?.description && <p className="text-sm text-gray-500 mt-0.5">{plan.description}</p>}
                 </div>
                 <div className="text-right shrink-0">
-                    <div className="text-xs text-gray-500">Expires</div>
-                    <div className="text-base font-bold text-gray-900">{formatDate(status!.expires_at)}</div>
+                    <div className="text-xs text-gray-500">{isFree ? 'Duration' : 'Expires'}</div>
+                    <div className="text-base font-bold text-gray-900">
+                        {isFree ? '∞ Forever' : formatDate(status!.expires_at)}
+                    </div>
                     {plan && (
                         <div className="text-xs text-gray-500 mt-0.5">
-                            ৳{plan.price_bdt.toLocaleString()} / {formatDuration(plan)}
+                            {plan.price_bdt === 0
+                                ? 'Always Free'
+                                : `৳${plan.price_bdt.toLocaleString()} / ${formatDuration(plan)}`}
                         </div>
                     )}
                 </div>
@@ -422,18 +440,29 @@ export default function SubscriptionPage() {
     // This is precise even when multiple plans share the same plan_type string.
     const activeSubPlanId = status?.subscription?.subscription_plan_id ?? null;
     const activeSubId     = status?.active_subscription_id ?? null;
-    const isActive        = !!(status?.is_active);
+    // Active when: is_active=true AND (expires_at is null=forever OR expires_at is future)
+    const isActive        = !!(status?.is_active && (
+        status.expires_at === null || (status.expires_at && new Date(status.expires_at) > new Date())
+    ));
 
     // ── Handlers ─────────────────────────────────────────────────────────────
     const handleBuy = async (plan: SubscriptionPlan) => {
         setError(null);
         setLoadingPlanId(plan.id);
         try {
-            const result = await subscriptionService.initiate(plan.id);
-            window.location.href = result.payment_url;
+            if (plan.price_bdt === 0) {
+                // Free plan — direct activation, no payment gateway
+                await subscriptionService.subscribeFree(plan.id);
+                setSwitchSuccess(`Successfully subscribed to ${plan.name} (Free)! ✓`);
+                await queryClient.invalidateQueries({ queryKey: ['subscription-status'] });
+                await queryClient.invalidateQueries({ queryKey: ['subscription-history'] });
+            } else {
+                const result = await subscriptionService.initiate(plan.id);
+                window.location.href = result.payment_url;
+            }
         } catch (err: unknown) {
             const e = err as { response?: { data?: { message?: string } }; message?: string };
-            setError(e.response?.data?.message ?? e.message ?? 'Failed to initiate payment.');
+            setError(e.response?.data?.message ?? e.message ?? 'Failed to process subscription.');
         } finally {
             setLoadingPlanId(null);
         }
@@ -599,7 +628,9 @@ export default function SubscriptionPage() {
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3 font-bold text-gray-900">
-                                                    ৳{item.amount_bdt.toLocaleString()}
+                                                    {item.amount_bdt === 0
+                                                        ? <span className="text-green-600 font-semibold">Free</span>
+                                                        : `৳${item.amount_bdt.toLocaleString()}`}
                                                 </td>
                                                 <td className="px-4 py-3 hidden sm:table-cell text-gray-500 capitalize text-xs">
                                                     {item.payment_method}

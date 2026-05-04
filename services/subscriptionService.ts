@@ -3,6 +3,7 @@ import type { ApiResponse } from '@/types/user';
 import type {
     InitiatePaymentResponse,
     PaymentHistoryItem,
+    SubscribeFreeResponse,
     SubscriptionPlan,
     SubscriptionStatus,
     SwitchPlanResponse,
@@ -15,9 +16,17 @@ export const subscriptionService = {
         return res.data.data;
     },
 
-    /** Initiate a payment and get SSLCommerz redirect URL */
+    /** Initiate a payment and get SSLCommerz redirect URL (paid plans only) */
     initiate: async (planId: number): Promise<InitiatePaymentResponse> => {
         const res = await api.post<ApiResponse<InitiatePaymentResponse>>('/subscription/initiate', {
+            plan_id: planId,
+        });
+        return res.data.data;
+    },
+
+    /** Subscribe to a free plan (price = 0) directly — no payment needed */
+    subscribeFree: async (planId: number): Promise<SubscribeFreeResponse> => {
+        const res = await api.post<ApiResponse<SubscribeFreeResponse>>('/subscription/free', {
             plan_id: planId,
         });
         return res.data.data;

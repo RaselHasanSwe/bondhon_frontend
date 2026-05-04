@@ -105,7 +105,7 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                         {formatHeight(profile.profile?.height_cm)}
                     </p>
                     {profile.profile?.city && (
-                        <p className="text-xs text-muted-foreground/70 flex items-center gap-1">
+                        <p className="text-xs text-muted-foreground/70 flex items-center gap-1 truncate">
                             <MapPinIcon size={12} strokeWidth={1.8}/>
                             {profile.profile.city}{profile.profile.country ? `, ${profile.profile.country}` : ''}
                         </p>

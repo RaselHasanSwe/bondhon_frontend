@@ -137,13 +137,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                             {user.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-[var(--sidebar-foreground)] truncate">{user.name}</p>
-                            <p className="text-xs">
-                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${planBadgeClass(user.subscription_plan)}`}>
-                                    <span aria-hidden>{planIcon(user.subscription_plan)}</span>
-                                    <span className="truncate">{planLabel(user.subscription_plan)}</span>
-                                </span>
-                            </p>
+                            <p className="text-sm font-medium text-[var(--sidebar-foreground)]">{user.name}</p>
                         </div>
                         <NotificationBell placement="sidebar"/>
                     </div>

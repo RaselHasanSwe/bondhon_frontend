@@ -30,7 +30,10 @@ export default function LoginPage() {
             const res = await authService.login(data);
             const {user, token} = res.data.data;
             setAuth(user, token);
-            router.push(user.email_verified_at ? '/dashboard' : '/verify-email');
+            //router.push(user.email_verified_at ? '/dashboard' : '/verify-email');
+            // location to redirect with reload
+            window.location.href = user.email_verified_at ? '/dashboard' : '/verify-email';
+
         } catch (err: unknown) {
             const axiosErr = err as { response?: { data?: { message?: string } } };
             setServerError(axiosErr.response?.data?.message ?? 'Login failed. Please try again.');

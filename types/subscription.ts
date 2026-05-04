@@ -78,6 +78,12 @@ export interface InitiatePaymentResponse {
     transaction_id: string;
 }
 
+export interface SubscribeFreeResponse {
+    subscription: Subscription;
+    plan: string;
+    expires_at: null;
+}
+
 export interface SwitchPlanResponse {
     active_subscription_id: number;
     plan: string;
