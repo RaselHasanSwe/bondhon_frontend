@@ -95,21 +95,6 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                 {/* Logo */}
                 <div className="mb-8 px-2">
                     <div className="flex items-center gap-2.5">
-                        {settings.site_logo ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                                src={settings.site_logo}
-                                alt={settings.site_name}
-                                className="h-9 w-auto object-contain rounded-lg"
-                            />
-                        ) : (
-                            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                                 style={{background: 'var(--gradient-gold-btn)', boxShadow: 'var(--shadow-btn)'}}>
-                                <svg className="w-4.5 h-4.5 text-white" style={{width:'18px',height:'18px'}} viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                                </svg>
-                            </div>
-                        )}
                         <div>
                             <h1 className="text-xl font-bold leading-none text-gold-gradient">{settings.site_name}</h1>
                             <p className="text-[10px] text-muted-foreground/70 tracking-widest uppercase mt-0.5">Matrimony</p>
