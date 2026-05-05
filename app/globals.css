@@ -405,7 +405,7 @@ button {
 /* ── Rich Text / CMS Content (prose override) ─────────────────────── */
 /*
  * Applied to .prose elements that render content from the SunEditor.
- * Overrides default Tailwind Typography colours to match the Bondhon brand.
+ * Overrides default Tailwind Typography colours to match the MyBouma brand.
  */
 .prose {
   --tw-prose-headings:     #1F2937;

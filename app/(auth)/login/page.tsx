@@ -51,7 +51,7 @@ export default function LoginPage() {
                     <h2 className="text-2xl font-bold text-[#1A1208]" style={{fontFamily: 'var(--font-heading)'}}>
                         Welcome back
                     </h2>
-                    <p className="text-sm text-[#8A7A62] mt-1">Sign in to your Bondhon account</p>
+                    <p className="text-sm text-[#8A7A62] mt-1">Sign in to your MyBouma account</p>
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>

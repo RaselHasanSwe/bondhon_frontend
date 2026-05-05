@@ -29,7 +29,7 @@ export default function Navbar({ siteName, logoUrl }: NavbarProps) {
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt={siteName} className="h-10 w-auto object-contain" />
+              <img style={{ background: '#000000' }} src={logoUrl} alt={siteName} className="h-10 w-auto object-contain px-5 py-2" />
             ) : (
               <div
                 className="h-10 w-10 rounded-xl flex items-center justify-center text-white font-bold text-lg"
@@ -38,12 +38,6 @@ export default function Navbar({ siteName, logoUrl }: NavbarProps) {
                 {siteName.charAt(0)}
               </div>
             )}
-            <span
-              className="font-bold text-xl hidden sm:block"
-              style={{ color: '#C9A227', fontFamily: 'var(--font-heading, serif)' }}
-            >
-              {siteName}
-            </span>
           </Link>
 
           {/* Desktop Nav */}

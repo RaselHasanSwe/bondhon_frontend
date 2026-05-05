@@ -1,8 +1,9 @@
 import type {Metadata} from 'next';
 import {GuestGuard} from '@/components/auth/GuestGuard';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: {default: 'Sign In', template: '%s | Bondhon'},
+    title: {default: 'Sign In', template: '%s | MyBouma'},
 };
 
 export default function AuthLayout({children}: { children: React.ReactNode }) {
@@ -27,7 +28,7 @@ export default function AuthLayout({children}: { children: React.ReactNode }) {
 
                     {/* Top logo */}
                     <div className="relative z-10 p-10">
-                        <div className="flex items-center gap-3">
+                        <Link href="/" className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl flex items-center justify-center"
                                  style={{background: 'linear-gradient(135deg, #C9A227, #E8C547)'}}>
                                 <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
@@ -40,10 +41,10 @@ export default function AuthLayout({children}: { children: React.ReactNode }) {
                                     backgroundClip: 'text',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
-                                }}>বন্ধন</h1>
-                                <p className="text-[10px] text-[#C9A227]/70 tracking-widest uppercase">Bondhon Matrimony</p>
+                                }}>MyBouma</h1>
+                                <p className="text-[10px] text-[#C9A227]/70 tracking-widest uppercase">MyBouma Matrimony</p>
                             </div>
-                        </div>
+                        </Link>
                     </div>
 
                     {/* Center content */}
@@ -63,7 +64,7 @@ export default function AuthLayout({children}: { children: React.ReactNode }) {
                                 }}>Perfect Match</span>
                             </h2>
                             <p className="text-white/55 text-sm leading-relaxed max-w-xs">
-                                Join thousands of families who found their perfect life partner through Bondhon's intelligent matchmaking.
+                                Join thousands of families who found their perfect life partner through MyBouma's intelligent matchmaking.
                             </p>
                         </div>
 
@@ -107,8 +108,8 @@ export default function AuthLayout({children}: { children: React.ReactNode }) {
                             backgroundClip: 'text',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
-                        }}>বন্ধন</h1>
-                        <p className="text-xs text-[#8A7A62] mt-1 tracking-widest uppercase">Bondhon Matrimony</p>
+                        }}>MyBouma</h1>
+                        <p className="text-xs text-[#8A7A62] mt-1 tracking-widest uppercase">MyBouma Matrimony</p>
                     </div>
 
                     <div className="w-full max-w-md animate-fade-in-up">

@@ -64,7 +64,6 @@ export default function RegisterPage() {
                 <div className="mb-7">
                     <div className="flex items-center justify-between mb-1">
                         <h2 className="text-2xl font-bold text-foreground" style={{fontFamily: 'var(--font-heading)'}}>Create account</h2>
-                        <span className="text-xs text-muted-foreground bg-[var(--muted)] rounded-full px-3 py-1">Step {step} of 1</span>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">Start your journey to finding your life partner</p>
                 </div>

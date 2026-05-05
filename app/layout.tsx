@@ -4,7 +4,7 @@ import "./globals.css";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { getSettings } from "@/services/publicService";
 
-const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "Bondhon";
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "MyBouma";
 
 const inter = Inter({
   subsets: ["latin"],

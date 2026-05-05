@@ -17,9 +17,9 @@ api.interceptors.request.use((config) => {
         let token = localStorage.getItem('auth_token');
 
         if (!token) {
-            // Try to recover from the Zustand persist store ('bondhon-auth')
+            // Try to recover from the Zustand persist store ('MyBouma-auth')
             try {
-                const persisted = localStorage.getItem('bondhon-auth');
+                const persisted = localStorage.getItem('mybouma-auth');
                 if (persisted) {
                     const state = JSON.parse(persisted)?.state;
                     if (state?.token) {
@@ -51,12 +51,12 @@ api.interceptors.response.use(
             localStorage.removeItem('auth_token');
             // Remove / reset the Zustand persisted store so isAuthenticated becomes false
             try {
-                const persisted = localStorage.getItem('bondhon-auth');
+                const persisted = localStorage.getItem('mybouma-auth');
                 if (persisted) {
                     const parsed = JSON.parse(persisted);
                     if (parsed?.state) {
                         parsed.state = {user: null, token: null, isAuthenticated: false};
-                        localStorage.setItem('bondhon-auth', JSON.stringify(parsed));
+                        localStorage.setItem('mybouma-auth', JSON.stringify(parsed));
                     }
                 }
             } catch { /* ignore */

@@ -73,7 +73,7 @@ function VerifyCallback({vUrl}: { vUrl: string }) {
                 <h2 className="text-2xl font-bold text-green-700" style={{fontFamily:'var(--font-heading)'}}>Email Verified!</h2>
                 <p className="text-muted-foreground text-sm leading-relaxed">
                     Your email has been verified successfully. Welcome to{' '}
-                    <span className="font-semibold text-[var(--primary)]">Bondhon</span>!
+                    <span className="font-semibold text-[var(--primary)]">MyBouma</span>!
                 </p>
                 <Link href="/login">
                     <button className="btn-gold w-full flex items-center justify-center gap-1.5"

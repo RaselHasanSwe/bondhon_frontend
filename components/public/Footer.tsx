@@ -49,9 +49,6 @@ export default function Footer({ settings }: FooterProps) {
                   {settings.site_name.charAt(0)}
                 </div>
               )}
-              <span className="font-bold text-lg" style={{ color: '#C9A227' }}>
-                {settings.site_name}
-              </span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
               {settings.meta_description ?? "Bangladesh's most trusted premium matrimony platform."}

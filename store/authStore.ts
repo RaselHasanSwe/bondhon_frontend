@@ -36,7 +36,7 @@ export const useAuthStore = create<AuthState>()(
                 })),
         }),
         {
-            name: 'bondhon-auth',
+            name: 'mybouma-auth',
             partialize: (state) => ({user: state.user, token: state.token, isAuthenticated: state.isAuthenticated}),
         }
     )
