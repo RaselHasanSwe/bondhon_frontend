@@ -40,9 +40,11 @@ export default async function TermsPage() {
             className="text-3xl md:text-4xl font-bold text-white"
             style={{ fontFamily: 'var(--font-heading, serif)' }}
           >
-            Terms &amp; Conditions
+            {page.title}
           </h1>
-          <p className="text-gray-400 mt-3">Please read these terms carefully before using our platform</p>
+          {page.meta_description && (
+            <p className="text-gray-400 mt-3">{page.meta_description}</p>
+          )}
         </div>
       </div>
 

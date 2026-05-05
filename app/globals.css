@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -401,3 +402,87 @@ button {
   h1, h2, h3, h4 { font-family: var(--font-heading); }
 }
 
+/* ── Rich Text / CMS Content (prose override) ─────────────────────── */
+/*
+ * Applied to .prose elements that render content from the SunEditor.
+ * Overrides default Tailwind Typography colours to match the Bondhon brand.
+ */
+.prose {
+  --tw-prose-headings:     #1F2937;
+  --tw-prose-body:         #374151;
+  --tw-prose-lead:         #4B5563;
+  --tw-prose-links:        #C9A227;
+  --tw-prose-bold:         #1F2937;
+  --tw-prose-counters:     #C9A227;
+  --tw-prose-bullets:      #C9A227;
+  --tw-prose-hr:           #E8DFCC;
+  --tw-prose-quotes:       #5A4A2A;
+  --tw-prose-quote-borders:#C9A227;
+  --tw-prose-captions:     #6B7280;
+  --tw-prose-code:         #C9A227;
+  --tw-prose-pre-code:     #F9FAFB;
+  --tw-prose-pre-bg:       #1F2937;
+  --tw-prose-th-borders:   #E8DFCC;
+  --tw-prose-td-borders:   #F3F4F6;
+}
+
+/* Ensure tables, blockquotes and images from the editor look polished */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.prose th {
+  background: #F7F3EC;
+  font-weight: 600;
+}
+.prose th, .prose td {
+  padding: 0.625rem 0.875rem;
+  border: 1px solid #E8DFCC;
+}
+.prose blockquote {
+  border-left-width: 3px;
+  border-left-color: #C9A227;
+  background: #FDF8ED;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+  font-style: normal;
+}
+.prose img {
+  border-radius: 0.75rem;
+  max-width: 100%;
+  height: auto;
+}
+.prose a {
+  color: #C9A227;
+  text-decoration: underline;
+  text-decoration-color: rgba(201,162,39,0.4);
+  text-underline-offset: 2px;
+  transition: color 0.2s;
+}
+.prose a:hover { color: #A07810; }
+.prose pre {
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+}
+.prose code:not(pre code) {
+  background: #FDF3CC;
+  color: #A07810;
+  padding: 0.15em 0.4em;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+/* FAQ item structure used by the SunEditor FAQ content */
+.prose .faq-item {
+  border: 1px solid #E8DFCC;
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  background: #FEFBF0;
+}
+.prose .faq-item h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  color: #1F2937;
+}

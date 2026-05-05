@@ -46,7 +46,7 @@ export default function FaqAccordion({ items }: FaqAccordionProps) {
           {openIndex === i && (
             <div className="px-6 pb-5">
               <div
-                className="text-gray-600 text-sm leading-relaxed border-t pt-4"
+                className="prose prose-sm max-w-none text-gray-600 border-t pt-4"
                 style={{ borderColor: '#f3f4f6' }}
                 dangerouslySetInnerHTML={{ __html: item.answer }}
               />

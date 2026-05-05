@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { subscriptionService } from '@/services/subscriptionService';
 import { tierStyle, planLabel } from '@/lib/plan-utils';
+import { useSettings } from '@/lib/useSettings';
 import type {
     PaymentHistoryItem,
     PlanFeatures,
@@ -107,11 +108,13 @@ function PlanCard({
     isCurrent,
     loadingId,
     onBuy,
+    currencySymbol,
 }: {
     plan: SubscriptionPlan;
     isCurrent: boolean;
     loadingId: number | null;
     onBuy: (p: SubscriptionPlan) => void;
+    currencySymbol: string;
 }) {
     const features = getEnabledFeatures(plan.features ?? {});
     const { grad, badge, icon } = tierStyle(plan.plan_type);
@@ -141,7 +144,7 @@ function PlanCard({
                 <div className="text-3xl font-extrabold text-gray-900">
                     {plan.price_bdt === 0 ? (
                         <span className="text-green-600">Free</span>
-                    ) : `৳${plan.price_bdt.toLocaleString()}`}
+                    ) : `${currencySymbol}${plan.price_bdt.toLocaleString()}`}
                 </div>
                 <div className="text-xs text-gray-500">
                     {plan.price_bdt === 0 ? 'Forever — no expiry' : `for ${formatDuration(plan)}`}
@@ -254,7 +257,7 @@ function SwitchBanner({
 // ---------------------------------------------------------------------------
 // Current Plan Snapshot
 // ---------------------------------------------------------------------------
-function CurrentPlanSnapshot({ status }: { status: SubscriptionStatus | undefined }) {
+function CurrentPlanSnapshot({ status, currencySymbol }: { status: SubscriptionStatus | undefined; currencySymbol: string }) {
     // A subscription is active when: is_active=true AND (expires_at is null = forever, OR expires_at is in the future)
     const isActive = !!(status?.is_active && (
         status.expires_at === null || (status.expires_at && new Date(status.expires_at) > new Date())
@@ -303,7 +306,7 @@ function CurrentPlanSnapshot({ status }: { status: SubscriptionStatus | undefine
                         <div className="text-xs text-gray-500 mt-0.5">
                             {plan.price_bdt === 0
                                 ? 'Always Free'
-                                : `৳${plan.price_bdt.toLocaleString()} / ${formatDuration(plan)}`}
+                                        : `${currencySymbol}${plan.price_bdt.toLocaleString()} / ${formatDuration(plan)}`}
                         </div>
                     )}
                 </div>
@@ -334,7 +337,7 @@ function CurrentPlanSnapshot({ status }: { status: SubscriptionStatus | undefine
 // ---------------------------------------------------------------------------
 // Invoice Modal
 // ---------------------------------------------------------------------------
-function InvoiceModal({ item, onClose }: { item: PaymentHistoryItem; onClose: () => void }) {
+function InvoiceModal({ item, onClose, currencySymbol }: { item: PaymentHistoryItem; onClose: () => void; currencySymbol: string }) {
     const printRef = useRef<HTMLDivElement>(null);
 
     const handlePrint = () => {
@@ -394,7 +397,7 @@ function InvoiceModal({ item, onClose }: { item: PaymentHistoryItem; onClose: ()
                     </table>
                     <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
                         <span className="text-sm text-gray-600 font-medium">Total Paid</span>
-                        <span className="text-2xl font-extrabold text-gray-900">৳{item.amount_bdt.toLocaleString()}</span>
+                        <span className="text-2xl font-extrabold text-gray-900">{currencySymbol}{item.amount_bdt.toLocaleString()}</span>
                     </div>
                     <p className="text-xs text-gray-400 text-center">Thank you for subscribing to Bondhon Premium! 💍</p>
                 </div>
@@ -410,6 +413,8 @@ type Tab = 'plans' | 'history';
 
 export default function SubscriptionPage() {
     const queryClient = useQueryClient();
+    const { settings } = useSettings();
+    const currencySymbol = settings.currency_symbol || '৳';
 
     const [tab,          setTab]          = useState<Tab>('plans');
     const [loadingPlanId,setLoadingPlanId]= useState<number | null>(null);
@@ -491,7 +496,7 @@ export default function SubscriptionPage() {
     // ── Render ───────────────────────────────────────────────────────────────
     return (
         <>
-            {invoiceItem && <InvoiceModal item={invoiceItem} onClose={() => setInvoiceItem(null)} />}
+            {invoiceItem && <InvoiceModal item={invoiceItem} onClose={() => setInvoiceItem(null)} currencySymbol={currencySymbol} />}
 
             <main className="max-w-5xl mx-auto px-4 py-6">
                 {/* Header */}
@@ -516,11 +521,11 @@ export default function SubscriptionPage() {
 
                 {/* Current plan snapshot */}
                 <div className="mb-5">
-                    {statusLoading ? (
-                        <div className="h-36 bg-gray-100 rounded-2xl animate-pulse" />
-                    ) : (
-                        <CurrentPlanSnapshot status={status} />
-                    )}
+                        {statusLoading ? (
+                            <div className="h-36 bg-gray-100 rounded-2xl animate-pulse" />
+                        ) : (
+                            <CurrentPlanSnapshot status={status} currencySymbol={currencySymbol} />
+                        )}
                 </div>
 
                 {/* Switch banner — shown when user has 2+ active subscriptions */}
@@ -563,11 +568,10 @@ export default function SubscriptionPage() {
                                     <PlanCard
                                         key={plan.id}
                                         plan={plan}
-                                        // Use plan.id === activeSubPlanId for exact matching
-                                        // (handles two plans with same plan_type like Gold Monthly vs Gold Quarterly)
                                         isCurrent={isActive && plan.id === activeSubPlanId}
                                         loadingId={loadingPlanId}
                                         onBuy={handleBuy}
+                                        currencySymbol={currencySymbol}
                                     />
                                 ))}
                             </div>
@@ -630,7 +634,7 @@ export default function SubscriptionPage() {
                                                 <td className="px-4 py-3 font-bold text-gray-900">
                                                     {item.amount_bdt === 0
                                                         ? <span className="text-green-600 font-semibold">Free</span>
-                                                        : `৳${item.amount_bdt.toLocaleString()}`}
+                                                        : `${currencySymbol}${item.amount_bdt.toLocaleString()}`}
                                                 </td>
                                                 <td className="px-4 py-3 hidden sm:table-cell text-gray-500 capitalize text-xs">
                                                     {item.payment_method}

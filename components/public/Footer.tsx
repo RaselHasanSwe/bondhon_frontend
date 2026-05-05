@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import type { SiteSettings } from '@/types/settings';
 
@@ -34,12 +35,22 @@ export default function Footer({ settings }: FooterProps) {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <div
-                className="h-9 w-9 rounded-lg flex items-center justify-center text-white font-bold"
-                style={{ background: 'linear-gradient(135deg, #C9A227, #D4AF37)' }}
-              >
-                {settings.site_name.charAt(0)}
-              </div>
+              {settings.site_logo ? (
+                <Image
+                  src={settings.site_logo}
+                  alt={settings.site_name}
+                  width={36}
+                  height={36}
+                  className="h-9 w-auto object-contain rounded-lg"
+                />
+              ) : (
+                <div
+                  className="h-9 w-9 rounded-lg flex items-center justify-center text-white font-bold"
+                  style={{ background: 'linear-gradient(135deg, #C9A227, #D4AF37)' }}
+                >
+                  {settings.site_name.charAt(0)}
+                </div>
+              )}
               <span className="font-bold text-lg" style={{ color: '#C9A227' }}>
                 {settings.site_name}
               </span>

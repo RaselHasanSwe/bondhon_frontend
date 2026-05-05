@@ -10,6 +10,8 @@ interface ContactFormData {
   message: string;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
+
 export default function ContactForm() {
   const [form, setForm] = useState<ContactFormData>({ name: '', email: '', subject: '', message: '' });
   const [loading, setLoading] = useState(false);
@@ -21,13 +23,28 @@ export default function ContactForm() {
     setLoading(true);
     setError(null);
 
-    // Simple mailto fallback — no backend endpoint needed for basic contact
-    // In production, integrate with a backend /api/v1/contact endpoint
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800)); // Simulate loading
+      const res = await fetch(`${API_URL}/api/v1/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(form),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        // Laravel validation errors come in json.errors as { field: [msg] }
+        const firstError = json.errors
+          ? Object.values(json.errors as Record<string, string[]>).flat()[0]
+          : (json.message ?? 'Something went wrong. Please try again.');
+        setError(firstError);
+        return;
+      }
+
       setSent(true);
+      setForm({ name: '', email: '', subject: '', message: '' });
     } catch {
-      setError('Something went wrong. Please email us directly.');
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -112,7 +129,7 @@ export default function ContactForm() {
       </div>
 
       {error && (
-        <p className="text-red-500 text-sm">{error}</p>
+        <p className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-lg px-4 py-2">{error}</p>
       )}
 
       <button
@@ -121,9 +138,18 @@ export default function ContactForm() {
         className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-white text-sm transition-opacity disabled:opacity-70"
         style={{ background: 'linear-gradient(135deg, #C9A227, #D4AF37)' }}
       >
-        {loading ? 'Sending…' : <><Send size={16} /> Send Message</>}
+        {loading ? (
+          <>
+            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+            </svg>
+            Sending…
+          </>
+        ) : (
+          <><Send size={16} /> Send Message</>
+        )}
       </button>
     </form>
   );
 }
-

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getSettings, getPage } from '@/services/publicService';
+import type { PageDetail } from '@/types/page';
 import { Heart, Search, Star, Shield, Users, CheckCircle, ArrowRight } from 'lucide-react';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -50,14 +51,19 @@ const steps = [
 export default async function HomePage() {
   const settings = await getSettings();
 
-  // Fetch home hero content — fallback gracefully if not available
-  let heroContent: string | null = null;
+  // Fetch home hero page for fully dynamic hero section
+  let heroPage: PageDetail | null = null;
   try {
-    const heroPage = await getPage('home_hero');
-    heroContent = heroPage.content ?? null;
+    heroPage = await getPage('home_hero');
   } catch {
-    // Use default static content
+    // Fallback to static content
   }
+
+  const heroTitle   = heroPage?.title       ?? 'Find Your Perfect Life Partner';
+  const heroBadge   = heroPage?.meta_title  ?? "Bangladesh's Most Trusted Matrimony Platform";
+  const heroSubtitle= heroPage?.meta_description ?? settings.meta_description
+    ?? 'Join thousands of verified profiles and let our smart matching algorithm find your ideal match on ' + settings.site_name + '.';
+  const heroContent = heroPage?.content ?? null;
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -92,24 +98,31 @@ export default async function HomePage() {
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6"
             style={{ background: 'rgba(201,162,39,0.15)', color: '#C9A227', border: '1px solid rgba(201,162,39,0.3)' }}
           >
-            <Star size={12} fill="currentColor" /> Bangladesh&apos;s Most Trusted Matrimony Platform
+            <Star size={12} fill="currentColor" /> {heroBadge}
           </div>
           <h1
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6"
             style={{ fontFamily: 'var(--font-heading, serif)' }}
           >
-            Find Your Perfect{' '}
-            <span style={{ color: '#C9A227' }}>Life Partner</span>
+            {heroTitle.includes('Life Partner') ? (
+              <>
+                {heroTitle.split('Life Partner')[0]}
+                <span style={{ color: '#C9A227' }}>Life Partner</span>
+                {heroTitle.split('Life Partner')[1]}
+              </>
+            ) : heroTitle}
           </h1>
-          {/* CMS hero content — rendered below main headline if provided by admin */}
+
+          {/* CMS hero body content — stats, extra text, etc. */}
           {heroContent && (
             <div
-              className="prose prose-invert prose-sm max-w-2xl mx-auto mb-8 text-gray-300 hidden"
+              className="prose prose-invert prose-sm max-w-2xl mx-auto mb-8 text-gray-300 [&_strong]:text-[#C9A227] [&_.home-stats]:justify-center"
               dangerouslySetInnerHTML={{ __html: heroContent }}
             />
           )}
+
           <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
-            {settings.meta_description ?? "Join thousands of verified profiles and let our smart matching algorithm find your ideal match on " + settings.site_name + "."}
+            {heroSubtitle}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
@@ -126,20 +139,6 @@ export default async function HomePage() {
             >
               Sign In
             </Link>
-          </div>
-
-          {/* Stats */}
-          <div className="mt-14 grid grid-cols-3 gap-6 max-w-lg mx-auto">
-            {[
-              { value: '50,000+', label: 'Profiles' },
-              { value: '10,000+', label: 'Matches Made' },
-              { value: '4.9★', label: 'Rating' },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="text-2xl font-bold" style={{ color: '#C9A227' }}>{stat.value}</div>
-                <div className="text-gray-400 text-xs mt-1">{stat.label}</div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -239,4 +238,3 @@ export default async function HomePage() {
     </>
   );
 }
-

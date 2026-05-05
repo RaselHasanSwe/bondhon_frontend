@@ -84,9 +84,11 @@ export default async function FaqPage() {
             className="text-3xl md:text-4xl font-bold text-white"
             style={{ fontFamily: 'var(--font-heading, serif)' }}
           >
-            Frequently Asked Questions
+            {page.title}
           </h1>
-          <p className="text-gray-400 mt-3">Everything you need to know about Bondhon</p>
+          {page.meta_description && (
+            <p className="text-gray-400 mt-3">{page.meta_description}</p>
+          )}
         </div>
       </div>
 

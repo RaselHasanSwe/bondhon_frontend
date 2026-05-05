@@ -22,7 +22,7 @@ interface ApiResponse<T> {
 
 export async function getSettings(): Promise<SiteSettings> {
   const res = await fetch(`${BASE_URL}/api/v1/settings`, {
-    next: { revalidate: 3600 }, // ISR: revalidate every hour
+    next: { revalidate: 60 }, // ISR: revalidate every 60 seconds
   });
 
   if (!res.ok) {
@@ -53,7 +53,7 @@ export async function getSettings(): Promise<SiteSettings> {
 
 export async function getPages(): Promise<PageListItem[]> {
   const res = await fetch(`${BASE_URL}/api/v1/pages`, {
-    next: { revalidate: 3600 },
+    next: { revalidate: 60 },
   });
 
   if (!res.ok) return [];
@@ -64,7 +64,7 @@ export async function getPages(): Promise<PageListItem[]> {
 
 export async function getPage(slug: string): Promise<PageDetail> {
   const res = await fetch(`${BASE_URL}/api/v1/pages/${slug}`, {
-    next: { revalidate: 3600 },
+    next: { revalidate: 60 },
   });
 
   if (!res.ok || res.status === 404) {
