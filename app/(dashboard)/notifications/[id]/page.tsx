@@ -1,14 +1,15 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {useRouter, useParams} from 'next/navigation';
 import {useNotificationStore} from '@/store/notificationStore';
+import {notificationService} from '@/services/notificationService';
 import type {AppNotification} from '@/types/notification';
 import {cn} from '@/lib/utils';
 import {
     BellIcon, MailIcon, CelebrationIcon, ClockIcon, EyeIcon,
     MessageSquareIcon, HeartIcon, AlertTriangleIcon, CheckCircleIcon,
-    XCircleIcon, MegaphoneIcon, ArrowLeftIcon, XIcon,
+    XCircleIcon, MegaphoneIcon, ArrowLeftIcon, XIcon, ExternalLinkIcon,
 } from '@/components/ui/icons';
 import type {ComponentType, SVGProps} from 'react';
 
@@ -78,30 +79,41 @@ export default function NotificationDetailPage() {
     const params = useParams();
     const id = params?.id as string;
 
-    const {notifications, remove, fetchNotifications} = useNotificationStore();
+    const {notifications, markRead, remove} = useNotificationStore();
     const [notification, setNotification] = useState<AppNotification | null | undefined>(undefined);
+    const [deleting, setDeleting] = useState(false);
+    const markedRead = useRef(false);
 
+    // Load: try store first, fall back to API fetch
     useEffect(() => {
-        // Try to find in store first, otherwise fetch
+        if (!id) return;
+
         const found = notifications.find((n) => n.id === id);
         if (found) {
             setNotification(found);
-        } else if (notifications.length === 0) {
-            fetchNotifications().then(() => {
-                // Will be resolved by the next effect run after store updates
-            });
         } else {
-            // Not found even after store has items
-            setNotification(null);
+            // Not in the store (could be on a later page) — fetch directly from API
+            notificationService.getById(id).then((n) => {
+                setNotification(n); // null = not found / deleted
+            });
         }
-    }, [id, notifications, fetchNotifications]);
+    }, [id, notifications]);
+
+    // Auto-mark as read once (backend also does this in show(), this keeps store in sync)
+    useEffect(() => {
+        if (notification && !notification.is_read && !markedRead.current) {
+            markedRead.current = true;
+            markRead(notification.id).catch(() => { /* silent */ });
+        }
+    }, [notification, markRead]);
 
     const handleDelete = async () => {
-        await remove(id);
+        // setDeleting(true);
+        // await remove(id);
         router.push('/notifications');
     };
 
-    // Loading state
+    // ── Loading ──────────────────────────────────────────────────────────
     if (notification === undefined) {
         return (
             <div className="max-w-2xl mx-auto pb-20 md:pb-6">
@@ -111,14 +123,14 @@ export default function NotificationDetailPage() {
         );
     }
 
-    // Not found
+    // ── Not found ────────────────────────────────────────────────────────
     if (notification === null) {
         return (
             <div className="max-w-2xl mx-auto pb-20 md:pb-6 text-center py-20">
                 <BellIcon size={48} className="mx-auto text-muted-foreground mb-4"/>
                 <h2 className="text-lg font-semibold text-foreground">Notification not found</h2>
                 <p className="text-sm text-muted-foreground mt-1 mb-6">
-                    This notification may have been deleted.
+                    This notification may have been deleted or does not exist.
                 </p>
                 <button
                     onClick={() => router.push('/notifications')}
@@ -147,7 +159,7 @@ export default function NotificationDetailPage() {
 
             {/* Card */}
             <div className="card-premium rounded-2xl overflow-hidden animate-fade-in-up">
-                {/* Colour stripe */}
+                {/* Read / unread stripe */}
                 <div className={cn('h-1.5 w-full', notification.is_read ? 'bg-border' : 'bg-primary')}/>
 
                 <div className="p-6">
@@ -170,10 +182,11 @@ export default function NotificationDetailPage() {
                             </div>
                         </div>
 
-                        {/* Delete */}
+                        {/* Delete button — explicit action only, never auto-delete */}
                         <button
                             onClick={handleDelete}
-                            className="text-muted-foreground hover:text-destructive transition-colors p-1 rounded-lg hover:bg-destructive/10"
+                            disabled={deleting}
+                            className="text-muted-foreground hover:text-destructive transition-colors p-1 rounded-lg hover:bg-destructive/10 disabled:opacity-50"
                             aria-label="Delete notification"
                         >
                             <XIcon size={16} strokeWidth={2}/>
@@ -194,7 +207,7 @@ export default function NotificationDetailPage() {
                     <div className="flex items-center gap-2 text-[11px] text-muted-foreground border-t border-border pt-4">
                         <ClockIcon size={13} strokeWidth={1.8}/>
                         {formatFullDate(notification.created_at)}
-                        {notification.is_read && notification.read_at && (
+                        {notification.is_read && (
                             <span className="ml-auto flex items-center gap-1">
                                 <CheckCircleIcon size={13} strokeWidth={1.8} className="text-green-500"/>
                                 Read
@@ -203,7 +216,7 @@ export default function NotificationDetailPage() {
                     </div>
                 </div>
 
-                {/* Action button */}
+                {/* Action button — goes to the relevant section (chat, profile, etc.) */}
                 {notification.action_url && (
                     <div className="px-6 pb-6">
                         <button
@@ -211,7 +224,8 @@ export default function NotificationDetailPage() {
                             className="w-full btn-primary py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[.98]"
                             style={{background: 'var(--primary)', color: '#fff'}}
                         >
-                            View Details →
+                            View Details
+                            <ExternalLinkIcon size={15} strokeWidth={2}/>
                         </button>
                     </div>
                 )}
@@ -219,4 +233,3 @@ export default function NotificationDetailPage() {
         </div>
     );
 }
-

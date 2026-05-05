@@ -110,7 +110,8 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
     const handleNotificationClick = async (notification: AppNotification) => {
         if (!notification.is_read) await markRead(notification.id);
         setOpen(false);
-        if (notification.action_url) router.push(notification.action_url);
+        // Always open the detail page; the detail page has a "View Details" button for action_url
+        router.push(`/notifications/${notification.id}`);
     };
 
     const preview = notifications.slice(0, 5);

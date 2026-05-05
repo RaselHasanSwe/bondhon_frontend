@@ -93,9 +93,18 @@ export const notificationService = {
         return res.data.data.data.map(transformNotification);
     },
 
+    /** Fetch a single notification by ID (auto-marks as read on the backend) */
+    async getById(id: string): Promise<AppNotification | null> {
+        try {
+            const res = await api.get<ApiResponse<BackendNotification>>(`/notifications/${id}`);
+            return transformNotification(res.data.data);
+        } catch {
+            return null;
+        }
+    },
+
     /** Fetch paginated notifications (for the history page) */
-    async getPaginated(page = 1, perPage = 15, unreadOnly = false): Promise<PaginatedNotifications> {
-        const params: Record<string, string | number | boolean> = {page, per_page: perPage};
+    async getPaginated(page = 1, perPage = 15, unreadOnly = false): Promise<PaginatedNotifications> {        const params: Record<string, string | number | boolean> = {page, per_page: perPage};
         if (unreadOnly) params.unread_only = true;
         const res = await api.get<ApiResponse<NotificationsResponse>>('/notifications', {params});
         const body = res.data.data;

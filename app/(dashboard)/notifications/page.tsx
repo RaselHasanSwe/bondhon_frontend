@@ -248,13 +248,13 @@ export default function NotificationsPage() {
                                 )}
 
                                 {/* Delete */}
-                                <button
-                                    onClick={(e) => handleRemove(e, n.id)}
-                                    className="absolute top-3 right-8 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1 rounded"
-                                    aria-label="Delete"
-                                >
-                                    <XIcon size={14} strokeWidth={2}/>
-                                </button>
+                                {/*<button*/}
+                                {/*    onClick={(e) => handleRemove(e, n.id)}*/}
+                                {/*    className="absolute top-3 right-8 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1 rounded"*/}
+                                {/*    aria-label="Delete"*/}
+                                {/*>*/}
+                                {/*    <XIcon size={14} strokeWidth={2}/>*/}
+                                {/*</button>*/}
                             </div>
                         );
                     })}
