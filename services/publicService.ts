@@ -11,6 +11,7 @@ import type { PageDetail, PageListItem } from '@/types/page';
 import { notFound } from 'next/navigation';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'Bondhon';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -28,19 +29,19 @@ export async function getSettings(): Promise<SiteSettings> {
   if (!res.ok) {
     // Return sensible defaults if the backend is unavailable
     return {
-      site_name: 'Bondhon',
+      site_name: APP_NAME,
       site_logo: null,
       site_favicon: null,
       currency: 'BDT',
       currency_symbol: '৳',
-      contact_email: 'support@bondhon.com',
+      contact_email: null,
       contact_phone: null,
       contact_address: 'Dhaka, Bangladesh',
       facebook_url: null,
       twitter_url: null,
       instagram_url: null,
-      meta_title: 'Bondhon — Premium Matrimony',
-      meta_description: "Find your perfect life partner on Bondhon — Bangladesh's most trusted matrimony platform.",
+      meta_title: `${APP_NAME} — Premium Matrimony`,
+      meta_description: `Find your perfect life partner on ${APP_NAME} — Bangladesh's most trusted matrimony platform.`,
       meta_keywords: 'matrimony, marriage, Bangladesh',
     };
   }

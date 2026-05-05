@@ -3,7 +3,6 @@
 import {useEffect, useState} from 'react';
 import {useRouter, usePathname} from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import {useAuthStore} from '@/store/authStore';
 import {authService} from '@/services/authService';
 import {cn} from '@/lib/utils';
@@ -97,11 +96,10 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                 <div className="mb-8 px-2">
                     <div className="flex items-center gap-2.5">
                         {settings.site_logo ? (
-                            <Image
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
                                 src={settings.site_logo}
                                 alt={settings.site_name}
-                                width={36}
-                                height={36}
                                 className="h-9 w-auto object-contain rounded-lg"
                             />
                         ) : (

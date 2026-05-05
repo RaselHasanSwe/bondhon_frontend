@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import type { SiteSettings } from '@/types/settings';
 
@@ -36,11 +35,10 @@ export default function Footer({ settings }: FooterProps) {
           <div>
             <div className="flex items-center gap-2 mb-3">
               {settings.site_logo ? (
-                <Image
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
                   src={settings.site_logo}
                   alt={settings.site_name}
-                  width={36}
-                  height={36}
                   className="h-9 w-auto object-contain rounded-lg"
                 />
               ) : (

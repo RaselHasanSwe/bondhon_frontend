@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { SiteSettings } from '@/types/settings';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'Bondhon';
 
 async function fetchSettings(): Promise<SiteSettings> {
   const res = await fetch(`${API_URL}/api/v1/settings`, {
@@ -20,7 +21,7 @@ async function fetchSettings(): Promise<SiteSettings> {
 }
 
 const FALLBACK: SiteSettings = {
-  site_name:        'Bondhon',
+  site_name:        APP_NAME,
   site_logo:        null,
   site_favicon:     null,
   currency:         'BDT',

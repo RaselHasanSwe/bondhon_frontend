@@ -4,6 +4,8 @@ import "./globals.css";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { getSettings } from "@/services/publicService";
 
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "Bondhon";
+
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -25,9 +27,9 @@ export async function generateMetadata(): Promise<Metadata> {
     settings = null;
   }
 
-  const siteName    = settings?.site_name        ?? "Bondhon";
+  const siteName    = settings?.site_name        ?? APP_NAME;
   const metaTitle   = settings?.meta_title       ?? `${siteName} — Premium Matrimony`;
-  const metaDesc    = settings?.meta_description ?? "Find your perfect life partner on Bondhon — Bangladesh's most trusted premium matrimony platform.";
+  const metaDesc    = settings?.meta_description ?? `Find your perfect life partner on ${siteName} — Bangladesh's most trusted premium matrimony platform.`;
   const metaKw      = settings?.meta_keywords    ?? "matrimony, marriage, Bangladesh";
   const faviconUrl  = settings?.site_favicon     ?? null;
 

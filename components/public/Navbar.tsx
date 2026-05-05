@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 
@@ -29,7 +28,8 @@ export default function Navbar({ siteName, logoUrl }: NavbarProps) {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             {logoUrl ? (
-              <Image src={logoUrl} alt={siteName} width={40} height={40} className="h-10 w-auto object-contain" />
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt={siteName} className="h-10 w-auto object-contain" />
             ) : (
               <div
                 className="h-10 w-10 rounded-xl flex items-center justify-center text-white font-bold text-lg"
