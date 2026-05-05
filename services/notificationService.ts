@@ -65,16 +65,22 @@ function resolveActionUrl(type: string, data: BackendNotification['data']): stri
 
 /** Transform a backend notification to the frontend AppNotification shape */
 function transformNotification(n: BackendNotification): AppNotification {
-    const type = n.type as NotificationType;
+    const type = (n.type as NotificationType) in {
+        interest_received: 1, interest_accepted: 1, interest_expired: 1,
+        profile_viewed: 1, new_message: 1, match_suggestion: 1, match_digest: 1,
+        subscription_expiring: 1, subscription_expiry: 1, photo_approved: 1,
+        photo_rejected: 1, system: 1, broadcast_message: 1,
+    } ? (n.type as NotificationType) : 'system' as NotificationType;
+
     return {
         id: n.id,
         type,
-        title: n.data.title ?? 'Notification',
-        body: n.data.message ?? '',
-        action_url: resolveActionUrl(n.type, n.data),
+        title: n.data?.title ?? 'Notification',
+        body: n.data?.message ?? '',
+        action_url: resolveActionUrl(n.type, n.data ?? {}),
         avatar: null,
         is_read: n.is_read,
-        read_at: n.read_at,
+        read_at: n.read_at ?? null,
         created_at: n.created_at,
         meta: n.data,
     };
@@ -123,4 +129,32 @@ export const notificationService = {
 
     /** Transform a raw backend notification (e.g. from WebSocket) to AppNotification */
     transformNotification,
+
+    // ── Admin ──────────────────────────────────────────────────────────────
+
+    /** Broadcast a notification to users (admin only) */
+    async adminBroadcast(
+        title: string,
+        message: string,
+        target: 'all' | 'free' | 'silver' | 'gold' | 'platinum' = 'all',
+        channel: 'application' | 'email' | 'both' = 'application',
+    ): Promise<{ notified_count: number }> {
+        const res = await api.post<ApiResponse<{ notified_count: number }>>('/admin/notifications/broadcast', {
+            title, message, target, channel,
+        });
+        return res.data.data;
+    },
+
+    /** Fetch all notifications for admin (paginated, all users) */
+    async adminGetAll(page = 1, perPage = 20): Promise<PaginatedNotifications> {
+        const res = await api.get<ApiResponse<{ data: BackendNotification[]; pagination: NotificationPagination }>>('/admin/notifications', {
+            params: { page, per_page: perPage },
+        });
+        const body = res.data.data;
+        return {
+            items: body.data.map(transformNotification),
+            unreadCount: 0,
+            pagination: body.pagination,
+        };
+    },
 };

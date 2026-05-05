@@ -133,7 +133,8 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                             {user.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-[var(--sidebar-foreground)]">{user.name}</p>
+                            <p className="text-xs font-medium text-[var(--sidebar-foreground)] truncate">{user.name}</p>
+                            <span className="text-xs">{user.email}</span>
                         </div>
                         <NotificationBell placement="sidebar"/>
                     </div>

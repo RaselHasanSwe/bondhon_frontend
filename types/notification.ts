@@ -29,7 +29,7 @@ export interface AppNotification {
     meta?: Record<string, unknown>;
 }
 
-/** Raw notification shape as returned by the backend API */
+/** Raw notification shape as returned by the backend API or WebSocket event */
 export interface BackendNotification {
     id: string;
     type: string;
@@ -49,6 +49,6 @@ export interface BackendNotification {
         [key: string]: unknown;
     };
     is_read: boolean;
-    read_at: string | null;
+    read_at: string | null | undefined;
     created_at: string;
 }
