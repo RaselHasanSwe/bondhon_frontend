@@ -7,6 +7,7 @@ import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
 import {useSearchParams} from 'next/navigation';
 import {profileService} from '@/services/profileService';
+import {authService} from '@/services/authService';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -100,6 +101,15 @@ const preferencesSchema = z.object({
     drinking_acceptable: z.boolean().optional(),
 });
 
+const changePasswordSchema = z.object({
+    current_password: z.string().min(1, 'Current password is required'),
+    new_password: z.string().min(8, 'New password must be at least 8 characters'),
+    new_password_confirmation: z.string().min(8, 'Please confirm your new password'),
+}).refine((d) => d.new_password === d.new_password_confirmation, {
+    message: 'Passwords do not match',
+    path: ['new_password_confirmation'],
+});
+
 type BasicForm = z.infer<typeof basicSchema>;
 type ReligiousForm = z.infer<typeof religiousSchema>;
 type EducationForm = z.infer<typeof educationSchema>;
@@ -107,6 +117,7 @@ type LifestyleForm = z.infer<typeof lifestyleSchema>;
 type FamilyForm = z.infer<typeof familySchema>;
 type HoroscopeForm = z.infer<typeof horoscopeSchema>;
 type PreferencesForm = z.infer<typeof preferencesSchema>;
+type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
 
 function SaveStatus({saved, saving}: { saved: boolean; saving: boolean }) {
     if (saving) return <span className="text-xs text-gray-400">Saving…</span>;
@@ -139,6 +150,7 @@ function ProfileEditInner() {
     const [savedTab, setSavedTab] = useState<string | null>(null);
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
     const [photoError, setPhotoError] = useState<string | null>(null);
+    const [pwSuccess, setPwSuccess] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const {data: profileRes, isLoading} = useQuery({
@@ -167,6 +179,10 @@ function ProfileEditInner() {
         },
     });
 
+    const changePasswordMutation = useMutation({
+        mutationFn: (data: ChangePasswordForm) => authService.changePassword(data),
+    });
+
     const profile = profileRes?.data;
 
     const basicForm = useForm<BasicForm>({resolver: zodResolver(basicSchema)});
@@ -176,6 +192,7 @@ function ProfileEditInner() {
     const familyForm = useForm<FamilyForm>({resolver: zodResolver(familySchema)});
     const horoscopeForm = useForm<HoroscopeForm>({resolver: zodResolver(horoscopeSchema)});
     const preferencesForm = useForm<PreferencesForm>({resolver: zodResolver(preferencesSchema)});
+    const changePasswordForm = useForm<ChangePasswordForm>({resolver: zodResolver(changePasswordSchema)});
 
     useEffect(() => {
         if (!profile) return;
@@ -326,6 +343,14 @@ function ProfileEditInner() {
         setTimeout(() => setSavedTab(null), 2000);
     };
 
+    const handleChangePassword = async (data: ChangePasswordForm) => {
+        setPwSuccess(false);
+        await changePasswordMutation.mutateAsync(data);
+        setPwSuccess(true);
+        changePasswordForm.reset();
+        setTimeout(() => setPwSuccess(false), 3000);
+    };
+
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -388,6 +413,7 @@ function ProfileEditInner() {
                             {value: 'horoscope', label: 'Horoscope'},
                             {value: 'photo', label: 'Photos'},
                             {value: 'preferences', label: 'Preferences'},
+                            {value: 'security', label: 'Security'},
                         ].map((tab) => (
                             <TabsTrigger
                                 key={tab.value}
@@ -975,6 +1001,85 @@ function ProfileEditInner() {
                             className="btn-gold" style={{height:"2.5rem",borderRadius:"0.75rem",padding:"0 1.25rem"}}
                         >
                             {prefMutation.isPending ? 'Saving…' : 'Save Preferences'}
+                        </Button>
+                    </form>
+                </TabsContent>
+
+                {/* ── Security — Change Password ──────────────────────────── */}
+                <TabsContent value="security">
+                    <form
+                        onSubmit={changePasswordForm.handleSubmit(handleChangePassword)}
+                        className="card-premium p-6 space-y-4"
+                    >
+                        <div className="flex items-center justify-between mb-2">
+                            <div>
+                                <h2 className="font-semibold text-foreground">Change Password</h2>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    Choose a strong password of at least 8 characters.
+                                </p>
+                            </div>
+                            {pwSuccess && (
+                                <span className="text-xs text-green-600 flex items-center gap-1">
+                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                    Password updated
+                                </span>
+                            )}
+                        </div>
+
+                        {changePasswordMutation.isError && (
+                            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                                {(changePasswordMutation.error as {response?: {data?: {message?: string}}})?.response?.data?.message
+                                    ?? 'Something went wrong. Please try again.'}
+                            </div>
+                        )}
+
+                        <div className="space-y-4 max-w-md">
+                            <FieldRow label="Current Password">
+                                <Input
+                                    type="password"
+                                    placeholder="Enter your current password"
+                                    autoComplete="current-password"
+                                    className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary"
+                                    {...changePasswordForm.register('current_password')}
+                                />
+                                {changePasswordForm.formState.errors.current_password && (
+                                    <p className="text-xs text-red-500 mt-1">{changePasswordForm.formState.errors.current_password.message}</p>
+                                )}
+                            </FieldRow>
+
+                            <FieldRow label="New Password">
+                                <Input
+                                    type="password"
+                                    placeholder="At least 8 characters"
+                                    autoComplete="new-password"
+                                    className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary"
+                                    {...changePasswordForm.register('new_password')}
+                                />
+                                {changePasswordForm.formState.errors.new_password && (
+                                    <p className="text-xs text-red-500 mt-1">{changePasswordForm.formState.errors.new_password.message}</p>
+                                )}
+                            </FieldRow>
+
+                            <FieldRow label="Confirm New Password">
+                                <Input
+                                    type="password"
+                                    placeholder="Repeat new password"
+                                    autoComplete="new-password"
+                                    className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary"
+                                    {...changePasswordForm.register('new_password_confirmation')}
+                                />
+                                {changePasswordForm.formState.errors.new_password_confirmation && (
+                                    <p className="text-xs text-red-500 mt-1">{changePasswordForm.formState.errors.new_password_confirmation.message}</p>
+                                )}
+                            </FieldRow>
+                        </div>
+
+                        <Button
+                            type="submit"
+                            disabled={changePasswordMutation.isPending}
+                            className="btn-gold" style={{height:'2.5rem', borderRadius:'0.75rem', padding:'0 1.25rem'}}
+                        >
+                            {changePasswordMutation.isPending ? 'Updating…' : 'Update Password'}
                         </Button>
                     </form>
                 </TabsContent>

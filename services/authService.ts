@@ -22,6 +22,12 @@ export interface ResetPasswordData {
     password_confirmation: string;
 }
 
+export interface ChangePasswordData {
+    current_password: string;
+    new_password: string;
+    new_password_confirmation: string;
+}
+
 export const authService = {
     register: (data: RegisterData) =>
         api.post<AuthResponse>('/auth/register', data),
@@ -48,5 +54,8 @@ export const authService = {
 
     resetPassword: (data: ResetPasswordData) =>
         api.post<ApiResponse<null>>('/auth/password/reset', data),
+
+    changePassword: (data: ChangePasswordData) =>
+        api.put<ApiResponse<null>>('/auth/change-password', data),
 };
 
