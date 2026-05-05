@@ -10,7 +10,8 @@ export type NotificationType =
     | 'photo_approved'
     | 'photo_rejected'
     | 'interest_expired'
-    | 'system';
+    | 'system'
+    | 'broadcast_message';
 
 export interface AppNotification {
     id: string;

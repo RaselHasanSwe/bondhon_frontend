@@ -19,15 +19,23 @@ interface ApiResponse<T> {
     message: string;
 }
 
+export interface NotificationPagination {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+}
+
+export interface PaginatedNotifications {
+    items: AppNotification[];
+    unreadCount: number;
+    pagination: NotificationPagination;
+}
+
 interface NotificationsResponse {
     data: BackendNotification[];
     unread_count: number;
-    pagination: {
-        current_page: number;
-        last_page: number;
-        per_page: number;
-        total: number;
-    };
+    pagination: NotificationPagination;
 }
 
 /** Map notification type string to action_url */
@@ -73,10 +81,23 @@ function transformNotification(n: BackendNotification): AppNotification {
 }
 
 export const notificationService = {
-    /** Fetch all notifications */
+    /** Fetch all notifications (first page, for the bell) */
     async getAll(): Promise<AppNotification[]> {
         const res = await api.get<ApiResponse<NotificationsResponse>>('/notifications');
         return res.data.data.data.map(transformNotification);
+    },
+
+    /** Fetch paginated notifications (for the history page) */
+    async getPaginated(page = 1, perPage = 15, unreadOnly = false): Promise<PaginatedNotifications> {
+        const params: Record<string, string | number | boolean> = {page, per_page: perPage};
+        if (unreadOnly) params.unread_only = true;
+        const res = await api.get<ApiResponse<NotificationsResponse>>('/notifications', {params});
+        const body = res.data.data;
+        return {
+            items: body.data.map(transformNotification),
+            unreadCount: body.unread_count,
+            pagination: body.pagination,
+        };
     },
 
     /** Mark a single notification as read */

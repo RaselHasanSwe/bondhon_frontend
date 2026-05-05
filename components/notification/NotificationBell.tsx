@@ -41,6 +41,7 @@ const TYPE_ICONS: Record<AppNotification['type'], ComponentType<IconProps>> = {
     photo_approved: CheckCircleIcon,
     photo_rejected: XCircleIcon,
     system: MegaphoneIcon,
+    broadcast_message: MegaphoneIcon,
 };
 
 export function NotificationBell({placement = 'default'}: { placement?: 'default' | 'sidebar' }) {
@@ -158,7 +159,7 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
                             className={cn('w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors', !n.is_read && 'bg-[#FBF6E8]')}
                         >
                             {(() => {
-                                const NIcon = TYPE_ICONS[n.type];
+                                const NIcon = TYPE_ICONS[n.type] ?? MegaphoneIcon;
                                 return <NIcon size={20} strokeWidth={1.8} className="shrink-0 mt-0.5 text-gray-500"/>;
                             })()}
                             <div className="flex-1 min-w-0">
