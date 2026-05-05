@@ -58,7 +58,7 @@ const TYPE_COLORS: Record<AppNotification['type'], string> = {
     photo_approved: 'bg-green-50 border-green-100',
     photo_rejected: 'bg-red-50 border-red-100',
     system: 'bg-gray-50 border-gray-100',
-    broadcast_message: 'bg-amber-50 border-amber-100',
+    broadcast_message: 'bg-white border-amber-100',
 };
 
 export default function NotificationsPage() {
