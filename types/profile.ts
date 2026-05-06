@@ -109,6 +109,22 @@ export interface PartnerPreference {
     diet: string[] | null;
     smoking_acceptable: boolean;
     drinking_acceptable: boolean;
+    // Extended preference fields
+    body_type: string[] | null;
+    complexion: string[] | null;
+    blood_group: string[] | null;
+    mother_tongue: string[] | null;
+    manglik_status: string[] | null;
+    rashi: string[] | null;
+    religiousness: string[] | null;
+    pray: string[] | null;
+    has_children: 'no' | 'yes' | 'any' | null;
+    child_living_status: string[] | null;
+    family_type: string[] | null;
+    family_values: string[] | null;
+    working_status: string[] | null;
+    employed_in: string[] | null;
+    pref_residing_status: string[] | null;
 }
 
 export interface ProfilePhoto {

@@ -552,6 +552,45 @@ export const familyStatusOptions: SelectOption[] = [
     { value: 'affluent', label: 'Affluent / Very Rich' },
 ];
 
+// ─── Rashi (Zodiac / Moon Sign) ───────────────────────────────────────────────
+export const rashiOptions: SelectOption[] = [
+    { value: 'aries', label: 'Aries (Mesh)' },
+    { value: 'taurus', label: 'Taurus (Vrishabha)' },
+    { value: 'gemini', label: 'Gemini (Mithun)' },
+    { value: 'cancer', label: 'Cancer (Karka)' },
+    { value: 'leo', label: 'Leo (Simha)' },
+    { value: 'virgo', label: 'Virgo (Kanya)' },
+    { value: 'libra', label: 'Libra (Tula)' },
+    { value: 'scorpio', label: 'Scorpio (Vrishchik)' },
+    { value: 'sagittarius', label: 'Sagittarius (Dhanu)' },
+    { value: 'capricorn', label: 'Capricorn (Makar)' },
+    { value: 'aquarius', label: 'Aquarius (Kumbha)' },
+    { value: 'pisces', label: 'Pisces (Meen)' },
+];
+
+// ─── Manglik Status (multi-select for preferences) ────────────────────────────
+export const manglikStatusOptions: SelectOption[] = [
+    { value: 'yes', label: 'Yes' },
+    { value: 'no', label: 'No' },
+    { value: 'partial', label: 'Partial' },
+    { value: 'dont_know', label: "Don't Know" },
+];
+
+// ─── Working Status ───────────────────────────────────────────────────────────
+export const workingStatusOptions: SelectOption[] = [
+    { value: 'working', label: 'Working / Employed' },
+    { value: 'homemaker', label: 'Homemaker' },
+    { value: 'student', label: 'Student' },
+    { value: 'not_working', label: 'Not Working' },
+];
+
+// ─── Have Children (with "Any" for preferences) ───────────────────────────────
+export const prefHasChildrenOptions: SelectOption[] = [
+    { value: 'no', label: 'No Children' },
+    { value: 'yes', label: 'Has Children' },
+    { value: 'any', label: 'Any / Does Not Matter' },
+];
+
 // ─── Utility: value → SelectOption ───────────────────────────────────────────
 export function toOption(options: SelectOption[], value: string | null | undefined): SelectOption | null {
     if (!value) return null;

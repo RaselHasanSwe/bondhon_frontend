@@ -29,6 +29,7 @@ import {
     hobbiesOptions, nationalityOptions, countryOptions, bangladeshDivisions, bangladeshDistricts,
     residingStatusOptions, siblingCountOptions, siblingPositionOptions,
     familyTypeOptions, familyStatusOptions,
+    rashiOptions, manglikStatusOptions, workingStatusOptions, prefHasChildrenOptions,
 } from '@/lib/profileOptions';
 
 // ─── ENUM fields that must not be sent as empty string ───────────────────────
@@ -127,10 +128,10 @@ const horoscopeSchema = z.object({
 });
 
 const preferencesSchema = z.object({
-    age_min: z.string().optional(),
-    age_max: z.string().optional(),
-    height_min_cm: z.string().optional(),
-    height_max_cm: z.string().optional(),
+    age_min: z.string().optional().refine(v => !v || (Number(v) >= 18 && Number(v) <= 100), { message: 'Age must be between 18 and 100' }),
+    age_max: z.string().optional().refine(v => !v || (Number(v) >= 18 && Number(v) <= 100), { message: 'Age must be between 18 and 100' }),
+    height_min_cm: z.string().optional().refine(v => !v || Number(v) >= 100, { message: 'Height must be at least 100 cm' }),
+    height_max_cm: z.string().optional().refine(v => !v || Number(v) >= 100, { message: 'Height must be at least 100 cm' }),
     pref_marital_status: z.array(z.string()).optional(),
     pref_diet: z.array(z.string()).optional(),
     pref_education: z.array(z.string()).optional(),
@@ -143,6 +144,28 @@ const preferencesSchema = z.object({
     pref_city: z.string().optional(),
     smoking_acceptable: z.boolean().optional(),
     drinking_acceptable: z.boolean().optional(),
+    // Extended fields
+    pref_body_type: z.array(z.string()).optional(),
+    pref_complexion: z.array(z.string()).optional(),
+    pref_blood_group: z.array(z.string()).optional(),
+    pref_mother_tongue: z.array(z.string()).optional(),
+    pref_manglik_status: z.array(z.string()).optional(),
+    pref_rashi: z.array(z.string()).optional(),
+    pref_religiousness: z.array(z.string()).optional(),
+    pref_pray: z.array(z.string()).optional(),
+    pref_has_children: z.string().optional(),
+    pref_child_living_status: z.array(z.string()).optional(),
+    pref_family_type: z.array(z.string()).optional(),
+    pref_family_values: z.array(z.string()).optional(),
+    pref_working_status: z.array(z.string()).optional(),
+    pref_employed_in: z.array(z.string()).optional(),
+    pref_residing_status: z.array(z.string()).optional(),
+}).refine(d => !d.age_min || !d.age_max || Number(d.age_min) <= Number(d.age_max), {
+    message: 'Min age must not be greater than max age',
+    path: ['age_min'],
+}).refine(d => !d.height_min_cm || !d.height_max_cm || Number(d.height_min_cm) <= Number(d.height_max_cm), {
+    message: 'Min height must not be greater than max height',
+    path: ['height_min_cm'],
 });
 
 const changePasswordSchema = z.object({
@@ -342,6 +365,22 @@ function ProfileEditInner() {
                 income_max_bdt:pp.income_max_bdt?.toString()??'', pref_country:pp.country??[],
                 pref_city:pp.city?.join(', ')??'', smoking_acceptable:pp.smoking_acceptable??false,
                 drinking_acceptable:pp.drinking_acceptable??false,
+                // Extended
+                pref_body_type: pp.body_type??[],
+                pref_complexion: pp.complexion??[],
+                pref_blood_group: pp.blood_group??[],
+                pref_mother_tongue: pp.mother_tongue??[],
+                pref_manglik_status: pp.manglik_status??[],
+                pref_rashi: pp.rashi??[],
+                pref_religiousness: pp.religiousness??[],
+                pref_pray: pp.pray??[],
+                pref_has_children: pp.has_children??'',
+                pref_child_living_status: pp.child_living_status??[],
+                pref_family_type: pp.family_type??[],
+                pref_family_values: pp.family_values??[],
+                pref_working_status: pp.working_status??[],
+                pref_employed_in: pp.employed_in??[],
+                pref_residing_status: pp.pref_residing_status??[],
             });
         }
     },[profile]);
@@ -371,8 +410,41 @@ function ProfileEditInner() {
             country:toArr(data.pref_country), city:toArray(data.pref_city),
             income_min_bdt:data.income_min_bdt?Number(data.income_min_bdt):null, income_max_bdt:data.income_max_bdt?Number(data.income_max_bdt):null,
             smoking_acceptable:data.smoking_acceptable??false, drinking_acceptable:data.drinking_acceptable??false,
+            // Extended
+            body_type: toArr(data.pref_body_type),
+            complexion: toArr(data.pref_complexion),
+            blood_group: toArr(data.pref_blood_group),
+            mother_tongue: toArr(data.pref_mother_tongue),
+            manglik_status: toArr(data.pref_manglik_status),
+            rashi: toArr(data.pref_rashi),
+            religiousness: toArr(data.pref_religiousness),
+            pray: toArr(data.pref_pray),
+            has_children: data.pref_has_children || null,
+            child_living_status: toArr(data.pref_child_living_status),
+            family_type: toArr(data.pref_family_type),
+            family_values: toArr(data.pref_family_values),
+            working_status: toArr(data.pref_working_status),
+            employed_in: toArr(data.pref_employed_in),
+            pref_residing_status: toArr(data.pref_residing_status),
         };
-        await prefMutation.mutateAsync(payload); setSavedTab('preferences'); setTimeout(()=>setSavedTab(null),2000);
+        try {
+            await prefMutation.mutateAsync(payload);
+            setSavedTab('preferences'); setTimeout(()=>setSavedTab(null),2000);
+        } catch(err:unknown) {
+            const apiErrors = (err as {response?:{data?:{errors?:Record<string,string[]>}}})?.response?.data?.errors;
+            if (apiErrors) {
+                const fieldMap: Record<string, keyof PreferencesForm> = {
+                    age_min: 'age_min', age_max: 'age_max',
+                    height_min_cm: 'height_min_cm', height_max_cm: 'height_max_cm',
+                    income_min_bdt: 'income_min_bdt', income_max_bdt: 'income_max_bdt',
+                };
+                for (const [apiField, formField] of Object.entries(fieldMap)) {
+                    if (apiErrors[apiField]?.[0]) {
+                        preferencesForm.setError(formField, { type: 'server', message: apiErrors[apiField][0] });
+                    }
+                }
+            }
+        }
     };
 
     const handleChangePassword = async(data:ChangePasswordForm)=>{
@@ -404,7 +476,7 @@ function ProfileEditInner() {
     const btnStyle={height:'2.5rem',borderRadius:'0.75rem',padding:'0 1.25rem'};
 
     return (
-        <div className="max-w-3xl mx-auto pb-20 md:pb-6 space-y-5 animate-fade-in">
+        <div className="max-w-4xl mx-auto pb-20 md:pb-6 space-y-5 animate-fade-in">
             <div className="animate-fade-in-up">
                 <h1 className="page-title">Edit Profile</h1>
                 <p className="text-sm text-muted-foreground mt-0.5">Keep your profile up to date for the best matches</p>
@@ -470,7 +542,7 @@ function ProfileEditInner() {
                                 )}/>
                             </FieldRow>
                             <FieldRow label="Age">
-                                <div className="flex items-center h-10 px-3 border border-border rounded-xl bg-input/50 text-sm text-muted-foreground">
+                                <div className="flex items-center h-[37px] px-3 border border-border rounded-xl bg-input/50 text-sm text-muted-foreground">
                                     {age!=null ? `${age} years old` : 'Auto-calculated from DOB'}
                                 </div>
                             </FieldRow>
@@ -887,88 +959,224 @@ function ProfileEditInner() {
 
                 {/* ── Partner Preferences ───────────────────────────────────── */}
                 <TabsContent value="preferences">
-                    <form onSubmit={preferencesForm.handleSubmit(handleSavePreferences)} className="card-premium p-6 space-y-5">
+                    <form onSubmit={preferencesForm.handleSubmit(handleSavePreferences)} className="card-premium p-6 space-y-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <h2 className="font-semibold text-foreground">Partner Preferences</h2>
-                                <p className="text-xs text-muted-foreground mt-0.5">What you are looking for in a partner.</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">The more specific you are, the better your matches.</p>
                             </div>
                             <SaveStatus saved={savedTab==='preferences'} saving={prefMutation.isPending}/>
                         </div>
 
-                        <div className="grid sm:grid-cols-2 gap-4">
-                            <FieldRow label="Age Range">
-                                <div className="flex gap-2 items-center">
-                                    <Input type="number" placeholder="Min" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('age_min')}/>
-                                    <span className="text-muted-foreground text-sm">–</span>
-                                    <Input type="number" placeholder="Max" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('age_max')}/>
-                                </div>
-                            </FieldRow>
-                            <FieldRow label="Height Range (cm)">
-                                <div className="flex gap-2 items-center">
-                                    <Input type="number" placeholder="Min" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('height_min_cm')}/>
-                                    <span className="text-muted-foreground text-sm">–</span>
-                                    <Input type="number" placeholder="Max" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('height_max_cm')}/>
-                                </div>
-                            </FieldRow>
-                            <FieldRow label="Annual Income (BDT)">
-                                <div className="flex gap-2 items-center">
-                                    <Input type="number" placeholder="Min" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('income_min_bdt')}/>
-                                    <span className="text-muted-foreground text-sm">–</span>
-                                    <Input type="number" placeholder="Max" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('income_max_bdt')}/>
-                                </div>
-                            </FieldRow>
+                        {/* ── Basic Range ── */}
+                        <div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Age, Height &amp; Income</p>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <FieldRow label="Age Range">
+                                    <div className="flex gap-2 items-center">
+                                        <Input type="number" placeholder="Min" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('age_min')}/>
+                                        <span className="text-muted-foreground text-sm">–</span>
+                                        <Input type="number" placeholder="Max" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('age_max')}/>
+                                    </div>
+                                    {preferencesForm.formState.errors.age_min && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.age_min.message}</p>}
+                                    {preferencesForm.formState.errors.age_max && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.age_max.message}</p>}
+                                </FieldRow>
+                                <FieldRow label="Height Range (cm)">
+                                    <div className="flex gap-2 items-center">
+                                        <Input type="number" placeholder="Min" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('height_min_cm')}/>
+                                        <span className="text-muted-foreground text-sm">–</span>
+                                        <Input type="number" placeholder="Max" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('height_max_cm')}/>
+                                    </div>
+                                    {preferencesForm.formState.errors.height_min_cm && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.height_min_cm.message}</p>}
+                                    {preferencesForm.formState.errors.height_max_cm && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.height_max_cm.message}</p>}
+                                </FieldRow>
+                                <FieldRow label="Annual Income (BDT)">
+                                    <div className="flex gap-2 items-center">
+                                        <Input type="number" placeholder="Min" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('income_min_bdt')}/>
+                                        <span className="text-muted-foreground text-sm">–</span>
+                                        <Input type="number" placeholder="Max" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('income_max_bdt')}/>
+                                    </div>
+                                    {preferencesForm.formState.errors.income_min_bdt && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.income_min_bdt.message}</p>}
+                                    {preferencesForm.formState.errors.income_max_bdt && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.income_max_bdt.message}</p>}
+                                </FieldRow>
+                            </div>
                         </div>
 
-                        <FieldRow label="Religion">
-                            <Controller name="pref_religion" control={preferencesForm.control} render={({field})=>(
-                                <MultiSearchableSelect id="pr" options={religionOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select religions…"/>
-                            )}/>
-                        </FieldRow>
-                        <FieldRow label="Caste" hint="Comma-separated e.g. Sunni, Brahmin">
-                            <Input placeholder="Sunni, Brahmin" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('pref_caste')}/>
-                        </FieldRow>
-                        <FieldRow label="Profession">
-                            <Controller name="pref_profession" control={preferencesForm.control} render={({field})=>(
-                                <MultiSearchableSelect id="ppr" options={professionOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select professions…"/>
-                            )}/>
-                        </FieldRow>
-                        <FieldRow label="Country">
-                            <Controller name="pref_country" control={preferencesForm.control} render={({field})=>(
-                                <MultiSearchableSelect id="pct" options={countryOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select countries…"/>
-                            )}/>
-                        </FieldRow>
-                        <FieldRow label="City" hint="Comma-separated e.g. Dhaka, Chittagong">
-                            <Input placeholder="Dhaka, Chittagong" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('pref_city')}/>
-                        </FieldRow>
+                        <hr className="border-border"/>
 
-                        <FieldRow label="Marital Status">
-                            <Controller name="pref_marital_status" control={preferencesForm.control} render={({field})=>(
-                                <MultiSearchableSelect id="pms" options={maritalStatusOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select marital status…"/>
-                            )}/>
-                        </FieldRow>
-                        <FieldRow label="Diet">
-                            <Controller name="pref_diet" control={preferencesForm.control} render={({field})=>(
-                                <MultiSearchableSelect id="pdt" options={dietOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select diet preferences…"/>
-                            )}/>
-                        </FieldRow>
-                        <FieldRow label="Minimum Education Level">
-                            <Controller name="pref_education" control={preferencesForm.control} render={({field})=>(
-                                <MultiSearchableSelect id="ped" options={educationLevelOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select education levels…"/>
-                            )}/>
-                        </FieldRow>
-                        <div className="grid sm:grid-cols-2 gap-4">
-                            <FieldRow label="Smoking Acceptable">
-                                <Controller name="smoking_acceptable" control={preferencesForm.control} render={({field})=>(
-                                    <SearchableSelect id="psmk" isClearable={false} options={[{value:'true',label:'Yes, acceptable'},{value:'false',label:'No, not acceptable'}]} value={field.value===true?'true':field.value===false?'false':''} onChange={v=>field.onChange(v==='true')} placeholder="Select…"/>
-                                )}/>
-                            </FieldRow>
-                            <FieldRow label="Drinking Acceptable">
-                                <Controller name="drinking_acceptable" control={preferencesForm.control} render={({field})=>(
-                                    <SearchableSelect id="pdrk" isClearable={false} options={[{value:'true',label:'Yes, acceptable'},{value:'false',label:'No, not acceptable'}]} value={field.value===true?'true':field.value===false?'false':''} onChange={v=>field.onChange(v==='true')} placeholder="Select…"/>
-                                )}/>
-                            </FieldRow>
+                        {/* ── Physical ── */}
+                        <div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Physical Appearance</p>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <FieldRow label="Body Type">
+                                    <Controller name="pref_body_type" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pbt" options={bodyTypeOptions} value={field.value??[]} onChange={field.onChange} placeholder="Any body type…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Complexion">
+                                    <Controller name="pref_complexion" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pcx" options={complexionOptions} value={field.value??[]} onChange={field.onChange} placeholder="Any complexion…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Blood Group">
+                                    <Controller name="pref_blood_group" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pbg" options={bloodGroupOptions} value={field.value??[]} onChange={field.onChange} placeholder="Any blood group…"/>
+                                    )}/>
+                                </FieldRow>
+                            </div>
                         </div>
+
+                        <hr className="border-border"/>
+
+                        {/* ── Religion & Spirituality ── */}
+                        <div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Religion &amp; Spirituality</p>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <FieldRow label="Religion">
+                                    <Controller name="pref_religion" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pr" options={religionOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select religions…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Caste" hint="Comma-separated e.g. Sunni, Brahmin">
+                                    <Input placeholder="Sunni, Brahmin" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('pref_caste')}/>
+                                </FieldRow>
+                                <FieldRow label="Religiousness">
+                                    <Controller name="pref_religiousness" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="prns" options={religiousnessOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Religious, Moderate…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Prayer Frequency">
+                                    <Controller name="pref_pray" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pprv" options={prayOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Always, Usually…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Manglik Status">
+                                    <Controller name="pref_manglik_status" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pmst" options={manglikStatusOptions} value={field.value??[]} onChange={field.onChange} placeholder="Any manglik status…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Rashi / Zodiac Sign">
+                                    <Controller name="pref_rashi" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="prsh" options={rashiOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Aries, Leo…"/>
+                                    )}/>
+                                </FieldRow>
+                            </div>
+                        </div>
+
+                        <hr className="border-border"/>
+
+                        {/* ── Family ── */}
+                        <div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Family</p>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <FieldRow label="Family Type">
+                                    <Controller name="pref_family_type" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pft" options={familyTypeOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Nuclear, Joint…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Family Values">
+                                    <Controller name="pref_family_values" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pfv" options={familyValuesOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Traditional, Moderate…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Has Children">
+                                    <Controller name="pref_has_children" control={preferencesForm.control} render={({field})=>(
+                                        <SearchableSelect id="phch" options={prefHasChildrenOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Any / select…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Child Living Status">
+                                    <Controller name="pref_child_living_status" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pcls" options={childLivingStatusOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select…"/>
+                                    )}/>
+                                </FieldRow>
+                            </div>
+                        </div>
+
+                        <hr className="border-border"/>
+
+                        {/* ── Career & Employment ── */}
+                        <div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Career &amp; Employment</p>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <FieldRow label="Working Status">
+                                    <Controller name="pref_working_status" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pws" options={workingStatusOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Working, Student…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Employed In">
+                                    <Controller name="pref_employed_in" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pei" options={employedInOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Government, Private…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Profession">
+                                    <Controller name="pref_profession" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="ppr" options={professionOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select professions…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Minimum Education Level">
+                                    <Controller name="pref_education" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="ped" options={educationLevelOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select education levels…"/>
+                                    )}/>
+                                </FieldRow>
+                            </div>
+                        </div>
+
+                        <hr className="border-border"/>
+
+                        {/* ── Location & Identity ── */}
+                        <div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Location &amp; Identity</p>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <FieldRow label="Mother Tongue">
+                                    <Controller name="pref_mother_tongue" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pmt" options={motherTongueOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Bengali, Urdu…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Residing Status">
+                                    <Controller name="pref_residing_status" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="prst" options={residingStatusOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Citizen, PR…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Country">
+                                    <Controller name="pref_country" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pct" options={countryOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select countries…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="City" hint="Comma-separated e.g. Dhaka, Chittagong">
+                                    <Input placeholder="Dhaka, Chittagong" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('pref_city')}/>
+                                </FieldRow>
+                            </div>
+                        </div>
+
+                        <hr className="border-border"/>
+
+                        {/* ── Lifestyle ── */}
+                        <div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Lifestyle &amp; More</p>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <FieldRow label="Marital Status">
+                                    <Controller name="pref_marital_status" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pms" options={maritalStatusOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select marital status…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Diet">
+                                    <Controller name="pref_diet" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pdt" options={dietOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select diet preferences…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Smoking Acceptable">
+                                    <Controller name="smoking_acceptable" control={preferencesForm.control} render={({field})=>(
+                                        <SearchableSelect id="psmk" isClearable={false} options={[{value:'true',label:'Yes, acceptable'},{value:'false',label:'No, not acceptable'}]} value={field.value===true?'true':field.value===false?'false':''} onChange={v=>field.onChange(v==='true')} placeholder="Select…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Drinking Acceptable">
+                                    <Controller name="drinking_acceptable" control={preferencesForm.control} render={({field})=>(
+                                        <SearchableSelect id="pdrk" isClearable={false} options={[{value:'true',label:'Yes, acceptable'},{value:'false',label:'No, not acceptable'}]} value={field.value===true?'true':field.value===false?'false':''} onChange={v=>field.onChange(v==='true')} placeholder="Select…"/>
+                                    )}/>
+                                </FieldRow>
+                            </div>
+                        </div>
+
                         <Button type="submit" disabled={prefMutation.isPending} className="btn-gold" style={btnStyle}>
                             {prefMutation.isPending ? 'Saving…' : 'Save Preferences'}
                         </Button>

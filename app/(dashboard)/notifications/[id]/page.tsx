@@ -217,18 +217,18 @@ export default function NotificationDetailPage() {
                 </div>
 
                 {/* Action button — goes to the relevant section (chat, profile, etc.) */}
-                {notification.action_url && (
-                    <div className="px-6 pb-6">
-                        <button
-                            onClick={() => router.push(notification.action_url!)}
-                            className="w-full btn-primary py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[.98]"
-                            style={{background: 'var(--primary)', color: '#fff'}}
-                        >
-                            View Details
-                            <ExternalLinkIcon size={15} strokeWidth={2}/>
-                        </button>
-                    </div>
-                )}
+                {/*{notification.action_url && (*/}
+                {/*    <div className="px-6 pb-6">*/}
+                {/*        <button*/}
+                {/*            onClick={() => router.push(notification.action_url!)}*/}
+                {/*            className="w-full btn-primary py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[.98]"*/}
+                {/*            style={{background: 'var(--primary)', color: '#fff'}}*/}
+                {/*        >*/}
+                {/*            View Details*/}
+                {/*            <ExternalLinkIcon size={15} strokeWidth={2}/>*/}
+                {/*        </button>*/}
+                {/*    </div>*/}
+                {/*)}*/}
             </div>
         </div>
     );

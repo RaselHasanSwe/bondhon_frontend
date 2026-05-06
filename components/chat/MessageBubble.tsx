@@ -101,7 +101,7 @@ function Lightbox({images, startIndex, onClose}: LightboxProps) {
             <div className="flex items-center justify-center w-full h-full px-16" onClick={(e) => e.stopPropagation()}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={images[idx].src} alt={images[idx].name ?? 'Image'}
-                     className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl select-none"
+                     className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl"
                      draggable={false}/>
             </div>
             {images[idx].name && (
