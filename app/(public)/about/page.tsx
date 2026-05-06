@@ -5,9 +5,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const page = await getPage('about');
   return {
     title: page.meta_title ?? 'About Us',
-    description: page.meta_description ?? 'Learn about Bondhon matrimony platform.',
+    description: page.meta_description ?? 'Learn about My Bouma matrimony platform.',
     openGraph: {
-      title: page.meta_title ?? 'About Us — Bondhon',
+      title: page.meta_title ?? 'About Us — My Bouma',
       description: page.meta_description ?? '',
       type: 'website',
     },

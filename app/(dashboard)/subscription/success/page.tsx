@@ -57,7 +57,7 @@ export default function SubscriptionSuccessPage() {
                     }
                 </p>
                 <p className="text-sm text-gray-400 mb-8">
-                    You now have access to all premium features. Enjoy your Bondhon experience!
+                    You now have access to all premium features. Enjoy your My Bouma experience!
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">

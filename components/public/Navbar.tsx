@@ -12,9 +12,8 @@ interface NavbarProps {
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
+  { href: '/success-stories', label: 'Success Stories' },
   { href: '/faq', label: 'FAQ' },
-  { href: '/terms', label: 'Terms' },
-  { href: '/privacy-policy', label: 'Privacy' },
   { href: '/contact', label: 'Contact' },
 ];
 

@@ -5,9 +5,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const page = await getPage('privacy_policy');
   return {
     title: page.meta_title ?? 'Privacy Policy',
-    description: page.meta_description ?? 'Privacy policy for Bondhon matrimony platform.',
+    description: page.meta_description ?? 'Privacy policy for My Bouma matrimony platform.',
     openGraph: {
-      title: page.meta_title ?? 'Privacy Policy — Bondhon',
+      title: page.meta_title ?? 'Privacy Policy — My Bouma',
       description: page.meta_description ?? '',
       type: 'website',
     },

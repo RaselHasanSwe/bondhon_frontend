@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { SiteSettings } from '@/types/settings';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
-const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'Bondhon';
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'My Bouma';
 
 async function fetchSettings(): Promise<SiteSettings> {
   const res = await fetch(`${API_URL}/api/v1/settings`, {

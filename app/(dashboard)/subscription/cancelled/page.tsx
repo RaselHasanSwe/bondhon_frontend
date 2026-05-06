@@ -48,7 +48,7 @@ export default function SubscriptionCancelledPage() {
                 </div>
 
                 <p className="mt-6 text-xs text-gray-400">
-                    Need help? Contact us at support@bondhon.com
+                    Need help? Contact us at support@mybouma.com
                 </p>
             </div>
         </main>

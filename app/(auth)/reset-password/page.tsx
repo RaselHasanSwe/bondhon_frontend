@@ -187,7 +187,7 @@ export default function ResetPasswordPage() {
                         Set new password
                     </h2>
                     <p className="text-sm text-muted-foreground mt-1">
-                        Enter a strong password for your Bondhon account
+                        Enter a strong password for your My Bouma account
                     </p>
                 </div>
 

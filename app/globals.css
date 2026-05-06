@@ -472,6 +472,77 @@ button {
   font-size: 0.875em;
 }
 
+/* ── Scroll-triggered reveal ── */
+.scroll-animate {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1), transform 0.65s cubic-bezier(0.16,1,0.3,1);
+}
+.scroll-animate.scroll-in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Shimmer sweep on hover (hero search, plan cards) */
+.hover-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.hover-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.14) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.55s ease;
+}
+.hover-shimmer:hover::after { transform: translateX(100%); }
+
+/* Hero image overlay gradient */
+@keyframes hero-float {
+  0%, 100% { transform: translateY(0) scale(1.02); }
+  50%       { transform: translateY(-8px) scale(1.04); }
+}
+.hero-blob { animation: hero-float 6s ease-in-out infinite; }
+
+/* Stat counter ring */
+@keyframes ring-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(201,162,39,0.5); }
+  70%  { box-shadow: 0 0 0 10px rgba(201,162,39,0); }
+  100% { box-shadow: 0 0 0 0 rgba(201,162,39,0); }
+}
+.ring-pulse { animation: ring-pulse 2.5s ease-out infinite; }
+
+/* Plan card gold glow on hover */
+.plan-card-gold:hover {
+  box-shadow: 0 12px 40px rgba(201,162,39,0.24), 0 2px 8px rgba(0,0,0,0.08) !important;
+  transform: translateY(-4px);
+  transition: all 0.25s ease;
+}
+
+/* Testimonial card lift */
+.testimonial-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.1) !important;
+  transition: all 0.25s ease;
+}
+
+/* Step card hover */
+.step-card:hover {
+  border-color: rgba(201,162,39,0.5) !important;
+  background: rgba(255,255,255,0.07) !important;
+  transition: all 0.25s ease;
+}
+
+/* FAQ item hover */
+.faq-card {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.faq-card:hover {
+  border-color: rgba(201,162,39,0.3) !important;
+  box-shadow: 0 4px 16px rgba(201,162,39,0.1) !important;
+}
+
 /* FAQ item structure used by the SunEditor FAQ content */
 .prose .faq-item {
   border: 1px solid #E8DFCC;
