@@ -484,7 +484,7 @@ function ProfileEditInner() {
             {completionRes && <ProfileCompletionBar status={completionRes}/>}
 
             <Tabs defaultValue={initialTab} className="w-full">
-                <div className="overflow-x-auto pb-1 mb-5">
+                <div className="overflow-x-auto pb-1 mb-2">
                     <TabsList className="flex min-w-max gap-1 h-auto p-1 rounded-xl bg-muted">
                         {[
                             {value:'basic',label:'Basic Info'},{value:'location',label:'Location'},
