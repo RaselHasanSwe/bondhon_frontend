@@ -1,18 +1,28 @@
 export interface ProfileData {
     profile_id: string;
+    nick_name: string | null;
+    profile_created_for: 'self' | 'son' | 'daughter' | 'brother' | 'sister' | 'relative' | null;
+    looking_for: 'bride' | 'groom' | null;
     dob: string | null;
     age: number | null;
     height_cm: number | null;
     weight_kg: number | null;
+    body_type: 'slim' | 'average' | 'athletic' | 'heavy' | null;
+    eye_color: string | null;
+    hair_color: string | null;
     complexion: 'very_fair' | 'fair' | 'wheatish' | 'dark' | null;
     blood_group: string | null;
     marital_status: 'never_married' | 'divorced' | 'widowed' | 'awaiting_divorce' | null;
+    disability: string | null;
     mother_tongue: string | null;
     nationality: string | null;
     country: string | null;
     state: string | null;
     city: string | null;
+    postal_code: string | null;
+    residing_status: 'citizen' | 'permanent_resident' | 'work_permit' | 'student_visa' | 'visitor_visa' | 'refugee' | 'other' | null;
     about_me: string | null;
+    what_looking_for: string | null;
     profile_completion_percentage: number;
     is_verified: boolean;
     is_photo_approved: boolean;
@@ -34,6 +44,8 @@ export interface ReligiousDetail {
     sub_caste: string | null;
     gotra: string | null;
     manglik_status: 'yes' | 'no' | 'partial' | 'dont_know' | null;
+    religiousness: 'very_religious' | 'religious' | 'moderate' | 'not_religious' | null;
+    pray: 'always' | 'usually' | 'sometimes' | 'rarely' | 'never' | null;
 }
 
 export interface FamilyDetail {
@@ -44,11 +56,20 @@ export interface FamilyDetail {
     mother_occupation: string | null;
     brothers_count: number;
     sisters_count: number;
+    has_children: 'no' | 'yes' | null;
+    child_living_status: string | null;
+    family_values: 'traditional' | 'moderate' | 'liberal' | 'religious' | null;
+    sibling_position: number | null;
 }
 
 export interface EducationCareer {
     highest_education: string | null;
     college_university: string | null;
+    institution_name_year: string | null;
+    employer_name: string | null;
+    job_location: string | null;
+    designation: string | null;
+    experience_years: number | null;
     profession: string | null;
     employed_in: 'private' | 'government' | 'business' | 'self_employed' | 'not_working' | null;
     annual_income_bdt: number | null;
@@ -58,6 +79,7 @@ export interface Lifestyle {
     diet: 'vegetarian' | 'non_vegetarian' | 'vegan' | 'jain' | null;
     smoking: 'non_smoker' | 'smoker' | 'occasionally' | null;
     drinking: 'non_drinker' | 'drinker' | 'occasionally' | null;
+    eye_wear: 'none' | 'glasses' | 'contact_lens' | null;
     hobbies: string[] | null;
     languages_known: string[];
 }
@@ -137,4 +159,3 @@ export interface FullProfile {
     partner_preference: PartnerPreference | null;
     photos: ProfilePhoto[];
 }
-

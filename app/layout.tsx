@@ -63,6 +63,8 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <body className="min-h-screen bg-background text-foreground antialiased">
         <QueryProvider>{children}</QueryProvider>
+        {/* Portal targets for react-datepicker and react-select */}
+        <div id="datepicker-portal" style={{position:'fixed',zIndex:99999}}/>
       </body>
     </html>
   );
