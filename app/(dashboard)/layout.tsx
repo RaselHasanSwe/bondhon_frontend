@@ -29,7 +29,7 @@ function CrownIcon({size = 24, strokeWidth = 1.8, ...props}: NavIconProps) {
 }
 
 
-const NAV_ITEMS: { href: string; label: string; Icon: ComponentType<NavIconProps> }[] = [
+const NAV_ITEMS: { href: string; label: string; Icon: ComponentType<NavIconProps>; adminOnly?: boolean }[] = [
     {href: '/dashboard',    label: 'Dashboard',    Icon: HomeIcon},
     {href: '/matches',      label: 'Matches',      Icon: MatchesIcon},
     {href: '/search',       label: 'Search',       Icon: SearchIcon},
@@ -122,6 +122,16 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                             </Link>
                         );
                     })}
+                    {/* Admin link — only visible to admins */}
+                    {user.role === 'admin' && (
+                        <Link
+                            href="/admin/dashboard"
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 text-amber-600 hover:bg-amber-50"
+                        >
+                            <span className="text-base">⚙️</span>
+                            Admin Panel
+                        </Link>
+                    )}
                 </nav>
 
                 {/* User section */}

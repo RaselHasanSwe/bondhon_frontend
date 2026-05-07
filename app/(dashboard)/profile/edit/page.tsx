@@ -19,18 +19,11 @@ import {ProfileCompletionBar} from '@/components/profile/ProfileCompletionBar';
 import {SearchableSelect, MultiSearchableSelect} from '@/components/ui/SearchableSelect';
 import type {ProfilePhoto} from '@/types/profile';
 import {
-    profileCreatedByOptions, profileCreatedForOptions, lookingForOptions,
-    maritalStatusOptions, haveChildrenOptions, childLivingStatusOptions,
-    heightOptions, weightOptions, bodyTypeOptions, eyeColorOptions, hairColorOptions,
-    complexionOptions, bloodGroupOptions, disabilityOptions, smokingOptions, drinkingOptions,
-    religionOptions, getCasteOptions, religiousnessOptions, prayOptions,
-    motherTongueOptions, familyValuesOptions, occupationOptions, professionOptions,
-    educationLevelOptions, employedInOptions, experienceOptions, dietOptions, eyeWearOptions,
-    hobbiesOptions, nationalityOptions, countryOptions, bangladeshDivisions, bangladeshDistricts,
-    residingStatusOptions, siblingCountOptions, siblingPositionOptions,
-    familyTypeOptions, familyStatusOptions,
-    rashiOptions, manglikStatusOptions, workingStatusOptions, prefHasChildrenOptions,
+    heightOptions, weightOptions,
+    siblingCountOptions, siblingPositionOptions,
+    experienceOptions,
 } from '@/lib/profileOptions';
+import { useOptions, useChildOptions } from '@/hooks/useSelectOptions';
 
 // ─── ENUM fields that must not be sent as empty string ───────────────────────
 const ENUM_FIELDS = new Set([
@@ -50,8 +43,6 @@ const basicSchema = z.object({
     looking_for: z.string().optional(),
     dob: z.string().optional(),
     marital_status: z.string().optional(),
-    have_children: z.string().optional(),
-    child_living_status: z.string().optional(),
     height_cm: z.string().optional(),
     weight_kg: z.string().optional(),
     body_type: z.string().optional(),
@@ -291,11 +282,58 @@ function ProfileEditInner() {
     const watchedReligion = religiousForm.watch('religion');
     const watchedCountry = locationForm.watch('country');
     const watchedCity = locationForm.watch('city');
-    const casteOpts = useMemo(()=>getCasteOptions(watchedReligion??''),[watchedReligion]);
-    const districtOpts = useMemo(()=>{
-        if (watchedCountry==='bangladesh'&&watchedCity) return bangladeshDistricts[watchedCity]??[];
-        return [];
-    },[watchedCountry,watchedCity]);
+
+    // ── Dynamic select options from API ─────────────────────────────────────
+    const { data: profileCreatedByOptions = [] }  = useOptions('profile_created_by');
+    const { data: profileCreatedForOptions = [] } = useOptions('profile_created_for');
+    const { data: lookingForOptions = [] }        = useOptions('looking_for');
+    const { data: maritalStatusOptions = [] }     = useOptions('marital_status');
+    const { data: haveChildrenOptions = [] }      = useOptions('have_children');
+    const { data: childLivingStatusOptions = [] } = useOptions('child_living_status');
+    const { data: bodyTypeOptions = [] }          = useOptions('body_type');
+    const { data: eyeColorOptions = [] }          = useOptions('eye_color');
+    const { data: hairColorOptions = [] }         = useOptions('hair_color');
+    const { data: complexionOptions = [] }        = useOptions('complexion');
+    const { data: bloodGroupOptions = [] }        = useOptions('blood_group');
+    const { data: disabilityOptions = [] }        = useOptions('disability');
+    const { data: smokingOptions = [] }           = useOptions('smoking');
+    const { data: drinkingOptions = [] }          = useOptions('drinking');
+    const { data: religionOptions = [] }          = useOptions('religion');
+    const { data: religiousnessOptions = [] }     = useOptions('religiousness');
+    const { data: prayOptions = [] }              = useOptions('pray');
+    const { data: manglikStatusOptions = [] }     = useOptions('manglik_status');
+    const { data: motherTongueOptions = [] }      = useOptions('mother_tongue');
+    const { data: familyValuesOptions = [] }      = useOptions('family_values');
+    const { data: occupationOptions = [] }        = useOptions('occupation');
+    const { data: professionOptions = [] }        = useOptions('profession');
+    const { data: educationLevelOptions = [] }    = useOptions('education_level');
+    const { data: employedInOptions = [] }        = useOptions('employed_in');
+    const { data: dietOptions = [] }              = useOptions('diet');
+    const { data: eyeWearOptions = [] }           = useOptions('eye_wear');
+    const { data: hobbiesOptions = [] }           = useOptions('hobbies');
+    const { data: nationalityOptions = [] }       = useOptions('nationality');
+    const { data: countryOptions = [] }           = useOptions('country');
+    const { data: residingStatusOptions = [] }    = useOptions('residing_status');
+    const { data: familyTypeOptions = [] }        = useOptions('family_type');
+    const { data: familyStatusOptions = [] }      = useOptions('family_status');
+    const { data: rashiOptions = [] }             = useOptions('rashi');
+    const { data: workingStatusOptions = [] }     = useOptions('working_status');
+    const { data: prefHasChildrenOptions = [] }   = useOptions('pref_has_children');
+
+    // ── Dependent (nested) options ───────────────────────────────────────────
+    // Caste depends on selected religion
+    const selectedReligionId = religionOptions.find(o => o.value === watchedReligion)?.id;
+    const { data: casteOpts = [] } = useChildOptions('caste', selectedReligionId);
+
+    // Location cascade: all levels live inside the unified 'country' group via parent_id
+    // Level 1 → /options/country                     (root countries, parent_id = null)
+    // Level 2 → /options/country?parent_id=<country> (states / divisions)
+    // Level 3 → /options/country?parent_id=<state>   (districts / cities)
+    const selectedCountryId  = countryOptions.find(o => o.value === watchedCountry)?.id;
+    const { data: divisions  = [] } = useChildOptions('country', selectedCountryId);
+
+    const selectedDivisionId = divisions.find(o => o.value === watchedCity)?.id;
+    const { data: districtOpts = [] } = useChildOptions('country', selectedDivisionId);
 
     useEffect(()=>{
         if (!profile) return;
@@ -556,16 +594,6 @@ function ProfileEditInner() {
                                     <SearchableSelect id="ms" options={maritalStatusOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
                                 )}/>
                             </FieldRow>
-                            <FieldRow label="Have Children">
-                                <Controller name="have_children" control={basicForm.control} render={({field})=>(
-                                    <SearchableSelect id="hc" options={haveChildrenOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
-                                )}/>
-                            </FieldRow>
-                            <FieldRow label="Child Living Status">
-                                <Controller name="child_living_status" control={basicForm.control} render={({field})=>(
-                                    <SearchableSelect id="cls" options={childLivingStatusOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
-                                )}/>
-                            </FieldRow>
                         </div>
 
                         <hr className="border-border"/>
@@ -654,18 +682,20 @@ function ProfileEditInner() {
                                     <SearchableSelect id="cnt" options={countryOptions} value={field.value} onChange={v=>{field.onChange(v??'');locationForm.setValue('city','');locationForm.setValue('state','');}} placeholder="Search country…"/>
                                 )}/>
                             </FieldRow>
-                            {watchedCountry==='bangladesh' ? (
+                            {divisions.length > 0 ? (
                                 <>
-                                    <FieldRow label="Division / City" required>
+                                    <FieldRow label="State / Division" required>
                                         <Controller name="city" control={locationForm.control} render={({field})=>(
-                                            <SearchableSelect id="div" options={bangladeshDivisions} value={field.value} onChange={v=>{field.onChange(v??'');locationForm.setValue('state','');}} placeholder="Select division…"/>
+                                            <SearchableSelect id="div" options={divisions} value={field.value} onChange={v=>{field.onChange(v??'');locationForm.setValue('state','');}} placeholder="Select state / division…"/>
                                         )}/>
                                     </FieldRow>
-                                    <FieldRow label="District">
-                                        <Controller name="state" control={locationForm.control} render={({field})=>(
-                                            <SearchableSelect id="dist" options={districtOpts} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select district…"/>
-                                        )}/>
-                                    </FieldRow>
+                                    {districtOpts.length > 0 && (
+                                        <FieldRow label="District / City">
+                                            <Controller name="state" control={locationForm.control} render={({field})=>(
+                                                <SearchableSelect id="dist" options={districtOpts} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select district / city…"/>
+                                            )}/>
+                                        </FieldRow>
+                                    )}
                                 </>
                             ) : (
                                 <>
@@ -725,7 +755,7 @@ function ProfileEditInner() {
                             </FieldRow>
                             <FieldRow label="Manglik Status">
                                 <Controller name="manglik_status" control={religiousForm.control} render={({field})=>(
-                                    <SearchableSelect id="mst" options={[{value:'yes',label:'Yes'},{value:'no',label:'No'},{value:'partial',label:'Partial'},{value:'dont_know',label:"Don't Know"}]} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                    <SearchableSelect id="mst" options={manglikStatusOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
                                 )}/>
                             </FieldRow>
                         </div>

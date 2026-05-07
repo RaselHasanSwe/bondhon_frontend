@@ -4,7 +4,15 @@ import ReactSelect, {
     StylesConfig,
     GroupBase,
 } from 'react-select';
-import { type SelectOption } from '@/lib/profileOptions';
+
+/** Generic option item — compatible with both static lists and dynamic API results. */
+export interface OptionItem {
+    value: string;
+    label: string;
+}
+
+// Backward-compat alias so existing imports keep working
+export type SelectOption = OptionItem;
 
 /** Read a CSS variable from :root at runtime so portal-mounted menus get the
  *  actual colour even though they are outside the component tree.
