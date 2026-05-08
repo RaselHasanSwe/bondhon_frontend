@@ -248,11 +248,18 @@ function ProfileEditInner() {
     const searchParams = useSearchParams();
     const initialTab = searchParams.get('tab') ?? 'basic';
     const queryClient = useQueryClient();
+    const [activeTab, setActiveTab] = useState<string>(initialTab);
     const [savedTab,setSavedTab] = useState<string|null>(null);
     const [uploadingPhoto,setUploadingPhoto] = useState(false);
     const [photoError,setPhotoError] = useState<string|null>(null);
     const [pwSuccess,setPwSuccess] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    
+    // Update active tab when URL changes
+    useEffect(() => {
+        const tabFromUrl = searchParams.get('tab') ?? 'basic';
+        setActiveTab(tabFromUrl);
+    }, [searchParams]);
 
     const {data:profileRes,isLoading} = useQuery({queryKey:['my-profile'],queryFn:()=>profileService.getMyProfile().then(r=>r.data)});
     const {data:completionRes} = useQuery({queryKey:['profile-completion'],queryFn:()=>profileService.getCompletionStatus().then(r=>r.data.data)});
@@ -521,7 +528,7 @@ function ProfileEditInner() {
             </div>
             {completionRes && <ProfileCompletionBar status={completionRes}/>}
 
-            <Tabs defaultValue={initialTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <div className="overflow-x-auto pb-1 mb-2">
                     <TabsList className="flex min-w-max gap-1 h-auto p-1 rounded-xl bg-muted">
                         {[
