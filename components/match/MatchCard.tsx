@@ -1,11 +1,13 @@
 'use client';
 
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 import {formatAge, formatHeight, resolvePhotoUrl} from '@/lib/utils';
 import {CompatibilityScore} from './CompatibilityScore';
 import {interestService, shortlistService} from '@/services/profileService';
+import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
 import type {ProfileCard} from '@/types/profile';
 import {MapPinIcon, ReligionIcon, GraduationCapIcon, MailIcon, StarIcon, StarFilledIcon, UserIcon, CheckIcon} from '@/components/ui/icons';
 
@@ -16,9 +18,92 @@ interface MatchCardProps {
 }
 
 export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
-    const [interestSent, setInterestSent] = useState(false);
+    const queryClient = useQueryClient();
+    const [interestStatus, setInterestStatus] = useState<'none' | 'pending' | 'accepted'>('none');
     const [shortlisted, setShortlisted] = useState(false);
-    const [loading, setLoading] = useState(false);
+
+    // Fetch interest status
+    const {data: interestStatusRes} = useQuery({
+        queryKey: ['interests-status-card', profile.id],
+        queryFn: () => interestService.checkStatus(profile.id).then((r) => r.data.data),
+    });
+
+    // Fetch shortlist status
+    const shortlistStatusQuery = useQuery({
+        queryKey: ['shortlist-status-card', profile.id],
+        queryFn: async () => {
+            try {
+                let page = 1;
+                let hasMore = true;
+
+                while (hasMore) {
+                    const response = await shortlistService.getAll(page);
+                    const data = response.data?.data as any;
+                    const profiles = data?.data ?? [];
+
+                    const isShortlisted = profiles.some((s: any) => s.user?.id === profile.id);
+                    if (isShortlisted) {
+                        return true;
+                    }
+
+                    const lastPage = data?.last_page ?? 1;
+                    const currentPage = data?.current_page ?? 1;
+                    hasMore = currentPage < lastPage;
+                    page++;
+
+                    if (page > 100) hasMore = false;
+                }
+
+                return false;
+            } catch (error) {
+                console.error('Error checking shortlist status:', error);
+                return false;
+            }
+        },
+        staleTime: 0,
+    });
+
+    // Update interest status
+    useEffect(() => {
+        if (interestStatusRes) {
+            setInterestStatus(interestStatusRes.status as 'none' | 'pending' | 'accepted');
+        }
+    }, [interestStatusRes]);
+
+    // Update shortlist status
+    useEffect(() => {
+        if (shortlistStatusQuery.data !== undefined) {
+            setShortlisted(shortlistStatusQuery.data);
+        }
+    }, [shortlistStatusQuery.data]);
+
+    const sendInterestMutation = useMutation({
+        mutationFn: (id: number) => interestService.send(id),
+        onSuccess: () => {
+            setInterestStatus('pending');
+            queryClient.invalidateQueries({queryKey: ['interests-status-card']});
+            showSuccessToast('Interest sent successfully!');
+        },
+        onError: (error: any) => {
+            const message = getErrorMessage(error);
+            showErrorToast(message);
+        },
+    });
+
+     const shortlistMutation = useMutation({
+         mutationFn: (id: number) => shortlistService.toggle(id),
+         onSuccess: async () => {
+             setShortlisted((s) => !s);
+             queryClient.invalidateQueries({queryKey: ['shortlist-status-card'], exact: false});
+             queryClient.invalidateQueries({queryKey: ['shortlist'], exact: false});
+             await shortlistStatusQuery.refetch();
+             showSuccessToast(shortlisted ? 'Removed from shortlist' : 'Added to shortlist');
+         },
+         onError: (error: any) => {
+             const message = getErrorMessage(error);
+             showErrorToast(message);
+         },
+     });
 
     const profileUrl = profile.profile?.profile_id
         ? `/profile/${profile.profile.profile_id}`
@@ -26,35 +111,19 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
 
     const handleSendInterest = async (e: React.MouseEvent) => {
         e.preventDefault();
-        if (loading || interestSent) return;
-        setLoading(true);
-        try {
-            await interestService.send(profile.id);
-            setInterestSent(true);
-        } catch {
-            // Silently fail — optimistic UI would show error toast in production
-        } finally {
-            setLoading(false);
-        }
+        if (sendInterestMutation.isPending || interestStatus !== 'none') return;
+        sendInterestMutation.mutate(profile.id);
     };
 
     const handleShortlist = async (e: React.MouseEvent) => {
         e.preventDefault();
-        if (loading) return;
-        setLoading(true);
-        try {
-            await shortlistService.toggle(profile.id);
-            setShortlisted((s) => !s);
-        } catch {
-            // error handling
-        } finally {
-            setLoading(false);
-        }
+        if (shortlistMutation.isPending) return;
+        shortlistMutation.mutate(profile.id);
     };
 
     return (
         <div
-            className="card-premium overflow-hidden group animate-fade-in">
+            className="card-premium overflow-hidden group animate-fade-in flex flex-col h-full">
             {/* Photo */}
             <Link href={profileUrl} className="block relative aspect-[4/5] bg-[var(--gold-50)]">
                 {resolvePhotoUrl(profile.primary_photo) ? (
@@ -92,58 +161,65 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
             </Link>
 
             {/* Info */}
-            <div className="p-4">
-                <Link href={profileUrl}>
-                    <h3 className="font-semibold text-foreground truncate hover:text-[var(--primary)] transition-colors" style={{fontFamily:'var(--font-heading)'}}>
-                        {profile.name}
-                    </h3>
-                </Link>
+            <div className="p-4 flex flex-col h-full">
+                {/* Profile Content - Takes up space */}
+                <div>
+                    <Link href={profileUrl}>
+                        <h3 className="font-semibold text-foreground truncate hover:text-[var(--primary)] transition-colors" style={{fontFamily:'var(--font-heading)'}}>
+                            {profile.name}
+                        </h3>
+                    </Link>
 
-                <div className="mt-1 space-y-0.5">
-                    <p className="text-sm text-muted-foreground">
-                        {formatAge(profile.profile?.dob)} •{' '}
-                        {formatHeight(profile.profile?.height_cm)}
-                    </p>
-                    {profile.profile?.city && (
-                        <p className="text-xs text-muted-foreground/70 flex items-center gap-1 truncate">
-                            <MapPinIcon size={12} strokeWidth={1.8}/>
-                            {profile.profile.city}{profile.profile.country ? `, ${profile.profile.country}` : ''}
+                    <div className="mt-1 space-y-0.5">
+                        <p className="text-sm text-muted-foreground">
+                            {formatAge(profile.profile?.dob)} •{' '}
+                            {formatHeight(profile.profile?.height_cm)}
                         </p>
-                    )}
-                    {profile.religion && (
-                        <p className="text-xs text-muted-foreground/70 flex items-center gap-1">
-                            <ReligionIcon size={12} strokeWidth={1.8}/>
-                            {profile.religion}
-                        </p>
-                    )}
-                    {profile.education && (
-                        <p className="text-xs text-muted-foreground/70 flex items-center gap-1">
-                            <GraduationCapIcon size={12} strokeWidth={1.8}/>
-                            {profile.education}
-                        </p>
-                    )}
+                        {profile.profile?.city && (
+                            <p className="text-xs text-muted-foreground/70 flex items-center gap-1 truncate">
+                                <MapPinIcon size={12} strokeWidth={1.8}/>
+                                {profile.profile.city}{profile.profile.country ? `, ${profile.profile.country}` : ''}
+                            </p>
+                        )}
+                        {profile.religion && (
+                            <p className="text-xs text-muted-foreground/70 flex items-center gap-1">
+                                <ReligionIcon size={12} strokeWidth={1.8}/>
+                                {profile.religion}
+                            </p>
+                        )}
+                        {profile.education && (
+                            <p className="text-xs text-muted-foreground/70 flex items-center gap-1">
+                                <GraduationCapIcon size={12} strokeWidth={1.8}/>
+                                {profile.education}
+                            </p>
+                        )}
+                    </div>
                 </div>
 
-                {/* Actions */}
-                <div className="mt-4 flex items-center gap-2">
+                {/* Actions - Bottom Aligned */}
+                <div className="mt-auto pt-4 flex items-center gap-2">
                     <button
                         onClick={handleSendInterest}
-                        disabled={loading || interestSent}
+                        disabled={interestStatus !== 'none' || sendInterestMutation.isPending}
                         className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
-                            interestSent
+                            interestStatus === 'accepted'
                                 ? 'bg-green-50 text-green-600 border border-green-200'
-                                : 'btn-gold'
+                                : interestStatus === 'pending'
+                                    ? 'bg-amber-50 text-amber-600 border border-amber-200'
+                                    : 'btn-gold'
                         }`}
-                        style={interestSent ? {} : {height:'auto', padding:'0.5rem', borderRadius:'0.75rem'}}
+                        style={{height:'auto', padding:'0.5rem', borderRadius:'0.75rem'}}
                     >
-                        {interestSent
-                            ? <><CheckIcon size={12} strokeWidth={2.5}/> Sent</>
-                            : <><MailIcon size={12} strokeWidth={2}/> Interest</>
+                        {interestStatus === 'accepted'
+                            ? <><CheckIcon size={12} strokeWidth={2.5}/> Approved</>
+                            : interestStatus === 'pending'
+                                ? <><CheckIcon size={12} strokeWidth={2.5}/> Interest Sent</>
+                                : <><MailIcon size={12} strokeWidth={2}/> Send Interest</>
                         }
                     </button>
                     <button
                         onClick={handleShortlist}
-                        disabled={loading}
+                        disabled={shortlistMutation.isPending}
                         title={shortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
                         className={`p-2 rounded-xl border transition-all ${
                             shortlisted

@@ -623,3 +623,89 @@ button {
   font-size: 1rem;
   color: #1F2937;
 }
+
+/* ─── SweetAlert2 Toast Styling ──────────────────────────────────────────── */
+.colored-toast.swal2-popup {
+  color: white;
+  border-radius: 0.75rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 1rem;
+  min-width: 320px;
+}
+
+.colored-toast.swal2-popup .swal2-title {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  font-family: var(--font-heading);
+}
+
+.colored-toast.swal2-popup .swal2-html-container {
+  color: rgba(255,255,255,0.9);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+}
+
+.colored-toast.swal2-popup .swal2-timer-progress-bar {
+  background: linear-gradient(90deg, rgba(201,162,39,0.8) 0%, rgba(201,162,39,0.4) 100%);
+  height: 3px;
+  border-radius: 99px;
+}
+
+/* Error state */
+.colored-toast.swal2-popup.swal2-icon-error {
+  background: linear-gradient(135deg, #7f1d1d 0%, #5f0a0a 100%);
+  border-color: rgba(239,68,68,0.3);
+}
+
+.colored-toast.swal2-popup.swal2-icon-error .swal2-icon {
+  color: #ef4444;
+}
+
+/* Success state */
+.colored-toast.swal2-popup.swal2-icon-success {
+  background: linear-gradient(135deg, #A07810 0%, #C9A227 50%, #E8B923 100%);
+  border-color: rgba(248,217,109,0.4);
+}
+
+.colored-toast.swal2-popup.swal2-icon-success .swal2-icon {
+  color: #FEFBF0;
+}
+
+/* Warning state */
+.colored-toast.swal2-popup.swal2-icon-warning {
+  background: linear-gradient(135deg, #78350f 0%, #451a03 100%);
+  border-color: rgba(251,146,60,0.3);
+}
+
+.colored-toast.swal2-popup.swal2-icon-warning .swal2-icon {
+  color: #fb923c;
+}
+
+/* Info state */
+.colored-toast.swal2-popup.swal2-icon-info {
+  background: linear-gradient(135deg, #0c4a6e 0%, #082f49 100%);
+  border-color: rgba(14,165,233,0.3);
+}
+
+.colored-toast.swal2-popup.swal2-icon-info .swal2-icon {
+  color: #0ea5e9;
+}
+
+/* Icon styling */
+.colored-toast.swal2-popup .swal2-icon {
+  width: 2rem;
+  height: 2rem;
+  margin-right: 0.75rem;
+}
+
+.colored-toast.swal2-popup .swal2-icon-content {
+  line-height: 1.5;
+}
+

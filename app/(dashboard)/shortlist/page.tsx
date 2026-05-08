@@ -3,6 +3,7 @@
 import {useState} from 'react';
 import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 import {shortlistService} from '@/services/profileService';
+import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
 import {MatchCard} from '@/components/match/MatchCard';
 import type {ProfileCard} from '@/types/profile';
 import {StarFilledIcon, StarIcon, XIcon, ArrowLeftIcon, ArrowRightIcon} from '@/components/ui/icons';
@@ -26,6 +27,11 @@ export default function ShortlistPage() {
         mutationFn: (userId: number) => shortlistService.toggle(userId),
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['shortlist']});
+            showSuccessToast('Removed from shortlist');
+        },
+        onError: (error: any) => {
+            const message = getErrorMessage(error);
+            showErrorToast(message);
         },
     });
 

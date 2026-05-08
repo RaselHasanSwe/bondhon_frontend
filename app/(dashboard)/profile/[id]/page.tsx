@@ -1,7 +1,7 @@
 'use client';
 
-import {useState} from 'react';
-import {useQuery, useMutation} from '@tanstack/react-query';
+import React, {useState} from 'react';
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 import {useParams, useRouter} from 'next/navigation';
 import {
     profileService,
@@ -11,9 +11,10 @@ import {
     reportService
 } from '@/services/profileService';
 import {chatService} from '@/services/chatService';
+import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
 import {CompatibilityScore} from '@/components/match/CompatibilityScore';
 import {formatAge, formatHeight} from '@/lib/utils';
-import {Dialog, DialogContent, DialogHeader, DialogTitle} from '@/components/ui/dialog';
+import {Dialog, DialogContent, DialogTitle} from '@/components/ui/dialog';
 import {Button} from '@/components/ui/button';
 import {Textarea} from '@/components/ui/textarea';
 import {useAuthStore} from '@/store/authStore';
@@ -46,8 +47,9 @@ export default function ProfileViewPage() {
     const params = useParams<{ id: string }>();
     const router = useRouter();
     const currentUser = useAuthStore((s) => s.user);
+    const queryClient = useQueryClient();
 
-    const [interestSent, setInterestSent] = useState(false);
+    const [interestStatus, setInterestStatus] = useState<'none' | 'pending' | 'accepted'>('none');
     const [shortlisted, setShortlisted] = useState(false);
     const [reportOpen, setReportOpen] = useState(false);
     const [reportReason, setReportReason] = useState('fake_profile');
@@ -59,6 +61,9 @@ export default function ProfileViewPage() {
         queryFn: () => profileService.getProfileById(params.id).then((r) => r.data),
         enabled: !!params.id,
     });
+
+    // Determine if this is own profile early
+    const isOwnProfile = currentUser?.id === profileRes?.data?.id;
 
     const {data: scoreRes} = useQuery({
         queryKey: ['compatibility-score', profileRes?.data?.id],
@@ -73,15 +78,106 @@ export default function ProfileViewPage() {
         enabled: !!profileRes?.data?.id,
     });
 
-    const sendInterestMutation = useMutation({
-        mutationFn: (id: number) => interestService.send(id),
-        onSuccess: () => setInterestSent(true),
+    // Fetch interest status between current user and this profile
+    const {data: interestStatusRes} = useQuery({
+        queryKey: ['interests-status', profileRes?.data?.id],
+        queryFn: () =>
+            profileRes?.data?.id && !isOwnProfile
+                ? interestService.checkStatus(profileRes.data.id).then((r) => r.data.data)
+                : null,
+        enabled: !!profileRes?.data?.id && !isOwnProfile,
     });
 
-    const shortlistMutation = useMutation({
-        mutationFn: (id: number) => shortlistService.toggle(id),
-        onSuccess: () => setShortlisted((s) => !s),
+    // Fetch shortlist status for this profile
+    const shortlistStatusQuery = useQuery({
+        queryKey: ['shortlist-status', profileRes?.data?.id],
+        queryFn: async () => {
+            if (!profileRes?.data?.id || isOwnProfile) return false;
+
+            try {
+                // Check all pages of shortlisted profiles
+                let page = 1;
+                let hasMore = true;
+
+                while (hasMore) {
+                    const response = await shortlistService.getAll(page);
+                    const data = response.data?.data as any;
+                    const profiles = data?.data ?? [];
+
+                    // Check if profile is in this page
+                    // The API returns 'user' field (not 'shortlisted_user')
+                    const isShortlisted = profiles.some((s: any) => s.user?.id === profileRes.data.id);
+                    if (isShortlisted) {
+                        return true;
+                    }
+
+                    // Check if there are more pages
+                    const lastPage = data?.last_page ?? 1;
+                    const currentPage = data?.current_page ?? 1;
+                    hasMore = currentPage < lastPage;
+                    page++;
+
+                    // Safety limit to prevent infinite loops
+                    if (page > 100) hasMore = false;
+                }
+
+                return false;
+            } catch (error) {
+                console.error('Error checking shortlist status:', error);
+                return false;
+            }
+        },
+        enabled: !!profileRes?.data?.id && !isOwnProfile,
+        staleTime: 0, // Always consider this data stale to refetch when invalidated
     });
+
+    const shortlistRes = shortlistStatusQuery.data;
+
+    // Update interest status based on fetched interest
+    React.useEffect(() => {
+        if (interestStatusRes) {
+            setInterestStatus(interestStatusRes.status as 'none' | 'pending' | 'accepted');
+        }
+    }, [interestStatusRes]);
+
+    // Update shortlist status based on fetched data
+    React.useEffect(() => {
+        if (shortlistRes !== undefined) {
+            setShortlisted(shortlistRes);
+        }
+    }, [shortlistRes]);
+
+
+    const sendInterestMutation = useMutation({
+        mutationFn: (id: number) => interestService.send(id),
+        onSuccess: () => {
+            setInterestStatus('pending');
+            // Invalidate the interest status query to refresh
+            queryClient.invalidateQueries({queryKey: ['interests-status']});
+            showSuccessToast('Interest sent successfully!');
+        },
+        onError: (error: any) => {
+            const message = getErrorMessage(error);
+            showErrorToast(message);
+        }
+    });
+
+     const shortlistMutation = useMutation({
+         mutationFn: (id: number) => shortlistService.toggle(id),
+         onSuccess: async () => {
+             setShortlisted((s) => !s);
+             // Invalidate and refetch shortlist queries
+             queryClient.invalidateQueries({queryKey: ['shortlist-status'], exact: false});
+             queryClient.invalidateQueries({queryKey: ['shortlist'], exact: false});
+             // Force refetch immediately
+             await shortlistStatusQuery.refetch();
+             showSuccessToast(shortlisted ? 'Removed from shortlist' : 'Added to shortlist');
+         },
+         onError: (error: any) => {
+             const message = getErrorMessage(error);
+             showErrorToast(message);
+         }
+     });
 
     const blockMutation = useMutation({
         mutationFn: (id: number) => blockService.block(id),
@@ -133,7 +229,6 @@ export default function ProfileViewPage() {
     const p: FullProfile = profileRes.data;
     const photos = p.photos?.filter((ph) => ph.is_approved) ?? [];
     const activePhoto = photos[activePhotoIdx];
-    const isOwnProfile = currentUser?.id === p.id;
 
     return (
         <div className="bg-[#FDFAF4] min-h-screen pb-24 md:pb-10"
@@ -253,79 +348,83 @@ export default function ProfileViewPage() {
                             )}
 
                             {/* Compatibility score + actions row */}
-                            <div className="mt-7 flex flex-wrap items-center gap-3">
-                                {scoreRes && (
-                                    <div className="mr-2">
-                                        <CompatibilityScore score={scoreRes.score} size="lg"/>
-                                    </div>
-                                )}
+                             <div className="mt-7 flex items-center gap-1.5 flex-nowrap overflow-x-auto pb-1">
+                                 {scoreRes && (
+                                     <div className="mr-1 shrink-0">
+                                         <CompatibilityScore score={scoreRes.score} size="lg"/>
+                                     </div>
+                                 )}
 
-                                {!isOwnProfile ? (
-                                    <>
-                                        {/* Send Interest */}
-                                        <button
-                                            onClick={() => sendInterestMutation.mutate(p.id)}
-                                            disabled={interestSent || sendInterestMutation.isPending}
-                                            className={`group relative inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 overflow-hidden shadow-lg
-                                                ${interestSent
-                                                ? 'bg-green-500/20 border border-green-400/40 text-green-300'
-                                                : 'bg-[#C9A227] hover:bg-[#d4af37] text-white hover:shadow-[0_0_20px_rgba(201,162,39,0.5)]'
-                                            }`}
-                                            style={{fontFamily: 'system-ui, sans-serif'}}>
-                                            {interestSent
-                                                ? <><CheckIcon size={14} strokeWidth={2.5}/> Interest Sent</>
-                                                : <><MailIcon size={14} strokeWidth={1.8}/> Send Interest</>
-                                            }
-                                        </button>
+                                 {!isOwnProfile ? (
+                                     <>
+                                         {/* Send Interest */}
+                                          <button
+                                              onClick={() => sendInterestMutation.mutate(p.id)}
+                                              disabled={interestStatus !== 'none' || sendInterestMutation.isPending}
+                                              className={`group relative inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 overflow-hidden shadow-md shrink-0 whitespace-nowrap
+                                                  ${interestStatus === 'accepted'
+                                                  ? 'bg-green-600/20 border border-green-500/40 text-green-400 cursor-not-allowed'
+                                                  : interestStatus === 'pending'
+                                                      ? 'bg-amber-500/20 border border-amber-400/40 text-amber-300 cursor-not-allowed'
+                                                      : 'bg-[#C9A227] hover:bg-[#d4af37] text-white hover:shadow-[0_0_15px_rgba(201,162,39,0.4)]'
+                                              }`}
+                                              style={{fontFamily: 'system-ui, sans-serif'}}>
+                                              {interestStatus === 'accepted'
+                                                  ? <><CheckIcon size={12} strokeWidth={2.5}/> Interest Accepted</>
+                                                  : interestStatus === 'pending'
+                                                      ? <><CheckIcon size={12} strokeWidth={2.5}/> Interest Sent</>
+                                                      : <><MailIcon size={12} strokeWidth={1.8}/> Send Interest</>
+                                              }
+                                          </button>
 
-                                        {/* Message */}
-                                        <button
-                                            onClick={() => {setMessageError(null); messageMutation.mutate(p.id);}}
-                                            disabled={messageMutation.isPending}
-                                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all duration-200 backdrop-blur-sm shadow-md"
-                                            style={{fontFamily: 'system-ui, sans-serif'}}>
-                                            {messageMutation.isPending
-                                                ? <><ClockIcon size={14} strokeWidth={1.8}/> Opening…</>
-                                                : <><ChatIcon size={14} strokeWidth={1.8}/> Send Message</>
-                                            }
-                                        </button>
+                                         {/* Message */}
+                                         <button
+                                             onClick={() => {setMessageError(null); messageMutation.mutate(p.id);}}
+                                             disabled={messageMutation.isPending}
+                                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all duration-200 backdrop-blur-sm shadow-md shrink-0 whitespace-nowrap"
+                                             style={{fontFamily: 'system-ui, sans-serif'}}>
+                                             {messageMutation.isPending
+                                                 ? <><ClockIcon size={12} strokeWidth={1.8}/> Opening…</>
+                                                 : <><ChatIcon size={12} strokeWidth={1.8}/> Message</>
+                                             }
+                                         </button>
 
-                                        {/* Shortlist */}
-                                        <button
-                                            onClick={() => shortlistMutation.mutate(p.id)}
-                                            disabled={shortlistMutation.isPending}
-                                            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm transition-all duration-200 border
-                                                ${shortlisted
-                                                ? 'border-[#C9A227] text-[#C9A227] bg-[#C9A227]/10'
-                                                : 'border-white/20 text-white/70 hover:border-[#C9A227]/60 hover:text-[#C9A227]'
-                                            }`}
-                                            style={{fontFamily: 'system-ui, sans-serif'}}>
-                                            {shortlisted ? <StarFilledIcon size={14} strokeWidth={1.8}/> : <StarIcon size={14} strokeWidth={1.8}/>}
-                                            {shortlisted ? 'Shortlisted' : 'Shortlist'}
-                                        </button>
+                                         {/* Shortlist */}
+                                         <button
+                                             onClick={() => shortlistMutation.mutate(p.id)}
+                                             disabled={shortlistMutation.isPending}
+                                             className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs transition-all duration-200 border shrink-0 whitespace-nowrap
+                                                 ${shortlisted
+                                                 ? 'border-[#C9A227] text-[#C9A227] bg-[#C9A227]/10'
+                                                 : 'border-white/20 text-white/70 hover:border-[#C9A227]/60 hover:text-[#C9A227]'
+                                             }`}
+                                             style={{fontFamily: 'system-ui, sans-serif'}}>
+                                             {shortlisted ? <StarFilledIcon size={12} strokeWidth={1.8}/> : <StarIcon size={12} strokeWidth={1.8}/>}
+                                             {shortlisted ? 'Shortlisted' : 'Shortlist'}
+                                         </button>
 
-                                        {/* Secondary actions */}
-                                        <div className="flex gap-2 ml-auto">
-                                            <button onClick={() => setReportOpen(true)}
-                                                    className="text-white/40 hover:text-white/70 text-xs px-3 py-2 rounded-full border border-white/10 hover:border-white/25 transition-colors"
-                                                    style={{fontFamily: 'system-ui, sans-serif'}}>
-                                                Report
-                                            </button>
-                                            <button onClick={() => {if (confirm('Block this user? They will not be able to see your profile.')) blockMutation.mutate(p.id);}}
-                                                    className="text-white/40 hover:text-red-400 text-xs px-3 py-2 rounded-full border border-white/10 hover:border-red-400/30 transition-colors"
-                                                    style={{fontFamily: 'system-ui, sans-serif'}}>
-                                                Block
-                                            </button>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <a href="/profile/edit"
-                                       className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#C9A227] hover:bg-[#d4af37] text-white text-sm font-semibold shadow-lg transition-all"
-                                       style={{fontFamily: 'system-ui, sans-serif'}}>
-                                        Edit Profile
-                                    </a>
-                                )}
-                            </div>
+                                         {/* Secondary actions */}
+                                         <div className="flex gap-1 ml-auto shrink-0">
+                                             <button onClick={() => setReportOpen(true)}
+                                                     className="text-white/40 hover:text-white/70 text-xs px-2 py-1.5 rounded-full border border-white/10 hover:border-white/25 transition-colors whitespace-nowrap"
+                                                     style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                 Report
+                                             </button>
+                                             <button onClick={() => {if (confirm('Block this user? They will not be able to see your profile.')) blockMutation.mutate(p.id);}}
+                                                     className="text-white/40 hover:text-red-400 text-xs px-2 py-1.5 rounded-full border border-white/10 hover:border-red-400/30 transition-colors whitespace-nowrap"
+                                                     style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                 Block
+                                             </button>
+                                         </div>
+                                     </>
+                                 ) : (
+                                     <a href="/profile/edit"
+                                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#C9A227] hover:bg-[#d4af37] text-white text-xs font-semibold shadow-md transition-all whitespace-nowrap"
+                                        style={{fontFamily: 'system-ui, sans-serif'}}>
+                                         Edit Profile
+                                     </a>
+                                 )}
+                             </div>
 
                             {messageError && (
                                 <p className="mt-2 text-xs text-red-400" style={{fontFamily: 'system-ui, sans-serif'}}>{messageError}</p>

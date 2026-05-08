@@ -968,10 +968,10 @@ function ProfileEditInner() {
                                         {photo.is_primary && <span className="absolute top-2 left-2 bg-[#C9A227] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Primary</span>}
                                         {photo.moderation_status==='pending' && <span className="absolute top-2 right-2 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Pending</span>}
                                         {photo.moderation_status==='rejected' && <span className="absolute top-2 right-2 bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full">Rejected</span>}
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-end gap-1 pb-3">
-                                            {!photo.is_primary && <button onClick={()=>handleSetPrimary(photo.id)} className="text-white text-xs bg-[#C9A227] rounded-full px-3 py-1 hover:bg-[#b8911f] transition-colors">Set Primary</button>}
-                                            <button onClick={()=>handleDeletePhoto(photo.id)} className="text-white text-xs bg-red-500 rounded-full px-3 py-1 hover:bg-red-600 transition-colors">Delete</button>
-                                        </div>
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-end gap-1 pb-2">
+                                             {!photo.is_primary && <button onClick={()=>handleSetPrimary(photo.id)} className="text-white text-xs bg-[#C9A227] rounded-full px-2.5 py-1 hover:bg-[#b8911f] transition-colors text-[11px]">Primary</button>}
+                                             <button onClick={()=>handleDeletePhoto(photo.id)} className="text-white text-xs bg-red-500 rounded-full px-2.5 py-1 hover:bg-red-600 transition-colors text-[11px]">Delete</button>
+                                         </div>
                                     </div>
                                 ))}
                             </div>

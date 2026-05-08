@@ -77,6 +77,9 @@ export const interestService = {
     getSent: (page = 1) =>
         api.get('/interests/sent', {params: {page}}),
 
+    checkStatus: (userId: number) =>
+        api.get<ApiResponse<{status: 'none' | 'pending' | 'accepted'; is_sender?: boolean; created_at?: string; expires_at?: string}>>(`/interests/status/${userId}`),
+
     accept: (id: number) =>
         api.put(`/interests/${id}/accept`),
 

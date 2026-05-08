@@ -3,6 +3,7 @@
 import {useState} from 'react';
 import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 import {interestService} from '@/services/profileService';
+import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
 import {formatAge, resolvePhotoUrl} from '@/lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -120,16 +121,26 @@ export default function InterestsPage() {
         enabled: tab === 'sent',
     });
 
-    const actionMutation = useMutation({
-        mutationFn: ({id, action}: { id: number; action: 'accept' | 'decline' | 'ignore' }) => {
-            if (action === 'accept') return interestService.accept(id);
-            if (action === 'decline') return interestService.decline(id);
-            return interestService.ignore(id);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['interests-received']});
-        },
-    });
+     const actionMutation = useMutation({
+         mutationFn: ({id, action}: { id: number; action: 'accept' | 'decline' | 'ignore' }) => {
+             if (action === 'accept') return interestService.accept(id);
+             if (action === 'decline') return interestService.decline(id);
+             return interestService.ignore(id);
+         },
+         onSuccess: (_, variables) => {
+             queryClient.invalidateQueries({queryKey: ['interests-received']});
+             const actionLabels = {
+                 accept: 'Interest accepted!',
+                 decline: 'Interest declined.',
+                 ignore: 'Interest ignored.'
+             };
+             showSuccessToast(actionLabels[variables.action]);
+         },
+         onError: (error: any) => {
+             const message = getErrorMessage(error);
+             showErrorToast(message);
+         }
+     });
 
     const currentData = tab === 'received' ? receivedData : sentData;
     const isLoading = tab === 'received' ? receivedLoading : sentLoading;
