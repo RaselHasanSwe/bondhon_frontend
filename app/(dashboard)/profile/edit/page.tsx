@@ -337,10 +337,10 @@ function ProfileEditInner() {
     // Level 2 → /options/country?parent_id=<country> (states / divisions)
     // Level 3 → /options/country?parent_id=<state>   (districts / cities)
     const selectedCountryId  = countryOptions.find(o => o.value === watchedCountry)?.id;
-    const { data: divisions  = [] } = useChildOptions('country', selectedCountryId);
+    const { data: divisions  = [] } = useChildOptions('bd_division', selectedCountryId);
 
     const selectedDivisionId = divisions.find(o => o.value === watchedCity)?.id;
-    const { data: districtOpts = [] } = useChildOptions('country', selectedDivisionId);
+    const { data: districtOpts = [] } = useChildOptions('bd_district', selectedDivisionId);
 
     useEffect(()=>{
         if (!profile) return;
