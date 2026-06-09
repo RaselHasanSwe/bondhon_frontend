@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { subscriptionService } from '@/services/subscriptionService';
-import { tierStyle, planLabel } from '@/lib/plan-utils';
-import { useSettings } from '@/lib/useSettings';
+import {useState, useRef} from 'react';
+import {useQuery, useQueryClient} from '@tanstack/react-query';
+import {subscriptionService} from '@/services/subscriptionService';
+import {tierStyle, planLabel} from '@/lib/plan-utils';
+import {useSettings} from '@/lib/useSettings';
 import type {
     PaymentHistoryItem,
     PlanFeatures,
@@ -17,39 +17,39 @@ import type {
 // Feature label definitions (mirrors backend SubscriptionFeatureService)
 // ---------------------------------------------------------------------------
 const FEATURE_LABELS: Record<string, { label: string; type: 'bool' | 'qty' | 'enum'; period?: string }> = {
-    daily_matches:                { label: 'Daily Match Suggestions',        type: 'qty',  period: '/day'   },
-    search_access:                { label: 'Search Access',                  type: 'bool'                  },
-    profile_views_per_day:        { label: 'Profile Views per Day',          type: 'qty',  period: '/day'   },
-    search_filters_advanced:      { label: 'Advanced Search Filters',        type: 'bool'                  },
-    profile_id_search:            { label: 'Search by Profile ID',           type: 'bool'                  },
-    send_interest_per_day:        { label: 'Interests Sent per Day',         type: 'qty',  period: '/day'   },
-    chat_access:                  { label: 'Chat Access',                    type: 'bool'                  },
-    audio_call_access:            { label: 'Audio Calls',                    type: 'bool'                  },
-    video_call_access:            { label: 'Video Calls',                    type: 'bool'                  },
-    message_read_receipt:         { label: 'Message Read Receipts',          type: 'bool'                  },
-    voice_message_access:         { label: 'Voice Messages',                 type: 'bool'                  },
-    contact_info_views_per_month: { label: 'Contact Info Unlocks',           type: 'qty',  period: '/month' },
-    see_who_liked_me:             { label: 'See Who Liked You',              type: 'bool'                  },
-    see_who_viewed_profile:       { label: 'See Profile Visitors',           type: 'bool'                  },
-    profile_visitors_detailed:    { label: 'Detailed Visitor List',          type: 'bool'                  },
-    profile_boost_per_month:      { label: 'Profile Boosts',                 type: 'qty',  period: '/month' },
-    featured_profile:             { label: 'Featured Profile Listing',       type: 'bool'                  },
-    highlighted_in_search:        { label: 'Highlighted in Search',          type: 'bool'                  },
-    top_of_match_list:            { label: 'Top of Daily Matches',           type: 'bool'                  },
-    max_photos_upload:            { label: 'Max Photos Upload',              type: 'qty'                   },
-    private_photo_access:         { label: 'Private Photo Requests',         type: 'bool'                  },
-    photo_request_per_day:        { label: 'Photo Unlock Requests',          type: 'qty',  period: '/day'   },
-    profile_visibility_control:   { label: 'Profile Visibility Control',     type: 'bool'                  },
-    verified_badge_eligible:      { label: 'Verified Badge Eligible',        type: 'bool'                  },
-    priority_verification:        { label: 'Priority Verification',          type: 'bool'                  },
-    compatibility_score_visible:  { label: 'Compatibility Score',            type: 'bool'                  },
-    profile_completion_tips:      { label: 'AI Profile Tips',                type: 'bool'                  },
-    match_report_monthly:         { label: 'Monthly Match Report',           type: 'bool'                  },
-    priority_support:             { label: 'Priority Support',               type: 'bool'                  },
-    relationship_advisor:         { label: 'Matrimony Advisor Access',       type: 'bool'                  },
-    email_digest_frequency:       { label: 'Email Digest',                   type: 'enum'                  },
-    push_notifications:           { label: 'Push Notifications',             type: 'bool'                  },
-    sms_notifications:            { label: 'SMS Alerts',                     type: 'bool'                  },
+    daily_matches: {label: 'Daily Match Suggestions', type: 'qty', period: '/day'},
+    search_access: {label: 'Search Access', type: 'bool'},
+    profile_views_per_day: {label: 'Profile Views per Day', type: 'qty', period: '/day'},
+    search_filters_advanced: {label: 'Advanced Search Filters', type: 'bool'},
+    profile_id_search: {label: 'Search by Profile ID', type: 'bool'},
+    send_interest_per_day: {label: 'Interests Sent per Day', type: 'qty', period: '/day'},
+    chat_access: {label: 'Chat Access', type: 'bool'},
+    audio_call_access: {label: 'Audio Calls', type: 'bool'},
+    video_call_access: {label: 'Video Calls', type: 'bool'},
+    message_read_receipt: {label: 'Message Read Receipts', type: 'bool'},
+    voice_message_access: {label: 'Voice Messages', type: 'bool'},
+    contact_info_views_per_month: {label: 'Contact Info Unlocks', type: 'qty', period: '/month'},
+    see_who_liked_me: {label: 'See Who Liked You', type: 'bool'},
+    see_who_viewed_profile: {label: 'See Profile Visitors', type: 'bool'},
+    profile_visitors_detailed: {label: 'Detailed Visitor List', type: 'bool'},
+    profile_boost_per_month: {label: 'Profile Boosts', type: 'qty', period: '/month'},
+    featured_profile: {label: 'Featured Profile Listing', type: 'bool'},
+    highlighted_in_search: {label: 'Highlighted in Search', type: 'bool'},
+    top_of_match_list: {label: 'Top of Daily Matches', type: 'bool'},
+    max_photos_upload: {label: 'Max Photos Upload', type: 'qty'},
+    private_photo_access: {label: 'Private Photo Requests', type: 'bool'},
+    photo_request_per_day: {label: 'Photo Unlock Requests', type: 'qty', period: '/day'},
+    profile_visibility_control: {label: 'Profile Visibility Control', type: 'bool'},
+    verified_badge_eligible: {label: 'Verified Badge Eligible', type: 'bool'},
+    priority_verification: {label: 'Priority Verification', type: 'bool'},
+    compatibility_score_visible: {label: 'Compatibility Score', type: 'bool'},
+    profile_completion_tips: {label: 'AI Profile Tips', type: 'bool'},
+    match_report_monthly: {label: 'Monthly Match Report', type: 'bool'},
+    priority_support: {label: 'Priority Support', type: 'bool'},
+    relationship_advisor: {label: 'Matrimony Advisor Access', type: 'bool'},
+    email_digest_frequency: {label: 'Email Digest', type: 'enum'},
+    push_notifications: {label: 'Push Notifications', type: 'bool'},
+    sms_notifications: {label: 'SMS Alerts', type: 'bool'},
 };
 
 // ---------------------------------------------------------------------------
@@ -57,36 +57,36 @@ const FEATURE_LABELS: Record<string, { label: string; type: 'bool' | 'qty' | 'en
 // ---------------------------------------------------------------------------
 function formatDate(iso: string | null | undefined) {
     if (!iso) return 'Forever ∞';
-    return new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+    return new Date(iso).toLocaleDateString('en-US', {day: 'numeric', month: 'short', year: 'numeric'});
 }
 
 function formatDuration(plan: SubscriptionPlan) {
-    const qty  = plan.duration_qty ?? (plan.duration_days ?? 30);
+    const qty = plan.duration_qty ?? (plan.duration_days ?? 30);
     const unit = plan.duration_unit ?? 'day';
     return `${qty} ${unit}${qty > 1 ? 's' : ''}`;
 }
 
 function statusColor(status: string) {
     return ({
-        active:   'bg-green-100 text-green-700',
-        pending:  'bg-yellow-100 text-yellow-700',
-        expired:  'bg-gray-100 text-gray-400',
+        active: 'bg-green-100 text-green-700',
+        pending: 'bg-yellow-100 text-yellow-700',
+        expired: 'bg-gray-100 text-gray-400',
         refunded: 'bg-red-100 text-red-600',
-    } as Record<string,string>)[status] ?? 'bg-gray-100 text-gray-500';
+    } as Record<string, string>)[status] ?? 'bg-gray-100 text-gray-500';
 }
 
 
 function getEnabledFeatures(features: PlanFeatures | string[]) {
     // Handle legacy array-of-strings format (e.g., ["Full chat access", "Audio & video calling"])
     if (Array.isArray(features)) {
-        return features.map((label, i) => ({ key: `feature_${i}`, label, value: true as boolean | number | string }));
+        return features.map((label, i) => ({key: `feature_${i}`, label, value: true as boolean | number | string}));
     }
     // Key-value object format
     // forPlanCard=true: only show features explicitly assigned (non-false/0/none) — superadmin-controlled
     // forPlanCard=false (current plan snapshot): show all enabled features
     return Object.entries(features ?? {})
         .filter(([, v]) => v !== false && v !== 0 && v !== 'none')
-        .map(([key, value]) => ({ key, label: FEATURE_LABELS[key]?.label ?? key, value }));
+        .map(([key, value]) => ({key, label: FEATURE_LABELS[key]?.label ?? key, value}));
 }
 
 function renderFeatureExtra(key: string, value: boolean | number | string): string | null {
@@ -104,12 +104,12 @@ function renderFeatureExtra(key: string, value: boolean | number | string): stri
 // Plan Card
 // ---------------------------------------------------------------------------
 function PlanCard({
-    plan,
-    isCurrent,
-    loadingId,
-    onBuy,
-    currencySymbol,
-}: {
+                      plan,
+                      isCurrent,
+                      loadingId,
+                      onBuy,
+                      currencySymbol,
+                  }: {
     plan: SubscriptionPlan;
     isCurrent: boolean;
     loadingId: number | null;
@@ -117,10 +117,11 @@ function PlanCard({
     currencySymbol: string;
 }) {
     const features = getEnabledFeatures(plan.features ?? {});
-    const { grad, badge, icon } = tierStyle(plan.plan_type);
+    const {grad, badge, icon} = tierStyle(plan.plan_type);
 
     return (
-        <div className={`relative flex flex-col rounded-2xl border-2 bg-gradient-to-b p-6 transition-shadow hover:shadow-lg ${grad} ${isCurrent ? 'ring-2 ring-green-400' : ''}`}>
+        <div
+            className={`relative flex flex-col rounded-2xl border-2 bg-gradient-to-b p-6 transition-shadow hover:shadow-lg ${grad} ${isCurrent ? 'ring-2 ring-green-400' : ''}`}>
             {isCurrent && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                     <span className="px-3 py-0.5 rounded-full text-xs font-semibold bg-green-500 text-white shadow">
@@ -132,7 +133,8 @@ function PlanCard({
             <div className="mb-4">
                 <div className="flex items-center gap-2 mb-1">
                     <span className="text-2xl">{icon}</span>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${badge}`}>
+                    <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${badge}`}>
                         {planLabel(plan.plan_type)}
                     </span>
                 </div>
@@ -154,21 +156,25 @@ function PlanCard({
             <ul className="flex-1 space-y-1.5 mb-6">
                 {features.length === 0 ? (
                     <li className="text-xs text-gray-400">No special features</li>
-                ) : features.map(({ key, label, value }) => {
+                ) : features.map(({key, label, value}) => {
                     const extra = renderFeatureExtra(key, value);
                     return (
                         <li key={key} className="flex items-start gap-2 text-xs text-gray-700">
-                            <svg className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            <svg className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" fill="none"
+                                 stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                                      d="M5 13l4 4L19 7"/>
                             </svg>
-                            <span>{label}{extra ? <span className="ml-1 font-semibold text-gray-900">({extra})</span> : null}</span>
+                            <span>{label}{extra ?
+                                <span className="ml-1 font-semibold text-gray-900">({extra})</span> : null}</span>
                         </li>
                     );
                 })}
             </ul>
 
             {isCurrent ? (
-                <div className="py-2 text-center rounded-xl border-2 border-green-400 bg-green-50 text-green-700 text-sm font-semibold">
+                <div
+                    className="py-2 text-center rounded-xl border-2 border-green-400 bg-green-50 text-green-700 text-sm font-semibold">
                     ✓ Active Plan
                 </div>
             ) : (
@@ -184,7 +190,8 @@ function PlanCard({
                     {loadingId === plan.id ? (
                         <span className="flex items-center justify-center gap-2">
                             <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        strokeWidth="4"/>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
                             </svg>
                             {plan.price_bdt === 0 ? 'Activating…' : 'Redirecting…'}
@@ -200,11 +207,11 @@ function PlanCard({
 // Switch Plan Banner  (shown when user has multiple active subscriptions)
 // ---------------------------------------------------------------------------
 function SwitchBanner({
-    switchable,
-    activeId,
-    onSwitch,
-    switching,
-}: {
+                          switchable,
+                          activeId,
+                          onSwitch,
+                          switching,
+                      }: {
     switchable: SwitchableSubscription[];
     activeId: number | null;
     onSwitch: (id: number) => void;
@@ -221,7 +228,7 @@ function SwitchBanner({
             <div className="flex flex-wrap gap-2">
                 {switchable.map(sw => {
                     const isCurrent = sw.id === activeId;
-                    const { badge, icon } = tierStyle(sw.plan);
+                    const {badge, icon} = tierStyle(sw.plan);
                     return (
                         <div
                             key={sw.id}
@@ -232,7 +239,8 @@ function SwitchBanner({
                             }`}
                         >
                             <span>{icon}</span>
-                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-semibold ${badge}`}>{planLabel(sw.plan)}</span>
+                            <span
+                                className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-semibold ${badge}`}>{planLabel(sw.plan)}</span>
                             <span>{sw.subscription_plan?.name ?? planLabel(sw.plan)}</span>
                             <span className="text-gray-400">· expires {formatDate(sw.expires_at)}</span>
                             {isCurrent ? (
@@ -257,28 +265,34 @@ function SwitchBanner({
 // ---------------------------------------------------------------------------
 // Current Plan Snapshot
 // ---------------------------------------------------------------------------
-function CurrentPlanSnapshot({ status, currencySymbol }: { status: SubscriptionStatus | undefined; currencySymbol: string }) {
+function CurrentPlanSnapshot({status, currencySymbol}: {
+    status: SubscriptionStatus | undefined;
+    currencySymbol: string
+}) {
     // A subscription is active when: is_active=true AND (expires_at is null = forever, OR expires_at is in the future)
     const isActive = !!(status?.is_active && (
         status.expires_at === null || (status.expires_at && new Date(status.expires_at) > new Date())
     ));
     const isFree = status?.subscription?.amount_bdt === 0 || status?.plan === 'free';
-    const plan     = status?.subscription?.subscription_plan as SubscriptionPlan | undefined;
+    const plan = status?.subscription?.subscription_plan as SubscriptionPlan | undefined;
     // status.features is always a proper key-value dict from SubscriptionFeatureService
     const features = getEnabledFeatures((status?.features ?? {}) as PlanFeatures);
 
     if (!isActive) {
         return (
-            <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center text-gray-500">
+            <div
+                className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center text-gray-500">
                 <div className="text-4xl mb-3">🆓</div>
                 <div className="font-semibold text-gray-700 mb-1">No Active Subscription</div>
-                <p className="text-xs text-gray-400 mb-2">You&apos;re currently on the <span className="font-semibold text-gray-600">Free (Basic)</span> tier.</p>
-                <p className="text-sm">Upgrade to Silver, Gold, or Platinum to unlock premium features like chat, calls, and more.</p>
+                <p className="text-xs text-gray-400 mb-2">You&apos;re currently on the <span
+                    className="font-semibold text-gray-600">Free (Basic)</span> tier.</p>
+                <p className="text-sm">Upgrade to Silver, Gold, or Platinum to unlock premium features like chat, calls,
+                    and more.</p>
             </div>
         );
     }
 
-    const { icon, badge, grad } = tierStyle(status!.plan);
+    const {icon, badge, grad} = tierStyle(status!.plan);
 
     return (
         <div className={`bg-gradient-to-br border-2 rounded-2xl p-5 ${grad}`}>
@@ -293,7 +307,8 @@ function CurrentPlanSnapshot({ status, currencySymbol }: { status: SubscriptionS
                         <h3 className="text-xl font-black text-gray-900">
                             {plan?.name ?? planLabel(status!.plan)}
                         </h3>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${badge}`}>{planLabel(status!.plan)}</span>
+                        <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${badge}`}>{planLabel(status!.plan)}</span>
                     </div>
                     {plan?.description && <p className="text-sm text-gray-500 mt-0.5">{plan.description}</p>}
                 </div>
@@ -306,7 +321,7 @@ function CurrentPlanSnapshot({ status, currencySymbol }: { status: SubscriptionS
                         <div className="text-xs text-gray-500 mt-0.5">
                             {plan.price_bdt === 0
                                 ? 'Always Free'
-                                        : `${currencySymbol}${plan.price_bdt.toLocaleString()} / ${formatDuration(plan)}`}
+                                : `${currencySymbol}${plan.price_bdt.toLocaleString()} / ${formatDuration(plan)}`}
                         </div>
                     )}
                 </div>
@@ -314,14 +329,18 @@ function CurrentPlanSnapshot({ status, currencySymbol }: { status: SubscriptionS
 
             {features.length > 0 && (
                 <>
-                    <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Your Features</div>
+                    <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Your Features
+                    </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5">
-                        {features.map(({ key, label, value }) => {
+                        {features.map(({key, label, value}) => {
                             const extra = renderFeatureExtra(key, value);
                             return (
-                                <div key={key} className="bg-white/80 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 text-xs text-gray-700 shadow-sm">
-                                    <svg className="w-3 h-3 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/>
+                                <div key={key}
+                                     className="bg-white/80 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 text-xs text-gray-700 shadow-sm">
+                                    <svg className="w-3 h-3 text-green-500 shrink-0" fill="none" stroke="currentColor"
+                                         viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                                              d="M5 13l4 4L19 7"/>
                                     </svg>
                                     <span>{label}{extra ? <strong className="ml-0.5">({extra})</strong> : ''}</span>
                                 </div>
@@ -337,7 +356,11 @@ function CurrentPlanSnapshot({ status, currencySymbol }: { status: SubscriptionS
 // ---------------------------------------------------------------------------
 // Invoice Modal
 // ---------------------------------------------------------------------------
-function InvoiceModal({ item, onClose, currencySymbol }: { item: PaymentHistoryItem; onClose: () => void; currencySymbol: string }) {
+function InvoiceModal({item, onClose, currencySymbol}: {
+    item: PaymentHistoryItem;
+    onClose: () => void;
+    currencySymbol: string
+}) {
     const printRef = useRef<HTMLDivElement>(null);
 
     const handlePrint = () => {
@@ -352,14 +375,18 @@ function InvoiceModal({ item, onClose, currencySymbol }: { item: PaymentHistoryI
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+                 onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white z-10">
                     <h2 className="text-base font-bold text-gray-900">Payment Invoice</h2>
                     <div className="flex gap-2">
-                        <button onClick={handlePrint} className="px-3 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 flex items-center gap-1 transition-colors">
+                        <button onClick={handlePrint}
+                                className="px-3 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 flex items-center gap-1 transition-colors">
                             🖨️ Print
                         </button>
-                        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">✕</button>
+                        <button onClick={onClose}
+                                className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">✕
+                        </button>
                     </div>
                 </div>
 
@@ -375,31 +402,35 @@ function InvoiceModal({ item, onClose, currencySymbol }: { item: PaymentHistoryI
                             <div>{formatDate(item.created_at)}</div>
                         </div>
                     </div>
-                    <hr />
+                    <hr/>
                     <table className="w-full text-sm">
                         <tbody>
-                            {[
-                                ['Plan',            item.plan_name],
-                                ['Tier',            <span key="tier" className="capitalize">{item.plan_type}</span>],
-                                item.subscription_plan ? ['Duration', formatDuration(item.subscription_plan)] : null,
-                                ['Payment Method',  item.payment_method],
-                                ['Transaction ID',  <span key="txid" className="font-mono text-xs break-all">{item.transaction_id}</span>],
-                                ['Status',          <span key="status" className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${statusColor(item.status)}`}>{item.status}</span>],
-                                item.starts_at ? ['Valid From', formatDate(item.starts_at)] : null,
-                                item.expires_at ? ['Valid Until', formatDate(item.expires_at)] : null,
-                            ].filter(Boolean).map((row, i) => (
-                                <tr key={i} className="border-b last:border-0">
-                                    <td className="py-2 text-gray-500 w-36 font-medium">{(row as [string, React.ReactNode])[0]}</td>
-                                    <td className="py-2 font-medium">{(row as [string, React.ReactNode])[1]}</td>
-                                </tr>
-                            ))}
+                        {[
+                            ['Plan', item.plan_name],
+                            ['Tier', <span key="tier" className="capitalize">{item.plan_type}</span>],
+                            item.subscription_plan ? ['Duration', formatDuration(item.subscription_plan)] : null,
+                            ['Payment Method', item.payment_method],
+                            ['Transaction ID',
+                                <span key="txid" className="font-mono text-xs break-all">{item.transaction_id}</span>],
+                            ['Status', <span key="status"
+                                             className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${statusColor(item.status)}`}>{item.status}</span>],
+                            item.starts_at ? ['Valid From', formatDate(item.starts_at)] : null,
+                            item.expires_at ? ['Valid Until', formatDate(item.expires_at)] : null,
+                        ].filter(Boolean).map((row, i) => (
+                            <tr key={i} className="border-b last:border-0">
+                                <td className="py-2 text-gray-500 w-36 font-medium">{(row as [string, React.ReactNode])[0]}</td>
+                                <td className="py-2 font-medium">{(row as [string, React.ReactNode])[1]}</td>
+                            </tr>
+                        ))}
                         </tbody>
                     </table>
                     <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
                         <span className="text-sm text-gray-600 font-medium">Total Paid</span>
-                        <span className="text-2xl font-extrabold text-gray-900">{currencySymbol}{item.amount_bdt.toLocaleString()}</span>
+                        <span
+                            className="text-2xl font-extrabold text-gray-900">{currencySymbol}{item.amount_bdt.toLocaleString()}</span>
                     </div>
-                    <p className="text-xs text-gray-400 text-center">Thank you for subscribing to My Bouma Premium! 💍</p>
+                    <p className="text-xs text-gray-400 text-center">Thank you for subscribing to My Bouma Premium!
+                        💍</p>
                 </div>
             </div>
         </div>
@@ -413,40 +444,41 @@ type Tab = 'plans' | 'history';
 
 export default function SubscriptionPage() {
     const queryClient = useQueryClient();
-    const { settings } = useSettings();
+    const {settings} = useSettings();
     const currencySymbol = settings.currency_symbol || '৳';
 
-    const [tab,          setTab]          = useState<Tab>('plans');
-    const [loadingPlanId,setLoadingPlanId]= useState<number | null>(null);
-    const [switching,    setSwitching]    = useState<number | null>(null);
-    const [error,        setError]        = useState<string | null>(null);
-    const [switchSuccess,setSwitchSuccess]= useState<string | null>(null);
-    const [invoiceItem,  setInvoiceItem]  = useState<PaymentHistoryItem | null>(null);
+    const [tab, setTab] = useState<Tab>('plans');
+    const [loadingPlanId, setLoadingPlanId] = useState<number | null>(null);
+    const [switching, setSwitching] = useState<number | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [switchSuccess, setSwitchSuccess] = useState<string | null>(null);
+    const [invoiceItem, setInvoiceItem] = useState<PaymentHistoryItem | null>(null);
+    const [durationFilter, setDurationFilter] = useState<string>('all');
 
     // ── Queries ──────────────────────────────────────────────────────────────
-    const { data: plans = [], isLoading: plansLoading } = useQuery({
+    const {data: plans = [], isLoading: plansLoading} = useQuery({
         queryKey: ['subscription-plans'],
-        queryFn:  () => subscriptionService.getPlans(),
+        queryFn: () => subscriptionService.getPlans(),
     });
 
-    const { data: status, isLoading: statusLoading } = useQuery<SubscriptionStatus>({
+    const {data: status, isLoading: statusLoading} = useQuery<SubscriptionStatus>({
         queryKey: ['subscription-status'],
-        queryFn:  () => subscriptionService.getStatus(),
+        queryFn: () => subscriptionService.getStatus(),
     });
 
-    const { data: history = [], isLoading: historyLoading } = useQuery({
+    const {data: history = [], isLoading: historyLoading} = useQuery({
         queryKey: ['subscription-history'],
-        queryFn:  () => subscriptionService.getHistory(),
-        enabled:  tab === 'history',
+        queryFn: () => subscriptionService.getHistory(),
+        enabled: tab === 'history',
     });
 
     // ── Derived state ────────────────────────────────────────────────────────
     // The "current" plan is identified by active_subscription_id → subscription_plan_id
     // This is precise even when multiple plans share the same plan_type string.
     const activeSubPlanId = status?.subscription?.subscription_plan_id ?? null;
-    const activeSubId     = status?.active_subscription_id ?? null;
+    const activeSubId = status?.active_subscription_id ?? null;
     // Active when: is_active=true AND (expires_at is null=forever OR expires_at is future)
-    const isActive        = !!(status?.is_active && (
+    const isActive = !!(status?.is_active && (
         status.expires_at === null || (status.expires_at && new Date(status.expires_at) > new Date())
     ));
 
@@ -459,8 +491,8 @@ export default function SubscriptionPage() {
                 // Free plan — direct activation, no payment gateway
                 await subscriptionService.subscribeFree(plan.id);
                 setSwitchSuccess(`Successfully subscribed to ${plan.name} (Free)! ✓`);
-                await queryClient.invalidateQueries({ queryKey: ['subscription-status'] });
-                await queryClient.invalidateQueries({ queryKey: ['subscription-history'] });
+                await queryClient.invalidateQueries({queryKey: ['subscription-status']});
+                await queryClient.invalidateQueries({queryKey: ['subscription-history']});
             } else {
                 const result = await subscriptionService.initiate(plan.id);
                 window.location.href = result.payment_url;
@@ -483,8 +515,8 @@ export default function SubscriptionPage() {
                 `Switched to ${result.subscription_plan?.name ?? result.plan} successfully! ✓`
             );
             // Invalidate both status and auth user so UI refreshes
-            await queryClient.invalidateQueries({ queryKey: ['subscription-status'] });
-            await queryClient.invalidateQueries({ queryKey: ['subscription-history'] });
+            await queryClient.invalidateQueries({queryKey: ['subscription-status']});
+            await queryClient.invalidateQueries({queryKey: ['subscription-history']});
         } catch (err: unknown) {
             const e = err as { response?: { data?: { message?: string } }; message?: string };
             setError(e.response?.data?.message ?? e.message ?? 'Failed to switch plan.');
@@ -493,39 +525,62 @@ export default function SubscriptionPage() {
         }
     };
 
+    // Build unique duration options from plan data (dynamic)
+    const durationOptions = Array.from(
+        new Map(
+            plans
+                .filter(p => p.price_bdt !== 0) // exclude free/forever plans from filter
+                .map(p => {
+                    const key = formatDuration(p);
+                    return [key, key];
+                })
+        ).entries()
+    ).map(([key]) => key);
+
+    const filteredPlans = durationFilter === 'all'
+        ? plans
+        : plans.filter(p => p.price_bdt === 0 || formatDuration(p) === durationFilter);
+
     // ── Render ───────────────────────────────────────────────────────────────
     return (
         <>
-            {invoiceItem && <InvoiceModal item={invoiceItem} onClose={() => setInvoiceItem(null)} currencySymbol={currencySymbol} />}
+            {invoiceItem &&
+                <InvoiceModal item={invoiceItem} onClose={() => setInvoiceItem(null)} currencySymbol={currencySymbol}/>}
 
-            <main className="max-w-5xl mx-auto px-4 py-6">
+            <main className="max-w-7xl mx-auto px-4 py-6">
                 {/* Header */}
                 <div className="mb-5">
                     <h1 className="text-2xl font-bold text-gray-900">Subscription</h1>
-                    <p className="text-sm text-gray-500 mt-1">Manage your plan, switch between purchased plans, and view invoices.</p>
+                    <p className="text-sm text-gray-500 mt-1">Manage your plan, switch between purchased plans, and view
+                        invoices.</p>
                 </div>
 
                 {/* Alerts */}
                 {switchSuccess && (
-                    <div className="mb-4 p-3 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm flex items-center gap-2">
+                    <div
+                        className="mb-4 p-3 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm flex items-center gap-2">
                         ✅ {switchSuccess}
-                        <button onClick={() => setSwitchSuccess(null)} className="ml-auto text-green-500 hover:text-green-700">✕</button>
+                        <button onClick={() => setSwitchSuccess(null)}
+                                className="ml-auto text-green-500 hover:text-green-700">✕
+                        </button>
                     </div>
                 )}
                 {error && (
-                    <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-2">
+                    <div
+                        className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-2">
                         ⚠️ {error}
-                        <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600">✕</button>
+                        <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600">✕
+                        </button>
                     </div>
                 )}
 
                 {/* Current plan snapshot */}
                 <div className="mb-5">
-                        {statusLoading ? (
-                            <div className="h-36 bg-gray-100 rounded-2xl animate-pulse" />
-                        ) : (
-                            <CurrentPlanSnapshot status={status} currencySymbol={currencySymbol} />
-                        )}
+                    {statusLoading ? (
+                        <div className="h-36 bg-gray-100 rounded-2xl animate-pulse"/>
+                    ) : (
+                        <CurrentPlanSnapshot status={status} currencySymbol={currencySymbol}/>
+                    )}
                 </div>
 
                 {/* Switch banner — shown when user has 2+ active subscriptions */}
@@ -556,15 +611,33 @@ export default function SubscriptionPage() {
                 {/* ═══ PLANS TAB ═══ */}
                 {tab === 'plans' && (
                     <>
+                        {/* Duration filter */}
+                        {!plansLoading && durationOptions.length > 1 && (
+                            <div className="mb-4 flex items-center gap-3">
+                                <label className="text-sm font-medium text-gray-600 shrink-0">Filter by duration:</label>
+                                <select
+                                    value={durationFilter}
+                                    onChange={e => setDurationFilter(e.target.value)}
+                                    className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-300 cursor-pointer"
+                                >
+                                    <option value="all">All Plans</option>
+                                    {durationOptions.map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
                         {plansLoading ? (
                             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                                {[1,2,3].map(i => <div key={i} className="bg-gray-100 rounded-2xl h-96 animate-pulse"/>)}
+                                {[1, 2, 3].map(i => <div key={i}
+                                                         className="bg-gray-100 rounded-2xl h-96 animate-pulse"/>)}
                             </div>
-                        ) : plans.length === 0 ? (
+                        ) : filteredPlans.length === 0 ? (
                             <div className="text-center py-16 text-gray-400">No plans available.</div>
                         ) : (
-                            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                                {plans.map(plan => (
+                            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                                {filteredPlans.map(plan => (
                                     <PlanCard
                                         key={plan.id}
                                         plan={plan}
@@ -579,7 +652,8 @@ export default function SubscriptionPage() {
 
                         <div className="mt-8 flex items-center justify-center gap-2 text-xs text-gray-400">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                             </svg>
                             Secure payment via SSLCommerz — all major cards and mobile banking accepted.
                         </div>
@@ -591,7 +665,8 @@ export default function SubscriptionPage() {
                     <div>
                         {historyLoading ? (
                             <div className="space-y-3">
-                                {[1,2,3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse"/>)}
+                                {[1, 2, 3].map(i => <div key={i}
+                                                         className="h-16 bg-gray-100 rounded-xl animate-pulse"/>)}
                             </div>
                         ) : history.length === 0 ? (
                             <div className="text-center py-16 text-gray-400">
@@ -602,76 +677,82 @@ export default function SubscriptionPage() {
                             <div className="overflow-x-auto rounded-2xl border border-gray-200">
                                 <table className="w-full text-sm">
                                     <thead>
-                                        <tr className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
-                                            <th className="px-4 py-3 text-left">Plan</th>
-                                            <th className="px-4 py-3 text-left">Amount</th>
-                                            <th className="px-4 py-3 text-left hidden sm:table-cell">Method</th>
-                                            <th className="px-4 py-3 text-left">Status</th>
-                                            <th className="px-4 py-3 text-left hidden md:table-cell">Purchased</th>
-                                            <th className="px-4 py-3 text-left hidden md:table-cell">Expires</th>
-                                            <th className="px-4 py-3 text-right">Actions</th>
-                                        </tr>
+                                    <tr className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
+                                        <th className="px-4 py-3 text-left">Plan</th>
+                                        <th className="px-4 py-3 text-left">Amount</th>
+                                        <th className="px-4 py-3 text-left hidden sm:table-cell">Method</th>
+                                        <th className="px-4 py-3 text-left">Status</th>
+                                        <th className="px-4 py-3 text-left hidden md:table-cell">Purchased</th>
+                                        <th className="px-4 py-3 text-left hidden md:table-cell">Expires</th>
+                                        <th className="px-4 py-3 text-right">Actions</th>
+                                    </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
-                                        {history.map(item => (
-                                            <tr key={item.id} className={`hover:bg-gray-50 transition-colors ${item.is_current ? 'bg-green-50/50' : ''}`}>
-                                                <td className="px-4 py-3">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <div>
-                                                            <div className="font-semibold text-gray-900 flex items-center gap-1.5">
-                                                                {item.plan_name}
-                                                                {item.is_current && (
-                                                                    <span className="px-1.5 py-0.5 rounded-full text-xs bg-green-100 text-green-700 font-semibold">Active</span>
-                                                                )}
-                                                            </div>
-                                                            <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-semibold mt-0.5 ${tierStyle(item.plan_type).badge}`}>
-                                                                <span aria-hidden>{tierStyle(item.plan_type).icon}</span>
-                                                                {planLabel(item.plan_type)}
-                                                            </span>
+                                    {history.map(item => (
+                                        <tr key={item.id}
+                                            className={`hover:bg-gray-50 transition-colors ${item.is_current ? 'bg-green-50/50' : ''}`}>
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center gap-1.5">
+                                                    <div>
+                                                        <div
+                                                            className="font-semibold text-gray-900 flex items-center gap-1.5">
+                                                            {item.plan_name}
+                                                            {item.is_current && (
+                                                                <span
+                                                                    className="px-1.5 py-0.5 rounded-full text-xs bg-green-100 text-green-700 font-semibold">Active</span>
+                                                            )}
                                                         </div>
+                                                        <span
+                                                            className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-semibold mt-0.5 ${tierStyle(item.plan_type).badge}`}>
+                                                                <span
+                                                                    aria-hidden>{tierStyle(item.plan_type).icon}</span>
+                                                            {planLabel(item.plan_type)}
+                                                            </span>
                                                     </div>
-                                                </td>
-                                                <td className="px-4 py-3 font-bold text-gray-900">
-                                                    {item.amount_bdt === 0
-                                                        ? <span className="text-green-600 font-semibold">Free</span>
-                                                        : `${currencySymbol}${item.amount_bdt.toLocaleString()}`}
-                                                </td>
-                                                <td className="px-4 py-3 hidden sm:table-cell text-gray-500 capitalize text-xs">
-                                                    {item.payment_method}
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${statusColor(item.status)}`}>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 font-bold text-gray-900">
+                                                {item.amount_bdt === 0
+                                                    ? <span className="text-green-600 font-semibold">Free</span>
+                                                    : `${currencySymbol}${item.amount_bdt.toLocaleString()}`}
+                                            </td>
+                                            <td className="px-4 py-3 hidden sm:table-cell text-gray-500 capitalize text-xs">
+                                                {item.payment_method}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                    <span
+                                                        className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${statusColor(item.status)}`}>
                                                         {item.status}
                                                     </span>
-                                                </td>
-                                                <td className="px-4 py-3 hidden md:table-cell text-gray-500 text-xs">
-                                                    {formatDate(item.created_at)}
-                                                </td>
-                                                <td className="px-4 py-3 hidden md:table-cell text-gray-500 text-xs">
-                                                    {formatDate(item.expires_at)}
-                                                </td>
-                                                <td className="px-4 py-3 text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        {/* Switch button — only for switchable non-current active subs */}
-                                                        {item.is_switchable && (
-                                                            <button
-                                                                onClick={() => handleSwitch(item.id)}
-                                                                disabled={switching !== null}
-                                                                className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                                            >
-                                                                {switching === item.id ? '…' : '⇄ Switch'}
-                                                            </button>
-                                                        )}
+                                            </td>
+                                            <td className="px-4 py-3 hidden md:table-cell text-gray-500 text-xs">
+                                                {formatDate(item.created_at)}
+                                            </td>
+                                            <td className="px-4 py-3 hidden md:table-cell text-gray-500 text-xs">
+                                                {formatDate(item.expires_at)}
+                                            </td>
+                                            <td className="px-4 py-3 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {/* Switch button — only for switchable non-current active subs */}
+                                                    {item.is_switchable && (
                                                         <button
-                                                            onClick={() => setInvoiceItem(item)}
-                                                            className="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-semibold text-gray-700 transition-colors"
+                                                            onClick={() => handleSwitch(item.id)}
+                                                            disabled={switching !== null}
+                                                            className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                         >
-                                                            🧾 Invoice
+                                                            {switching === item.id ? '…' : '⇄ Switch'}
                                                         </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                                    )}
+                                                    <button
+                                                        onClick={() => setInvoiceItem(item)}
+                                                        className="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs font-semibold text-gray-700 transition-colors"
+                                                    >
+                                                        🧾 Invoice
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
                                     </tbody>
                                 </table>
                             </div>
@@ -682,7 +763,8 @@ export default function SubscriptionPage() {
                 {/* Footer note */}
                 {tab === 'history' && (
                     <p className="text-xs text-gray-400 text-center mt-4">
-                        💡 Click <strong>⇄ Switch</strong> on any valid past plan to re-activate it for the remainder of its subscription period.
+                        💡 Click <strong>⇄ Switch</strong> on any valid past plan to re-activate it for the remainder of
+                        its subscription period.
                     </p>
                 )}
             </main>
