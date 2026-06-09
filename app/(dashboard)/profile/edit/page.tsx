@@ -3,13 +3,14 @@
 import {useState, useEffect, useRef, Suspense, useMemo} from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+import {useQuery, useQueries, useMutation, useQueryClient} from '@tanstack/react-query';
 import {useForm, Controller} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
 import {useSearchParams} from 'next/navigation';
 import {profileService} from '@/services/profileService';
 import {authService} from '@/services/authService';
+import api from '@/lib/api';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -23,7 +24,7 @@ import {
     siblingCountOptions, siblingPositionOptions,
     experienceOptions,
 } from '@/lib/profileOptions';
-import { useOptions, useChildOptions } from '@/hooks/useSelectOptions';
+import { useOptions, useChildOptions, type OptionItem } from '@/hooks/useSelectOptions';
 
 // ─── ENUM fields that must not be sent as empty string ───────────────────────
 const ENUM_FIELDS = new Set([
@@ -132,7 +133,11 @@ const preferencesSchema = z.object({
     income_min_bdt: z.string().optional(),
     income_max_bdt: z.string().optional(),
     pref_country: z.array(z.string()).optional(),
-    pref_city: z.string().optional(),
+    // Location hierarchy preferences
+    pref_divisions: z.array(z.string()).optional(),
+    pref_districts: z.array(z.string()).optional(),
+    pref_provinces: z.array(z.string()).optional(),
+    pref_states: z.array(z.string()).optional(),
     smoking_acceptable: z.boolean().optional(),
     drinking_acceptable: z.boolean().optional(),
     // Extended fields
@@ -354,6 +359,53 @@ function ProfileEditInner() {
                 ? 'Province / Territory'
                 : 'State / Division';
 
+    // ── Preferences Location Hierarchy ────────────────────────────────────────
+    const watchedPrefCountries = preferencesForm.watch('pref_country');
+    const watchedPrefDivisions = preferencesForm.watch('pref_divisions');
+    const isBangladeshSelected = watchedPrefCountries?.includes('bangladesh');
+    const isCanadaSelected = watchedPrefCountries?.includes('canada');
+    const isUsaSelected = watchedPrefCountries?.includes('united_states');
+
+    // Bangladesh: first show divisions
+    const bangladeshOption = countryOptions.find(o => o.value === 'bangladesh');
+    const { data: prefDivisionOpts = [] } = useChildOptions('country', isBangladeshSelected ? bangladeshOption?.id : undefined);
+
+    // Bangladesh: then load districts under selected division(s)
+    const selectedPrefDivisionIds = useMemo(() => {
+        if (!isBangladeshSelected || !watchedPrefDivisions?.length) return [] as number[];
+        const selected = new Set(watchedPrefDivisions);
+        return prefDivisionOpts
+            .filter((o) => selected.has(o.value))
+            .map((o) => o.id);
+    }, [isBangladeshSelected, watchedPrefDivisions, prefDivisionOpts]);
+
+    const prefDistrictQueries = useQueries({
+        queries: selectedPrefDivisionIds.map((divisionId) => ({
+            queryKey: ['options', 'country', 'districts', divisionId],
+            queryFn: () => api.get('/options/country', { params: { parent_id: divisionId } }).then((r) => r.data as OptionItem[]),
+            staleTime: 1000 * 60 * 60,
+            enabled: isBangladeshSelected,
+        })),
+    });
+
+    const prefDistrictOpts = useMemo(() => {
+        const merged = new Map<string, OptionItem>();
+        for (const query of prefDistrictQueries) {
+            for (const option of query.data ?? []) {
+                merged.set(option.value, option);
+            }
+        }
+        return Array.from(merged.values());
+    }, [prefDistrictQueries]);
+
+    // Get Canada country ID for fetching provinces
+    const canadaOption = countryOptions.find(o => o.value === 'canada');
+    const { data: prefProvinceOpts = [] } = useChildOptions('country', isCanadaSelected ? canadaOption?.id : undefined);
+
+    // Get USA country ID for fetching states
+    const usaOption = countryOptions.find(o => o.value === 'united_states');
+    const { data: prefStateOpts = [] } = useChildOptions('country', isUsaSelected ? usaOption?.id : undefined);
+
     useEffect(()=>{
         if (!profile) return;
         const p = profile.profile;
@@ -420,8 +472,13 @@ function ProfileEditInner() {
                 pref_religion:pp.religion??[], pref_caste:pp.caste?.join(', ')??'',
                 pref_profession:pp.profession??[], income_min_bdt:pp.income_min_bdt?.toString()??'',
                 income_max_bdt:pp.income_max_bdt?.toString()??'', pref_country:pp.country??[],
-                pref_city:pp.city?.join(', ')??'', smoking_acceptable:pp.smoking_acceptable??false,
+                smoking_acceptable:pp.smoking_acceptable??false,
                 drinking_acceptable:pp.drinking_acceptable??false,
+                // Location hierarchy preferences
+                pref_divisions: pp.pref_divisions??[],
+                pref_districts: pp.pref_districts??[],
+                pref_provinces: pp.pref_provinces??[],
+                pref_states: pp.pref_states??[],
                 // Extended
                 pref_body_type: pp.body_type??[],
                 pref_complexion: pp.complexion??[],
@@ -464,7 +521,12 @@ function ProfileEditInner() {
             height_min_cm:data.height_min_cm?Number(data.height_min_cm):null, height_max_cm:data.height_max_cm?Number(data.height_max_cm):null,
             marital_status:toArr(data.pref_marital_status), diet:toArr(data.pref_diet), education:toArr(data.pref_education),
             religion:toArr(data.pref_religion), caste:toArray(data.pref_caste), profession:toArr(data.pref_profession),
-            country:toArr(data.pref_country), city:toArray(data.pref_city),
+            country:toArr(data.pref_country),
+            // Location hierarchy preferences
+            pref_divisions: toArr(data.pref_divisions),
+            pref_districts: toArr(data.pref_districts),
+            pref_provinces: toArr(data.pref_provinces),
+            pref_states: toArr(data.pref_states),
             income_min_bdt:data.income_min_bdt?Number(data.income_min_bdt):null, income_max_bdt:data.income_max_bdt?Number(data.income_max_bdt):null,
             smoking_acceptable:data.smoking_acceptable??false, drinking_acceptable:data.drinking_acceptable??false,
             // Extended
@@ -1198,12 +1260,46 @@ function ProfileEditInner() {
                                 </FieldRow>
                                 <FieldRow label="Country">
                                     <Controller name="pref_country" control={preferencesForm.control} render={({field})=>(
-                                        <MultiSearchableSelect id="pct" options={countryOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select countries…"/>
+                                        <MultiSearchableSelect id="pct" options={countryOptions} value={field.value??[]} onChange={v=>{field.onChange(v);preferencesForm.setValue('pref_divisions',[]);preferencesForm.setValue('pref_districts',[]);preferencesForm.setValue('pref_provinces',[]);preferencesForm.setValue('pref_states',[]);}} placeholder="Select countries…"/>
                                     )}/>
                                 </FieldRow>
-                                <FieldRow label="City" hint="Comma-separated e.g. Dhaka, Chittagong">
-                                    <Input placeholder="Dhaka, Chittagong" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('pref_city')}/>
-                                </FieldRow>
+
+                                {/* ── Bangladesh Divisions & Districts ── */}
+                                {isBangladeshSelected && (
+                                    <>
+                                        <FieldRow label="Division (Bangladesh)">
+                                            <Controller name="pref_divisions" control={preferencesForm.control} render={({field})=>(
+                                                <MultiSearchableSelect id="pdiv" options={prefDivisionOpts} value={field.value??[]} onChange={(v)=>{field.onChange(v);preferencesForm.setValue('pref_districts',[]);}} placeholder="Select divisions…"/>
+                                            )}/>
+                                        </FieldRow>
+                                        {selectedPrefDivisionIds.length > 0 && (
+                                            <FieldRow label="District / City (Bangladesh)">
+                                                <Controller name="pref_districts" control={preferencesForm.control} render={({field})=>(
+                                                    <MultiSearchableSelect id="pdist" options={prefDistrictOpts} value={field.value??[]} onChange={field.onChange} placeholder="Select districts / cities…"/>
+                                                )}/>
+                                            </FieldRow>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* ── Canada Provinces ── */}
+                                {isCanadaSelected && (
+                                    <FieldRow label="Provinces / Territories (Canada)">
+                                        <Controller name="pref_provinces" control={preferencesForm.control} render={({field})=>(
+                                            <MultiSearchableSelect id="pprov" options={prefProvinceOpts} value={field.value??[]} onChange={field.onChange} placeholder="Select provinces…"/>
+                                        )}/>
+                                    </FieldRow>
+                                )}
+
+                                {/* ── USA States ── */}
+                                {isUsaSelected && (
+                                    <FieldRow label="States (USA)">
+                                        <Controller name="pref_states" control={preferencesForm.control} render={({field})=>(
+                                            <MultiSearchableSelect id="pst" options={prefStateOpts} value={field.value??[]} onChange={field.onChange} placeholder="Select states…"/>
+                                        )}/>
+                                    </FieldRow>
+                                )}
+
                             </div>
                         </div>
 

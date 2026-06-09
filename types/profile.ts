@@ -105,7 +105,11 @@ export interface PartnerPreference {
     income_min_bdt: number | null;
     income_max_bdt: number | null;
     country: string[] | null;
-    city: string[] | null;
+    // Location hierarchy preferences
+    pref_divisions: string[] | null;
+    pref_districts: string[] | null;
+    pref_provinces: string[] | null;
+    pref_states: string[] | null;
     diet: string[] | null;
     smoking_acceptable: boolean;
     drinking_acceptable: boolean;
