@@ -11,6 +11,7 @@ import {useSearchParams} from 'next/navigation';
 import {profileService} from '@/services/profileService';
 import {authService} from '@/services/authService';
 import api from '@/lib/api';
+import { showSuccessToast, showErrorToast, getErrorMessage } from '@/lib/toast';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -509,8 +510,13 @@ function ProfileEditInner() {
         let processed={...data};
         for(const k of Object.keys(processed)){if(ENUM_FIELDS.has(k)&&processed[k]==='')delete processed[k];}
         processed = coerceNumeric(processed,['height_cm','weight_kg','annual_income_bdt','family_income_bdt_per_month','brothers_count','sisters_count','sibling_position','experience_years']);
-        await saveMutation.mutateAsync(processed);
-        setSavedTab(tabKey); setTimeout(()=>setSavedTab(null),2000);
+        try {
+            await saveMutation.mutateAsync(processed);
+            setSavedTab(tabKey); setTimeout(()=>setSavedTab(null),2000);
+            showSuccessToast('Profile updated successfully.');
+        } catch (err: unknown) {
+            showErrorToast(getErrorMessage(err), 'Update failed');
+        }
     };
 
     const handleSavePreferences = async(data:PreferencesForm)=>{
@@ -549,7 +555,9 @@ function ProfileEditInner() {
         try {
             await prefMutation.mutateAsync(payload);
             setSavedTab('preferences'); setTimeout(()=>setSavedTab(null),2000);
+            showSuccessToast('Preferences updated successfully.');
         } catch(err:unknown) {
+            showErrorToast(getErrorMessage(err), 'Update failed');
             const apiErrors = (err as {response?:{data?:{errors?:Record<string,string[]>}}})?.response?.data?.errors;
             if (apiErrors) {
                 const fieldMap: Record<string, keyof PreferencesForm> = {
@@ -567,8 +575,14 @@ function ProfileEditInner() {
     };
 
     const handleChangePassword = async(data:ChangePasswordForm)=>{
-        setPwSuccess(false); await changePasswordMutation.mutateAsync(data);
-        setPwSuccess(true); changePasswordForm.reset(); setTimeout(()=>setPwSuccess(false),3000);
+        setPwSuccess(false);
+        try {
+            await changePasswordMutation.mutateAsync(data);
+            setPwSuccess(true); changePasswordForm.reset(); setTimeout(()=>setPwSuccess(false),3000);
+            showSuccessToast('Password updated successfully.');
+        } catch (err: unknown) {
+            showErrorToast(getErrorMessage(err), 'Password update failed');
+        }
     };
 
     const handlePhotoUpload = async(e:React.ChangeEvent<HTMLInputElement>)=>{
