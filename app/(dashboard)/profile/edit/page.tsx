@@ -706,10 +706,10 @@ function ProfileEditInner() {
                                 </>
                             ) : (
                                 <>
-                                    <FieldRow label="City" required>
-                                        <Input placeholder="e.g. London" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...locationForm.register('city')}/>
-                                    </FieldRow>
-                                    <FieldRow label="State / Province">
+                                    {/*<FieldRow label="City" required>*/}
+                                    {/*    <Input placeholder="e.g. London" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...locationForm.register('city')}/>*/}
+                                    {/*</FieldRow>*/}
+                                    <FieldRow label="State / Province" required>
                                         <Input placeholder="e.g. England" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...locationForm.register('state')}/>
                                     </FieldRow>
                                 </>
