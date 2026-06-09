@@ -31,8 +31,8 @@ export function useOptions(group: string) {
 /**
  * Fetch child options that depend on a parent row id.
  * e.g. caste depends on selected religion id,
- *      bd_division depends on selected country id,
- *      bd_district depends on selected division id.
+ *      country depends on selected country id for level-2 locations,
+ *      country depends on selected state/division id for level-3 locations.
  *
  * Only fires when parentId is truthy.
  */

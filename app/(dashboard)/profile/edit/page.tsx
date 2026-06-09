@@ -289,6 +289,7 @@ function ProfileEditInner() {
     const watchedReligion = religiousForm.watch('religion');
     const watchedCountry = locationForm.watch('country');
     const watchedCity = locationForm.watch('city');
+    const watchedState = locationForm.watch('state');
 
     // ── Dynamic select options from API ─────────────────────────────────────
     const { data: profileCreatedByOptions = [] }  = useOptions('profile_created_by');
@@ -336,11 +337,22 @@ function ProfileEditInner() {
     // Level 1 → /options/country                     (root countries, parent_id = null)
     // Level 2 → /options/country?parent_id=<country> (states / divisions)
     // Level 3 → /options/country?parent_id=<state>   (districts / cities)
-    const selectedCountryId  = countryOptions.find(o => o.value === watchedCountry)?.id;
-    const { data: divisions  = [] } = useChildOptions('bd_division', selectedCountryId);
+    const selectedCountryOption = countryOptions.find(o => o.value === watchedCountry);
+    const selectedCountryId = selectedCountryOption?.id;
+    const { data: locationLevel2Opts = [] } = useChildOptions('country', selectedCountryId);
 
-    const selectedDivisionId = divisions.find(o => o.value === watchedCity)?.id;
-    const { data: districtOpts = [] } = useChildOptions('bd_district', selectedDivisionId);
+    const isBangladeshLocation = watchedCountry === 'bangladesh';
+    const selectedLevel2Value = isBangladeshLocation ? watchedCity : watchedState;
+    const selectedLevel2Id = locationLevel2Opts.find(o => o.value === selectedLevel2Value)?.id;
+    const { data: locationLevel3Opts = [] } = useChildOptions('country', isBangladeshLocation ? selectedLevel2Id : undefined);
+
+    const level2Label = watchedCountry === 'bangladesh'
+        ? 'Division'
+        : watchedCountry === 'united_states'
+            ? 'State'
+            : watchedCountry === 'canada'
+                ? 'Province / Territory'
+                : 'State / Division';
 
     useEffect(()=>{
         if (!profile) return;
@@ -689,17 +701,27 @@ function ProfileEditInner() {
                                     <SearchableSelect id="cnt" options={countryOptions} value={field.value} onChange={v=>{field.onChange(v??'');locationForm.setValue('city','');locationForm.setValue('state','');}} placeholder="Search country…"/>
                                 )}/>
                             </FieldRow>
-                            {divisions.length > 0 ? (
+                            {locationLevel2Opts.length > 0 ? (
                                 <>
-                                    <FieldRow label="State / Division" required>
-                                        <Controller name="city" control={locationForm.control} render={({field})=>(
-                                            <SearchableSelect id="div" options={divisions} value={field.value} onChange={v=>{field.onChange(v??'');locationForm.setValue('state','');}} placeholder="Select state / division…"/>
-                                        )}/>
-                                    </FieldRow>
-                                    {districtOpts.length > 0 && (
-                                        <FieldRow label="District / City">
+                                    {isBangladeshLocation ? (
+                                        <>
+                                            <FieldRow label={level2Label} required>
+                                                <Controller name="city" control={locationForm.control} render={({field})=>(
+                                                    <SearchableSelect id="div" options={locationLevel2Opts} value={field.value} onChange={v=>{field.onChange(v??'');locationForm.setValue('state','');}} placeholder={`Select ${level2Label.toLowerCase()}…`}/>
+                                                )}/>
+                                            </FieldRow>
+                                            {locationLevel3Opts.length > 0 && (
+                                                <FieldRow label="District / City">
+                                                    <Controller name="state" control={locationForm.control} render={({field})=>(
+                                                        <SearchableSelect id="dist" options={locationLevel3Opts} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select district / city…"/>
+                                                    )}/>
+                                                </FieldRow>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <FieldRow label={level2Label} required>
                                             <Controller name="state" control={locationForm.control} render={({field})=>(
-                                                <SearchableSelect id="dist" options={districtOpts} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select district / city…"/>
+                                                <SearchableSelect id="state" options={locationLevel2Opts} value={field.value} onChange={v=>{field.onChange(v??'');locationForm.setValue('city','');}} placeholder={`Select ${level2Label.toLowerCase()}…`}/>
                                             )}/>
                                         </FieldRow>
                                     )}
