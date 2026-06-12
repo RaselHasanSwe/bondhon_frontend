@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '@/services/adminService';
 import type { AdminUser } from '@/types/admin';
@@ -86,6 +87,7 @@ export default function AdminUsersPage() {
                                     <th className="text-left px-4 py-3 font-medium text-gray-600">Role</th>
                                     <th className="text-left px-4 py-3 font-medium text-gray-600">Plan</th>
                                     <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Face</th>
                                     <th className="text-left px-4 py-3 font-medium text-gray-600">Verified</th>
                                     <th className="text-left px-4 py-3 font-medium text-gray-600">Joined</th>
                                     <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>
@@ -126,6 +128,19 @@ export default function AdminUsersPage() {
                                             )}
                                         </td>
                                         <td className="px-4 py-3">
+                                            {user.face_scan_session ? (
+                                                <Badge className={
+                                                    user.face_scan_session.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                                                    user.face_scan_session.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                                    'bg-amber-100 text-amber-700'
+                                                }>
+                                                    {user.face_scan_session.status === 'approved' ? '✅ Face OK' : user.face_scan_session.status === 'rejected' ? '❌ Face Rejected' : '⏳ Face Pending'}
+                                                </Badge>
+                                            ) : (
+                                                <Badge className="bg-gray-100 text-gray-500">No Face</Badge>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-3">
                                             {user.profile?.is_verified ? (
                                                 <Badge className="bg-emerald-100 text-emerald-700">✓ Verified</Badge>
                                             ) : (
@@ -136,7 +151,13 @@ export default function AdminUsersPage() {
                                             {new Date(user.created_at).toLocaleDateString()}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <div className="flex gap-1.5">
+                                            <div className="flex gap-1.5 flex-wrap">
+                                                <Link
+                                                    href={`/admin/users/${user.id}`}
+                                                    className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                                                >
+                                                    View
+                                                </Link>
                                                 {!user.deleted_at && (
                                                     <button
                                                         onClick={() => banMutation.mutate({ id: user.id, is_banned: !user.is_banned })}
@@ -165,7 +186,7 @@ export default function AdminUsersPage() {
                                 ))}
                                 {(usersPage?.data ?? []).length === 0 && (
                                     <tr>
-                                        <td colSpan={8} className="px-4 py-10 text-center text-gray-400">
+                                        <td colSpan={9} className="px-4 py-10 text-center text-gray-400">
                                             No users found.
                                         </td>
                                     </tr>

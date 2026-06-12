@@ -29,7 +29,6 @@ type Step1Form = z.infer<typeof step1Schema>;
 export default function RegisterPage() {
     const router = useRouter();
     const setAuth = useAuthStore((s) => s.setAuth);
-    const [step] = useState(1);
     const [serverError, setServerError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
@@ -46,7 +45,7 @@ export default function RegisterPage() {
         try {
             const res = await authService.register(data);
             setAuth(res.data.data.user, res.data.data.token);
-            router.push('/verify-email');  // → "check your inbox" page
+            router.push('/face-scan');
         } catch (err: unknown) {
             const axiosErr = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
             setServerError(axiosErr.response?.data?.message ?? 'Registration failed. Please try again.');

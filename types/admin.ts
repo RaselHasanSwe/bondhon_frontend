@@ -27,6 +27,20 @@ export interface AdminUser {
         profile_completion_percentage: number;
         last_seen_at: string | null;
     } | null;
+    face_scan_session?: {
+        id: number;
+        status: 'pending' | 'submitted' | 'approved' | 'rejected';
+        completed_at: string | null;
+        reviewed_at: string | null;
+        review_note: string | null;
+        latest_capture?: {
+            id: number;
+            capture_key: string;
+            image_url: string;
+            metadata: Record<string, unknown> | null;
+            captured_at: string | null;
+        } | null;
+    } | null;
 }
 
 export interface AdminPhoto {
@@ -77,5 +91,34 @@ export interface SelectOption {
     sort_order: number;
     is_active: boolean;
     children?: SelectOption[];
+}
+
+export interface AdminUserDetail {
+    user: AdminUser & {
+        deleted_at: string | null;
+        email_verified_at: string | null;
+        religious_detail?: Record<string, unknown> | null;
+        family_detail?: Record<string, unknown> | null;
+        education_career?: Record<string, unknown> | null;
+        lifestyle?: Record<string, unknown> | null;
+        horoscope_detail?: Record<string, unknown> | null;
+        partner_preference?: Record<string, unknown> | null;
+        photos?: Array<Record<string, unknown>>;
+    };
+    face_scan: {
+        id: number;
+        status: 'pending' | 'submitted' | 'approved' | 'rejected';
+        completed_at: string | null;
+        reviewed_at: string | null;
+        review_note: string | null;
+        reviewed_by: number | null;
+        captures: Array<{
+            id: number;
+            capture_key: string;
+            image_url: string;
+            metadata: Record<string, unknown> | null;
+            captured_at: string | null;
+        }>;
+    } | null;
 }
 

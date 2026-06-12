@@ -8,10 +8,14 @@ export const adminService = {
     // Users
     getUsers: (params?: { search?: string; page?: number; role?: string; is_banned?: boolean }) =>
         api.get('/admin/users', { params }),
+    getUser: (id: number) =>
+        api.get(`/admin/users/${id}`),
     banUser: (id: number, is_banned: boolean) =>
         api.put(`/admin/users/${id}/ban`, { is_banned }),
     verifyUser: (id: number) =>
         api.put(`/admin/users/${id}/verify`),
+    reviewFaceScan: (id: number, data: { decision: 'approved' | 'rejected' | 'ban'; review_note?: string }) =>
+        api.put(`/admin/users/${id}/face-scan`, data),
 
     // Photo moderation
     getPendingPhotos: (page = 1) =>

@@ -29,6 +29,7 @@ const FALLBACK: SiteSettings = {
   contact_email:    null,
   contact_phone:    null,
   contact_address:  null,
+  face_scan_enabled: '1',
   facebook_url:     null,
   twitter_url:      null,
   instagram_url:    null,

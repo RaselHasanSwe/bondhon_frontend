@@ -14,7 +14,6 @@ import {
     StarIcon, BellIcon, UserIcon, LogOutIcon,
 } from '@/components/ui/icons';
 import type {ComponentType, SVGProps} from 'react';
-import {planLabel, planBadgeClass, planIcon} from '@/lib/plan-utils';
 
 type NavIconProps = SVGProps<SVGSVGElement> & { size?: number; strokeWidth?: number };
 
@@ -58,6 +57,20 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
             router.replace('/login');
         }
     }, [mounted, isAuthenticated, router]);
+
+    useEffect(() => {
+        if (!mounted || !isAuthenticated || !user) return;
+
+        const faceScanEnabled = settings.face_scan_enabled === '1' || settings.face_scan_enabled === 'true' || settings.face_scan_enabled === 'yes' || settings.face_scan_enabled === 'on';
+        const faceScanDone = ['submitted', 'approved', 'pending'].includes(user.face_scan_status ?? '');
+        const isOnFaceScan = pathname === '/face-scan';
+
+        if (faceScanEnabled && user.face_scan_required && !faceScanDone && !isOnFaceScan) {
+            router.replace('/face-scan');
+        }
+    }, [mounted, isAuthenticated, user, settings.face_scan_enabled, router]);
+
+
 
     // ── Sync fresh user data from the server on every mount so the sidebar
     //    always shows the latest subscription_plan (auth store can be stale
