@@ -772,11 +772,11 @@ export default function FaceScanPage() {
 
     // ── Render ────────────────────────────────────────────────────────────────
     return (
-        <div className="min-h-screen bg-[linear-gradient(160deg,#f8f3e8_0%,#fffaf1_100%)] flex items-center justify-center px-4 py-8">
+        <div className="min-h-screen bg-[linear-gradient(160deg,#f8f3e8_0%,#fffaf1_100%)] flex items-center justify-center px-4">
             <div className="w-full max-w-5xl bg-white/90 backdrop-blur rounded-3xl shadow-2xl border border-amber-100 overflow-hidden">
 
                 {/* Header */}
-                <div className="bg-[linear-gradient(90deg,#1a1207,#3c2904,#1a1207)] px-5 sm:px-8 py-4 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="bg-[linear-gradient(90deg,#1a1207,#3c2904,#1a1207)] px-5 sm:px-8 pt-4 pb-2 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
                         <p className="text-xs uppercase tracking-[0.35em] text-amber-200/80">Secure identity verification</p>
                         <h1 className="text-2xl font-bold">Face scan</h1>
@@ -790,14 +790,14 @@ export default function FaceScanPage() {
                     </div>
                 </div>
 
-                <div className="grid lg:grid-cols-[1.25fr_0.75fr] gap-6 p-4 sm:p-6 lg:p-8">
+                <div className="grid lg:grid-cols-[1.25fr_0.75fr] gap-6 p-4 sm:p-6 lg:px-8">
 
                     {/* ── Left: camera ─────────────────────────────────────── */}
                     <div className="space-y-4">
 
                         {/* Controls */}
                         <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4 sm:p-5">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                 <div>
                                     <h2 className="font-semibold text-lg text-stone-900">Camera</h2>
                                     <p className="text-sm text-stone-600 mt-0.5">Good lighting · Remove glasses and headwear</p>
@@ -825,10 +825,19 @@ export default function FaceScanPage() {
                                             I am not wearing glasses
                                         </label>
                                     )}
+
+                                    { cameraReady && (
+                                        <button
+                                            type="button" onClick={stopCamera}
+                                            className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl border border-amber-200 bg-white px-5 py-3 font-semibold text-stone-700 hover:bg-amber-50 transition-colors"
+                                        >
+                                            Stop camera
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 
-                            {!cameraReady ? (
+                            {!cameraReady && (
                                 <button
                                     type="button" onClick={startCamera} disabled={loadingModels}
                                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,#C9A227,#E8C547)] px-5 py-3 font-semibold text-white shadow-md disabled:opacity-60 transition-opacity"
@@ -840,13 +849,6 @@ export default function FaceScanPage() {
                                         </svg>
                                     )}
                                     {loadingModels ? 'Loading models…' : 'Allow camera & start scan'}
-                                </button>
-                            ) : (
-                                <button
-                                    type="button" onClick={stopCamera}
-                                    className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl border border-amber-200 bg-white px-5 py-3 font-semibold text-stone-700 hover:bg-amber-50 transition-colors"
-                                >
-                                    Stop camera
                                 </button>
                             )}
 
