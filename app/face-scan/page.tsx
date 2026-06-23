@@ -757,7 +757,8 @@ export default function FaceScanPage() {
             if (captureCountdown === 0) return { text: '📸 Capturing smile!', type: 'ok' };
             return { text: 'Great smile — hold it!', type: 'ok' };
         }
-        return { text: STEP_INSTRUCTIONS[nextStep].hint, type: 'info' };
+        // return { text: STEP_INSTRUCTIONS[nextStep].hint, type: 'info' };
+        return { text: 'Follow the on-screen instructions', type: 'info' };
     };
 
     const guidance = getGuidance();
