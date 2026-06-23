@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { getSettings } from "@/services/publicService";
+
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "MyBouma";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -9,26 +12,47 @@ const inter = Inter({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Bondhon — Matrimony Platform",
-    template: "%s | Bondhon Matrimony",
-  },
-  description:
-    "Find your perfect life partner on Bondhon — Bangladesh's trusted matrimony platform.",
-  keywords: [
-    "matrimony",
-    "marriage profile",
-    "bride",
-    "groom",
-    "matchmaking",
-    "Bangladesh",
-  ],
-  openGraph: {
-    siteName: "Bondhon Matrimony",
-    type: "website",
-  },
-};
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-heading",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
+
+export async function generateMetadata(): Promise<Metadata> {
+  let settings;
+  try {
+    settings = await getSettings();
+  } catch {
+    settings = null;
+  }
+
+  const siteName    = settings?.site_name        ?? APP_NAME;
+  const metaTitle   = settings?.meta_title       ?? `${siteName} — Premium Matrimony`;
+  const metaDesc    = settings?.meta_description ?? `Find your perfect life partner on ${siteName} — Bangladesh's most trusted premium matrimony platform.`;
+  const metaKw      = settings?.meta_keywords    ?? "matrimony, marriage, Bangladesh";
+  const faviconUrl  = settings?.site_favicon     ?? null;
+
+  return {
+    title: {
+      default:  metaTitle,
+      template: `%s | ${siteName} Matrimony`,
+    },
+    description:  metaDesc,
+    keywords:     metaKw.split(",").map((k) => k.trim()),
+    openGraph: {
+      siteName: `${siteName} Matrimony`,
+      type:     "website",
+    },
+    icons: faviconUrl
+      ? {
+          icon:     [{ url: faviconUrl }],
+          shortcut: [{ url: faviconUrl }],
+          apple:    [{ url: faviconUrl }],
+        }
+      : undefined,
+  };
+}
 
 export default function RootLayout({
   children,
@@ -36,9 +60,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className="min-h-screen bg-[#F8F9FB] text-[#1F2937] antialiased">
+    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+      <body className="min-h-screen bg-background text-foreground antialiased">
         <QueryProvider>{children}</QueryProvider>
+        {/* Portal targets for react-datepicker and react-select */}
+        <div id="datepicker-portal" style={{position:'fixed',zIndex:99999}}/>
       </body>
     </html>
   );

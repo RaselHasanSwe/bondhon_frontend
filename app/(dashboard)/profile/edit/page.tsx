@@ -1,945 +1,1400 @@
 'use client';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useSearchParams } from 'next/navigation';
-import { profileService } from '@/services/profileService';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { ProfileCompletionBar } from '@/components/profile/ProfileCompletionBar';
-import type { ProfilePhoto } from '@/types/profile';
+import {useState, useEffect, useRef, Suspense, useMemo} from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import {useQuery, useQueries, useMutation, useQueryClient} from '@tanstack/react-query';
+import {useForm, Controller} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {z} from 'zod';
+import {useSearchParams} from 'next/navigation';
+import {profileService} from '@/services/profileService';
+import {authService} from '@/services/authService';
+import api from '@/lib/api';
+import { showSuccessToast, showErrorToast, getErrorMessage } from '@/lib/toast';
+import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {Textarea} from '@/components/ui/textarea';
+import {ProfileCompletionBar} from '@/components/profile/ProfileCompletionBar';
+import {SearchableSelect, MultiSearchableSelect} from '@/components/ui/SearchableSelect';
+import type {ProfilePhoto} from '@/types/profile';
+import {
+    heightOptions, weightOptions,
+    siblingCountOptions, siblingPositionOptions,
+    experienceOptions,
+} from '@/lib/profileOptions';
+import { useOptions, useChildOptions, type OptionItem } from '@/hooks/useSelectOptions';
 
-// Fields that use <select> with enum values — empty string means "not selected"
-// and must NOT be sent to the backend (would fail `in:` validation).
+// ─── ENUM fields that must not be sent as empty string ───────────────────────
 const ENUM_FIELDS = new Set([
-  'marital_status', 'manglik_status', 'employed_in',
-  'diet', 'smoking', 'drinking',
-  'family_type', 'family_status',
-  'complexion', 'blood_group',   // basic info enums
+    'marital_status','manglik_status','employed_in','diet','smoking','drinking',
+    'family_type','family_status','complexion','blood_group','body_type',
+    'disability','eye_wear','has_children','child_living_status','family_values',
+    'residing_status','profile_created_for','looking_for','religiousness','pray',
+    'profile_created_by',
 ]);
 
+// ─── Schemas ──────────────────────────────────────────────────────────────────
 const basicSchema = z.object({
-  dob: z.string().min(1, 'Date of birth is required'),
-  height_cm: z.string().optional(),
-  weight_kg: z.string().optional(),
-  complexion: z.string().optional(),
-  blood_group: z.string().optional(),
-  marital_status: z.string().optional(),
-  mother_tongue: z.string().max(100).optional(),
-  nationality: z.string().max(100).optional(),
-  country: z.string().max(100).optional(),
-  state: z.string().max(100).optional(),
-  city: z.string().max(100).optional(),
-  about_me: z.string().max(2000).optional(),
+    name: z.string().max(100).optional(),
+    nick_name: z.string().max(100).optional(),
+    profile_created_by: z.string().optional(),
+    profile_created_for: z.string().optional(),
+    looking_for: z.string().optional(),
+    dob: z.string().optional(),
+    marital_status: z.string().optional(),
+    height_cm: z.string().optional(),
+    weight_kg: z.string().optional(),
+    body_type: z.string().optional(),
+    eye_color: z.string().optional(),
+    hair_color: z.string().optional(),
+    complexion: z.string().optional(),
+    blood_group: z.string().optional(),
+    disability: z.string().optional(),
+    mother_tongue: z.string().optional(),
+    about_me: z.string().max(2000).optional(),
+    what_looking_for: z.string().max(2000).optional(),
+});
+
+const locationSchema = z.object({
+    nationality: z.string().optional(),
+    country: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    postal_code: z.string().max(20).optional(),
+    residing_status: z.string().optional(),
 });
 
 const religiousSchema = z.object({
-  religion: z.string().max(100).optional(),
-  caste: z.string().max(100).optional(),
-  sub_caste: z.string().max(100).optional(),
-  gotra: z.string().max(100).optional(),
-  manglik_status: z.string().optional(),
+    religion: z.string().optional(),
+    caste: z.string().optional(),
+    sub_caste: z.string().max(100).optional(),
+    gotra: z.string().max(100).optional(),
+    manglik_status: z.string().optional(),
+    religiousness: z.string().optional(),
+    pray: z.string().optional(),
 });
 
 const educationSchema = z.object({
-  highest_education: z.string().optional(),
-  college_university: z.string().max(200).optional(),
-  profession: z.string().max(100).optional(),
-  employed_in: z.string().optional(),
-  annual_income_bdt: z.string().optional(),
+    highest_education: z.string().optional(),
+    college_university: z.string().max(300).optional(),
+    institution_name_year: z.string().max(300).optional(),
+    employer_name: z.string().max(200).optional(),
+    job_location: z.string().max(200).optional(),
+    designation: z.string().max(200).optional(),
+    experience_years: z.string().optional(),
+    profession: z.string().optional(),
+    employed_in: z.string().optional(),
+    annual_income_bdt: z.string().optional(),
 });
 
 const lifestyleSchema = z.object({
-  diet: z.string().optional(),
-  smoking: z.string().optional(),
-  drinking: z.string().optional(),
+    diet: z.string().optional(),
+    smoking: z.string().optional(),
+    drinking: z.string().optional(),
+    eye_wear: z.string().optional(),
+    hobbies: z.array(z.string()).optional(),
 });
 
 const familySchema = z.object({
-  family_type: z.string().optional(),
-  family_status: z.string().optional(),
-  family_income_bdt_per_month: z.string().optional(),
-  father_occupation: z.string().max(200).optional(),
-  mother_occupation: z.string().max(200).optional(),
-  brothers_count: z.string().optional(),
-  sisters_count: z.string().optional(),
+    family_type: z.string().optional(),
+    family_status: z.string().optional(),
+    family_income_bdt_per_month: z.string().optional(),
+    father_occupation: z.string().optional(),
+    mother_occupation: z.string().optional(),
+    brothers_count: z.string().optional(),
+    sisters_count: z.string().optional(),
+    sibling_position: z.string().optional(),
+    has_children: z.string().optional(),
+    child_living_status: z.string().optional(),
+    family_values: z.string().optional(),
 });
 
 const horoscopeSchema = z.object({
-  birth_place: z.string().max(200).optional(),
-  birth_time: z.string().optional(),
-  rashi: z.string().max(100).optional(),
-  nakshatra: z.string().max(100).optional(),
-  manglik: z.boolean().optional(),
+    birth_place: z.string().max(200).optional(),
+    birth_time: z.string().optional(),
+    rashi: z.string().max(100).optional(),
+    nakshatra: z.string().max(100).optional(),
+    manglik: z.boolean().optional(),
 });
 
 const preferencesSchema = z.object({
-  age_min: z.string().optional(),
-  age_max: z.string().optional(),
-  height_min_cm: z.string().optional(),
-  height_max_cm: z.string().optional(),
-  // checkbox arrays — backend validates these as strict enums
-  pref_marital_status: z.array(z.string()).optional(),
-  pref_diet: z.array(z.string()).optional(),
-  pref_education: z.array(z.string()).optional(),
-  // free-text comma-separated (no strict enum on backend)
-  pref_religion: z.string().optional(),
-  pref_caste: z.string().optional(),
-  pref_profession: z.string().optional(),
-  income_min_bdt: z.string().optional(),
-  income_max_bdt: z.string().optional(),
-  pref_country: z.string().optional(),
-  pref_city: z.string().optional(),
-  smoking_acceptable: z.boolean().optional(),
-  drinking_acceptable: z.boolean().optional(),
+    age_min: z.string().optional().refine(v => !v || (Number(v) >= 18 && Number(v) <= 100), { message: 'Age must be between 18 and 100' }),
+    age_max: z.string().optional().refine(v => !v || (Number(v) >= 18 && Number(v) <= 100), { message: 'Age must be between 18 and 100' }),
+    height_min_cm: z.string().optional().refine(v => !v || Number(v) >= 100, { message: 'Height must be at least 100 cm' }),
+    height_max_cm: z.string().optional().refine(v => !v || Number(v) >= 100, { message: 'Height must be at least 100 cm' }),
+    pref_marital_status: z.array(z.string()).optional(),
+    pref_diet: z.array(z.string()).optional(),
+    pref_education: z.array(z.string()).optional(),
+    pref_religion: z.array(z.string()).optional(),
+    pref_caste: z.string().optional(),
+    pref_profession: z.array(z.string()).optional(),
+    income_min_bdt: z.string().optional(),
+    income_max_bdt: z.string().optional(),
+    pref_country: z.array(z.string()).optional(),
+    // Location hierarchy preferences
+    pref_divisions: z.array(z.string()).optional(),
+    pref_districts: z.array(z.string()).optional(),
+    pref_provinces: z.array(z.string()).optional(),
+    pref_states: z.array(z.string()).optional(),
+    smoking_acceptable: z.boolean().optional(),
+    drinking_acceptable: z.boolean().optional(),
+    // Extended fields
+    pref_body_type: z.array(z.string()).optional(),
+    pref_complexion: z.array(z.string()).optional(),
+    pref_blood_group: z.array(z.string()).optional(),
+    pref_mother_tongue: z.array(z.string()).optional(),
+    pref_manglik_status: z.array(z.string()).optional(),
+    pref_rashi: z.array(z.string()).optional(),
+    pref_religiousness: z.array(z.string()).optional(),
+    pref_pray: z.array(z.string()).optional(),
+    pref_has_children: z.string().optional(),
+    pref_child_living_status: z.array(z.string()).optional(),
+    pref_family_type: z.array(z.string()).optional(),
+    pref_family_values: z.array(z.string()).optional(),
+    pref_working_status: z.array(z.string()).optional(),
+    pref_employed_in: z.array(z.string()).optional(),
+    pref_residing_status: z.array(z.string()).optional(),
+}).refine(d => !d.age_min || !d.age_max || Number(d.age_min) <= Number(d.age_max), {
+    message: 'Min age must not be greater than max age',
+    path: ['age_min'],
+}).refine(d => !d.height_min_cm || !d.height_max_cm || Number(d.height_min_cm) <= Number(d.height_max_cm), {
+    message: 'Min height must not be greater than max height',
+    path: ['height_min_cm'],
+});
+
+const changePasswordSchema = z.object({
+    current_password: z.string().min(1,'Current password is required'),
+    new_password: z.string().min(8,'New password must be at least 8 characters'),
+    new_password_confirmation: z.string().min(8,'Please confirm your new password'),
+}).refine(d => d.new_password === d.new_password_confirmation,{
+    message:'Passwords do not match', path:['new_password_confirmation'],
 });
 
 type BasicForm = z.infer<typeof basicSchema>;
+type LocationForm = z.infer<typeof locationSchema>;
 type ReligiousForm = z.infer<typeof religiousSchema>;
 type EducationForm = z.infer<typeof educationSchema>;
 type LifestyleForm = z.infer<typeof lifestyleSchema>;
 type FamilyForm = z.infer<typeof familySchema>;
 type HoroscopeForm = z.infer<typeof horoscopeSchema>;
 type PreferencesForm = z.infer<typeof preferencesSchema>;
+type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
 
-function SaveStatus({ saved, saving }: { saved: boolean; saving: boolean }) {
-  if (saving) return <span className="text-xs text-gray-400">Saving…</span>;
-  if (saved) return <span className="text-xs text-green-600">✓ Saved</span>;
-  return null;
+// ─── UI Helpers ───────────────────────────────────────────────────────────────
+function SaveStatus({saved,saving}:{saved:boolean;saving:boolean}) {
+    if (saving) return <span className="text-xs text-gray-400">Saving…</span>;
+    if (saved) return <span className="text-xs text-green-600 flex items-center gap-1"><svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Saved</span>;
+    return null;
 }
 
-function FieldRow({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-1.5">
-      <Label className="text-sm font-medium">{label}</Label>
-      {hint && <p className="text-xs text-gray-400">{hint}</p>}
-      {children}
-    </div>
-  );
+function FieldRow({label,hint,required,children}:{label:string;hint?:string;required?:boolean;children:React.ReactNode}) {
+    return (
+        <div className="space-y-1.5">
+            <Label className="text-sm font-medium">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</Label>
+            {hint && <p className="text-xs text-gray-400">{hint}</p>}
+            {children}
+        </div>
+    );
 }
 
-// ── Inner page (needs useSearchParams → must be wrapped in Suspense) ─────────
+// ─── Date of Birth Picker ─────────────────────────────────────────────────────
+function DobPicker({value, onChange}: {value: string; onChange: (v: string) => void}) {
+    const selected = useMemo(() => {
+        if (!value) return null;
+        const d = new Date(value);
+        return isNaN(d.getTime()) ? null : d;
+    }, [value]);
 
+    const maxDate = useMemo(() => {
+        const d = new Date();
+        d.setFullYear(d.getFullYear() - 18);
+        return d;
+    }, []);
+
+    const minDate = useMemo(() => {
+        const d = new Date();
+        d.setFullYear(d.getFullYear() - 90);
+        return d;
+    }, []);
+
+    return (
+        <DatePicker
+            selected={selected}
+            onChange={(date: Date | null) => {
+                if (date) {
+                    const y = date.getFullYear();
+                    const m = String(date.getMonth() + 1).padStart(2, '0');
+                    const d = String(date.getDate()).padStart(2, '0');
+                    onChange(`${y}-${m}-${d}`);
+                } else {
+                    onChange('');
+                }
+            }}
+            dateFormat="dd MMMM yyyy"
+            showMonthDropdown
+            showYearDropdown
+            dropdownMode="select"
+            maxDate={maxDate}
+            minDate={minDate}
+            placeholderText="Select date of birth"
+            className="h-8 w-full border border-border bg-input rounded-lg px-2.5 py-1 text-sm text-foreground focus:outline-none focus:ring-3 focus:ring-ring/50 focus:border-primary"
+            wrapperClassName="w-full"
+            popperProps={{strategy: 'fixed'}}
+            popperPlacement="bottom-start"
+            portalId="datepicker-portal"
+        />
+    );
+}
+
+// ─── Inner Page ───────────────────────────────────────────────────────────────
 function ProfileEditInner() {
-  const searchParams = useSearchParams();
-  const initialTab = searchParams.get('tab') ?? 'basic';
+    const searchParams = useSearchParams();
+    const initialTab = searchParams.get('tab') ?? 'basic';
+    const queryClient = useQueryClient();
+    const [activeTab, setActiveTab] = useState<string>(initialTab);
+    const [savedTab,setSavedTab] = useState<string|null>(null);
+    const [uploadingPhoto,setUploadingPhoto] = useState(false);
+    const [photoError,setPhotoError] = useState<string|null>(null);
+    const [pwSuccess,setPwSuccess] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    
+    // Update active tab when URL changes
+    useEffect(() => {
+        const tabFromUrl = searchParams.get('tab') ?? 'basic';
+        setActiveTab(tabFromUrl);
+    }, [searchParams]);
 
-  const queryClient = useQueryClient();
-  const [savedTab, setSavedTab] = useState<string | null>(null);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [photoError, setPhotoError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+    const {data:profileRes,isLoading} = useQuery({queryKey:['my-profile'],queryFn:()=>profileService.getMyProfile().then(r=>r.data)});
+    const {data:completionRes} = useQuery({queryKey:['profile-completion'],queryFn:()=>profileService.getCompletionStatus().then(r=>r.data.data)});
 
-  const { data: profileRes, isLoading } = useQuery({
-    queryKey: ['my-profile'],
-    queryFn: () => profileService.getMyProfile().then((r) => r.data),
-  });
+    const saveMutation = useMutation({
+        mutationFn:(data:Record<string,unknown>)=>profileService.updateProfile(data),
+        onSuccess:()=>{queryClient.invalidateQueries({queryKey:['my-profile']});queryClient.invalidateQueries({queryKey:['profile-completion']});},
+    });
+    const prefMutation = useMutation({
+        mutationFn:(data:Record<string,unknown>)=>profileService.updatePreferences(data),
+        onSuccess:()=>{queryClient.invalidateQueries({queryKey:['my-profile']});queryClient.invalidateQueries({queryKey:['profile-completion']});},
+    });
+    const changePasswordMutation = useMutation({mutationFn:(data:ChangePasswordForm)=>authService.changePassword(data)});
 
-  const { data: completionRes } = useQuery({
-    queryKey: ['profile-completion'],
-    queryFn: () => profileService.getCompletionStatus().then((r) => r.data.data),
-  });
+    const profile = profileRes?.data;
 
-  const saveMutation = useMutation({
-    mutationFn: (data: Record<string, unknown>) => profileService.updateProfile(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile-completion'] });
-    },
-  });
+    const basicForm = useForm<BasicForm>({resolver:zodResolver(basicSchema)});
+    const locationForm = useForm<LocationForm>({resolver:zodResolver(locationSchema)});
+    const religiousForm = useForm<ReligiousForm>({resolver:zodResolver(religiousSchema)});
+    const educationForm = useForm<EducationForm>({resolver:zodResolver(educationSchema)});
+    const lifestyleForm = useForm<LifestyleForm>({resolver:zodResolver(lifestyleSchema)});
+    const familyForm = useForm<FamilyForm>({resolver:zodResolver(familySchema)});
+    const horoscopeForm = useForm<HoroscopeForm>({resolver:zodResolver(horoscopeSchema)});
+    const preferencesForm = useForm<PreferencesForm>({resolver:zodResolver(preferencesSchema)});
+    const changePasswordForm = useForm<ChangePasswordForm>({resolver:zodResolver(changePasswordSchema)});
 
-  const prefMutation = useMutation({
-    mutationFn: (data: Record<string, unknown>) => profileService.updatePreferences(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile-completion'] });
-    },
-  });
+    const watchedReligion = religiousForm.watch('religion');
+    const watchedCountry = locationForm.watch('country');
+    const watchedCity = locationForm.watch('city');
+    const watchedState = locationForm.watch('state');
 
-  const profile = profileRes?.data;
+    // ── Dynamic select options from API ─────────────────────────────────────
+    const { data: profileCreatedByOptions = [] }  = useOptions('profile_created_by');
+    const { data: profileCreatedForOptions = [] } = useOptions('profile_created_for');
+    const { data: lookingForOptions = [] }        = useOptions('looking_for');
+    const { data: maritalStatusOptions = [] }     = useOptions('marital_status');
+    const { data: haveChildrenOptions = [] }      = useOptions('have_children');
+    const { data: childLivingStatusOptions = [] } = useOptions('child_living_status');
+    const { data: bodyTypeOptions = [] }          = useOptions('body_type');
+    const { data: eyeColorOptions = [] }          = useOptions('eye_color');
+    const { data: hairColorOptions = [] }         = useOptions('hair_color');
+    const { data: complexionOptions = [] }        = useOptions('complexion');
+    const { data: bloodGroupOptions = [] }        = useOptions('blood_group');
+    const { data: disabilityOptions = [] }        = useOptions('disability');
+    const { data: smokingOptions = [] }           = useOptions('smoking');
+    const { data: drinkingOptions = [] }          = useOptions('drinking');
+    const { data: religionOptions = [] }          = useOptions('religion');
+    const { data: religiousnessOptions = [] }     = useOptions('religiousness');
+    const { data: prayOptions = [] }              = useOptions('pray');
+    const { data: manglikStatusOptions = [] }     = useOptions('manglik_status');
+    const { data: motherTongueOptions = [] }      = useOptions('mother_tongue');
+    const { data: familyValuesOptions = [] }      = useOptions('family_values');
+    const { data: occupationOptions = [] }        = useOptions('occupation');
+    const { data: professionOptions = [] }        = useOptions('profession');
+    const { data: educationLevelOptions = [] }    = useOptions('education_level');
+    const { data: employedInOptions = [] }        = useOptions('employed_in');
+    const { data: dietOptions = [] }              = useOptions('diet');
+    const { data: eyeWearOptions = [] }           = useOptions('eye_wear');
+    const { data: hobbiesOptions = [] }           = useOptions('hobbies');
+    const { data: nationalityOptions = [] }       = useOptions('nationality');
+    const { data: countryOptions = [] }           = useOptions('country');
+    const { data: residingStatusOptions = [] }    = useOptions('residing_status');
+    const { data: familyTypeOptions = [] }        = useOptions('family_type');
+    const { data: familyStatusOptions = [] }      = useOptions('family_status');
+    const { data: rashiOptions = [] }             = useOptions('rashi');
+    const { data: workingStatusOptions = [] }     = useOptions('working_status');
+    const { data: prefHasChildrenOptions = [] }   = useOptions('pref_has_children');
 
-  const basicForm = useForm<BasicForm>({ resolver: zodResolver(basicSchema) });
-  const religiousForm = useForm<ReligiousForm>({ resolver: zodResolver(religiousSchema) });
-  const educationForm = useForm<EducationForm>({ resolver: zodResolver(educationSchema) });
-  const lifestyleForm = useForm<LifestyleForm>({ resolver: zodResolver(lifestyleSchema) });
-  const familyForm = useForm<FamilyForm>({ resolver: zodResolver(familySchema) });
-  const horoscopeForm = useForm<HoroscopeForm>({ resolver: zodResolver(horoscopeSchema) });
-  const preferencesForm = useForm<PreferencesForm>({ resolver: zodResolver(preferencesSchema) });
+    // ── Dependent (nested) options ───────────────────────────────────────────
+    // Caste depends on selected religion
+    const selectedReligionId = religionOptions.find(o => o.value === watchedReligion)?.id;
+    const { data: casteOpts = [] } = useChildOptions('caste', selectedReligionId);
 
-  useEffect(() => {
-    if (!profile) return;
-    const p = profile.profile;
-    if (p) {
-      basicForm.reset({
-        dob: p.dob ?? '',
-        height_cm: p.height_cm?.toString() ?? '',
-        weight_kg: p.weight_kg?.toString() ?? '',
-        complexion: p.complexion ?? '',
-        blood_group: p.blood_group ?? '',
-        marital_status: p.marital_status ?? '',
-        mother_tongue: p.mother_tongue ?? '',
-        nationality: p.nationality ?? '',
-        country: p.country ?? '',
-        state: p.state ?? '',
-        city: p.city ?? '',
-        about_me: p.about_me ?? '',
-      });
-    }
-    if (profile.religious_detail) {
-      religiousForm.reset({
-        religion: profile.religious_detail.religion ?? '',
-        caste: profile.religious_detail.caste ?? '',
-        sub_caste: profile.religious_detail.sub_caste ?? '',
-        gotra: profile.religious_detail.gotra ?? '',
-        manglik_status: (profile.religious_detail.manglik_status as ReligiousForm['manglik_status']) ?? undefined,
-      });
-    }
-    if (profile.education_career) {
-      educationForm.reset({
-        highest_education: profile.education_career.highest_education ?? '',
-        college_university: profile.education_career.college_university ?? '',
-        profession: profile.education_career.profession ?? '',
-        employed_in: (profile.education_career.employed_in as EducationForm['employed_in']) ?? undefined,
-        annual_income_bdt: profile.education_career.annual_income_bdt?.toString() ?? '',
-      });
-    }
-    if (profile.lifestyle) {
-      lifestyleForm.reset({
-        diet: (profile.lifestyle.diet as LifestyleForm['diet']) ?? undefined,
-        smoking: (profile.lifestyle.smoking as LifestyleForm['smoking']) ?? undefined,
-        drinking: (profile.lifestyle.drinking as LifestyleForm['drinking']) ?? undefined,
-      });
-    }
-    if (profile.family_detail) {
-      const fd = profile.family_detail;
-      familyForm.reset({
-        family_type: fd.family_type ?? '',
-        family_status: fd.family_status ?? '',
-        family_income_bdt_per_month: fd.family_income_bdt_per_month?.toString() ?? '',
-        father_occupation: fd.father_occupation ?? '',
-        mother_occupation: fd.mother_occupation ?? '',
-        brothers_count: fd.brothers_count?.toString() ?? '0',
-        sisters_count: fd.sisters_count?.toString() ?? '0',
-      });
-    }
-    if (profile.horoscope_detail) {
-      const h = profile.horoscope_detail;
-      horoscopeForm.reset({
-        birth_place: h.birth_place ?? '',
-        birth_time: h.birth_time ?? '',
-        rashi: h.rashi ?? '',
-        nakshatra: h.nakshatra ?? '',
-        manglik: h.manglik ?? false,
-      });
-    }
-    if (profile.partner_preference) {
-      const pp = profile.partner_preference;
-      preferencesForm.reset({
-        age_min: pp.age_min?.toString() ?? '',
-        age_max: pp.age_max?.toString() ?? '',
-        height_min_cm: pp.height_min_cm?.toString() ?? '',
-        height_max_cm: pp.height_max_cm?.toString() ?? '',
-        pref_marital_status: pp.marital_status ?? [],
-        pref_diet: pp.diet ?? [],
-        pref_education: pp.education ?? [],
-        pref_religion: pp.religion?.join(', ') ?? '',
-        pref_caste: pp.caste?.join(', ') ?? '',
-        pref_profession: pp.profession?.join(', ') ?? '',
-        income_min_bdt: pp.income_min_bdt?.toString() ?? '',
-        income_max_bdt: pp.income_max_bdt?.toString() ?? '',
-        pref_country: pp.country?.join(', ') ?? '',
-        pref_city: pp.city?.join(', ') ?? '',
-        smoking_acceptable: pp.smoking_acceptable ?? false,
-        drinking_acceptable: pp.drinking_acceptable ?? false,
-      });
-    }
-  }, [profile]);
+    // Location cascade: all levels live inside the unified 'country' group via parent_id
+    // Level 1 → /options/country                     (root countries, parent_id = null)
+    // Level 2 → /options/country?parent_id=<country> (states / divisions)
+    // Level 3 → /options/country?parent_id=<state>   (districts / cities)
+    const selectedCountryOption = countryOptions.find(o => o.value === watchedCountry);
+    const selectedCountryId = selectedCountryOption?.id;
+    const { data: locationLevel2Opts = [] } = useChildOptions('country', selectedCountryId);
 
-  const coerceNumeric = (data: Record<string, unknown>, keys: string[]) => {
-    const out = { ...data };
-    for (const k of keys) {
-      if (k in out && out[k] !== '' && out[k] != null) out[k] = Number(out[k]);
-      else if (k in out && out[k] === '') delete out[k];
-    }
-    return out;
-  };
+    const isBangladeshLocation = watchedCountry === 'bangladesh';
+    const selectedLevel2Value = isBangladeshLocation ? watchedCity : watchedState;
+    const selectedLevel2Id = locationLevel2Opts.find(o => o.value === selectedLevel2Value)?.id;
+    const { data: locationLevel3Opts = [] } = useChildOptions('country', isBangladeshLocation ? selectedLevel2Id : undefined);
 
-  const handleSave = async (data: Record<string, unknown>, tabKey: string) => {
-    let processed = { ...data };
+    const level2Label = watchedCountry === 'bangladesh'
+        ? 'Division'
+        : watchedCountry === 'united_states'
+            ? 'State'
+            : watchedCountry === 'canada'
+                ? 'Province / Territory'
+                : 'State / Division';
 
-    // Strip empty-string values for enum fields — backend `in:` rule rejects ""
-    for (const k of Object.keys(processed)) {
-      if (ENUM_FIELDS.has(k) && processed[k] === '') delete processed[k];
-    }
+    // ── Preferences Location Hierarchy ────────────────────────────────────────
+    const watchedPrefCountries = preferencesForm.watch('pref_country');
+    const watchedPrefDivisions = preferencesForm.watch('pref_divisions');
+    const isBangladeshSelected = watchedPrefCountries?.includes('bangladesh');
+    const isCanadaSelected = watchedPrefCountries?.includes('canada');
+    const isUsaSelected = watchedPrefCountries?.includes('united_states');
 
-    processed = coerceNumeric(processed, [
-      'height_cm', 'weight_kg', 'annual_income_bdt',
-      'family_income_bdt_per_month', 'brothers_count', 'sisters_count',
-    ]);
+    // Bangladesh: first show divisions
+    const bangladeshOption = countryOptions.find(o => o.value === 'bangladesh');
+    const { data: prefDivisionOpts = [] } = useChildOptions('country', isBangladeshSelected ? bangladeshOption?.id : undefined);
 
-    await saveMutation.mutateAsync(processed);
-    setSavedTab(tabKey);
-    setTimeout(() => setSavedTab(null), 2000);
-  };
+    // Bangladesh: then load districts under selected division(s)
+    const selectedPrefDivisionIds = useMemo(() => {
+        if (!isBangladeshSelected || !watchedPrefDivisions?.length) return [] as number[];
+        const selected = new Set(watchedPrefDivisions);
+        return prefDivisionOpts
+            .filter((o) => selected.has(o.value))
+            .map((o) => o.id);
+    }, [isBangladeshSelected, watchedPrefDivisions, prefDivisionOpts]);
 
-  const handleSavePreferences = async (data: PreferencesForm) => {
-    // toArray: convert comma-separated free-text to array (for open fields)
-    const toArray = (v: string | undefined): string[] | null =>
-      v ? v.split(',').map((s) => s.trim()).filter(Boolean) : null;
+    const prefDistrictQueries = useQueries({
+        queries: selectedPrefDivisionIds.map((divisionId) => ({
+            queryKey: ['options', 'country', 'districts', divisionId],
+            queryFn: () => api.get('/options/country', { params: { parent_id: divisionId } }).then((r) => r.data as OptionItem[]),
+            staleTime: 1000 * 60 * 60,
+            enabled: isBangladeshSelected,
+        })),
+    });
 
-    // toArr: normalize checkbox arrays (empty array → null for backend)
-    const toArr = (v: string[] | undefined): string[] | null =>
-      v && v.length > 0 ? v : null;
+    const prefDistrictOpts = useMemo(() => {
+        const merged = new Map<string, OptionItem>();
+        for (const query of prefDistrictQueries) {
+            for (const option of query.data ?? []) {
+                merged.set(option.value, option);
+            }
+        }
+        return Array.from(merged.values());
+    }, [prefDistrictQueries]);
 
-    const payload = {
-      age_min: data.age_min ? Number(data.age_min) : null,
-      age_max: data.age_max ? Number(data.age_max) : null,
-      height_min_cm: data.height_min_cm ? Number(data.height_min_cm) : null,
-      height_max_cm: data.height_max_cm ? Number(data.height_max_cm) : null,
-      marital_status: toArr(data.pref_marital_status),   // strict enum — checkboxes
-      diet:           toArr(data.pref_diet),              // strict enum — checkboxes
-      education:      toArr(data.pref_education),         // known values — checkboxes
-      religion:   toArray(data.pref_religion),            // free text
-      caste:      toArray(data.pref_caste),               // free text
-      profession: toArray(data.pref_profession),          // free text
-      country:    toArray(data.pref_country),             // free text
-      city:       toArray(data.pref_city),                // free text
-      income_min_bdt: data.income_min_bdt ? Number(data.income_min_bdt) : null,
-      income_max_bdt: data.income_max_bdt ? Number(data.income_max_bdt) : null,
-      smoking_acceptable: data.smoking_acceptable ?? false,
-      drinking_acceptable: data.drinking_acceptable ?? false,
+    // Get Canada country ID for fetching provinces
+    const canadaOption = countryOptions.find(o => o.value === 'canada');
+    const { data: prefProvinceOpts = [] } = useChildOptions('country', isCanadaSelected ? canadaOption?.id : undefined);
+
+    // Get USA country ID for fetching states
+    const usaOption = countryOptions.find(o => o.value === 'united_states');
+    const { data: prefStateOpts = [] } = useChildOptions('country', isUsaSelected ? usaOption?.id : undefined);
+
+    useEffect(()=>{
+        if (!profile) return;
+        const p = profile.profile;
+        if (p) {
+            const dobParts = p.dob ? p.dob.split('T')[0] : '';
+            basicForm.reset({
+                name:profile.name??'', nick_name:p.nick_name??'',
+                profile_created_by:(profile as any).profile_created_by??'',
+                profile_created_for:p.profile_created_for??'', looking_for:p.looking_for??'',
+                dob:dobParts, marital_status:p.marital_status??'',
+                height_cm:p.height_cm?.toString()??'', weight_kg:p.weight_kg?.toString()??'',
+                body_type:p.body_type??'', eye_color:p.eye_color??'', hair_color:p.hair_color??'',
+                complexion:p.complexion??'', blood_group:p.blood_group??'', disability:p.disability??'',
+                mother_tongue:p.mother_tongue??'', about_me:p.about_me??'', what_looking_for:p.what_looking_for??'',
+            });
+            locationForm.reset({
+                nationality:p.nationality??'', country:p.country??'', city:p.city??'',
+                state:p.state??'', postal_code:p.postal_code??'', residing_status:p.residing_status??'',
+            });
+        }
+        if (profile.religious_detail) {
+            const rd = profile.religious_detail;
+            religiousForm.reset({
+                religion:rd.religion??'', caste:rd.caste??'', sub_caste:rd.sub_caste??'',
+                gotra:rd.gotra??'', manglik_status:rd.manglik_status??'',
+                religiousness:rd.religiousness??'', pray:rd.pray??'',
+            });
+        }
+        if (profile.education_career) {
+            const ec = profile.education_career;
+            educationForm.reset({
+                highest_education:ec.highest_education??'', college_university:ec.college_university??'',
+                institution_name_year:ec.institution_name_year??'', employer_name:ec.employer_name??'',
+                job_location:ec.job_location??'', designation:ec.designation??'',
+                experience_years:ec.experience_years?.toString()??'', profession:ec.profession??'',
+                employed_in:ec.employed_in??'', annual_income_bdt:ec.annual_income_bdt?.toString()??'',
+            });
+        }
+        if (profile.lifestyle) {
+            const ls = profile.lifestyle;
+            lifestyleForm.reset({diet:ls.diet??'',smoking:ls.smoking??'',drinking:ls.drinking??'',eye_wear:ls.eye_wear??'',hobbies:ls.hobbies??[]});
+        }
+        if (profile.family_detail) {
+            const fd = profile.family_detail;
+            familyForm.reset({
+                family_type:fd.family_type??'', family_status:fd.family_status??'',
+                family_income_bdt_per_month:fd.family_income_bdt_per_month?.toString()??'',
+                father_occupation:fd.father_occupation??'', mother_occupation:fd.mother_occupation??'',
+                brothers_count:fd.brothers_count?.toString()??'0', sisters_count:fd.sisters_count?.toString()??'0',
+                sibling_position:fd.sibling_position?.toString()??'', has_children:fd.has_children??'',
+                child_living_status:fd.child_living_status??'', family_values:fd.family_values??'',
+            });
+        }
+        if (profile.horoscope_detail) {
+            const h = profile.horoscope_detail;
+            horoscopeForm.reset({birth_place:h.birth_place??'',birth_time:h.birth_time??'',rashi:h.rashi??'',nakshatra:h.nakshatra??'',manglik:h.manglik??false});
+        }
+        if (profile.partner_preference) {
+            const pp = profile.partner_preference;
+            preferencesForm.reset({
+                age_min:pp.age_min?.toString()??'', age_max:pp.age_max?.toString()??'',
+                height_min_cm:pp.height_min_cm?.toString()??'', height_max_cm:pp.height_max_cm?.toString()??'',
+                pref_marital_status:pp.marital_status??[], pref_diet:pp.diet??[], pref_education:pp.education??[],
+                pref_religion:pp.religion??[], pref_caste:pp.caste?.join(', ')??'',
+                pref_profession:pp.profession??[], income_min_bdt:pp.income_min_bdt?.toString()??'',
+                income_max_bdt:pp.income_max_bdt?.toString()??'', pref_country:pp.country??[],
+                smoking_acceptable:pp.smoking_acceptable??false,
+                drinking_acceptable:pp.drinking_acceptable??false,
+                // Location hierarchy preferences
+                pref_divisions: pp.pref_divisions??[],
+                pref_districts: pp.pref_districts??[],
+                pref_provinces: pp.pref_provinces??[],
+                pref_states: pp.pref_states??[],
+                // Extended
+                pref_body_type: pp.body_type??[],
+                pref_complexion: pp.complexion??[],
+                pref_blood_group: pp.blood_group??[],
+                pref_mother_tongue: pp.mother_tongue??[],
+                pref_manglik_status: pp.manglik_status??[],
+                pref_rashi: pp.rashi??[],
+                pref_religiousness: pp.religiousness??[],
+                pref_pray: pp.pray??[],
+                pref_has_children: pp.has_children??'',
+                pref_child_living_status: pp.child_living_status??[],
+                pref_family_type: pp.family_type??[],
+                pref_family_values: pp.family_values??[],
+                pref_working_status: pp.working_status??[],
+                pref_employed_in: pp.employed_in??[],
+                pref_residing_status: pp.pref_residing_status??[],
+            });
+        }
+    },[profile]);
+
+    const coerceNumeric = (data:Record<string,unknown>,keys:string[])=>{
+        const out={...data};
+        for (const k of keys){if(k in out&&out[k]!==''&&out[k]!=null)out[k]=Number(out[k]);else if(k in out&&out[k]==='')delete out[k];}
+        return out;
     };
 
-    await prefMutation.mutateAsync(payload);
-    setSavedTab('preferences');
-    setTimeout(() => setSavedTab(null), 2000);
-  };
+    const handleSave = async(data:Record<string,unknown>,tabKey:string)=>{
+        let processed={...data};
+        for(const k of Object.keys(processed)){if(ENUM_FIELDS.has(k)&&processed[k]==='')delete processed[k];}
+        processed = coerceNumeric(processed,['height_cm','weight_kg','annual_income_bdt','family_income_bdt_per_month','brothers_count','sisters_count','sibling_position','experience_years']);
+        try {
+            await saveMutation.mutateAsync(processed);
+            setSavedTab(tabKey); setTimeout(()=>setSavedTab(null),2000);
+            showSuccessToast('Profile updated successfully.');
+        } catch (err: unknown) {
+            showErrorToast(getErrorMessage(err), 'Update failed');
+        }
+    };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadingPhoto(true);
-    setPhotoError(null);
-    try {
-      await profileService.uploadPhoto(file);
-      queryClient.invalidateQueries({ queryKey: ['my-profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile-completion'] });
-    } catch {
-      setPhotoError('Upload failed. Please try a smaller image (max 5 MB).');
-    } finally {
-      setUploadingPhoto(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
+    const handleSavePreferences = async(data:PreferencesForm)=>{
+        const toArray=(v:string|undefined):string[]|null=>v?v.split(',').map(s=>s.trim()).filter(Boolean):null;
+        const toArr=(v:string[]|undefined):string[]|null=>v&&v.length>0?v:null;
+        const payload={
+            age_min:data.age_min?Number(data.age_min):null, age_max:data.age_max?Number(data.age_max):null,
+            height_min_cm:data.height_min_cm?Number(data.height_min_cm):null, height_max_cm:data.height_max_cm?Number(data.height_max_cm):null,
+            marital_status:toArr(data.pref_marital_status), diet:toArr(data.pref_diet), education:toArr(data.pref_education),
+            religion:toArr(data.pref_religion), caste:toArray(data.pref_caste), profession:toArr(data.pref_profession),
+            country:toArr(data.pref_country),
+            // Location hierarchy preferences
+            pref_divisions: toArr(data.pref_divisions),
+            pref_districts: toArr(data.pref_districts),
+            pref_provinces: toArr(data.pref_provinces),
+            pref_states: toArr(data.pref_states),
+            income_min_bdt:data.income_min_bdt?Number(data.income_min_bdt):null, income_max_bdt:data.income_max_bdt?Number(data.income_max_bdt):null,
+            smoking_acceptable:data.smoking_acceptable??false, drinking_acceptable:data.drinking_acceptable??false,
+            // Extended
+            body_type: toArr(data.pref_body_type),
+            complexion: toArr(data.pref_complexion),
+            blood_group: toArr(data.pref_blood_group),
+            mother_tongue: toArr(data.pref_mother_tongue),
+            manglik_status: toArr(data.pref_manglik_status),
+            rashi: toArr(data.pref_rashi),
+            religiousness: toArr(data.pref_religiousness),
+            pray: toArr(data.pref_pray),
+            has_children: data.pref_has_children || null,
+            child_living_status: toArr(data.pref_child_living_status),
+            family_type: toArr(data.pref_family_type),
+            family_values: toArr(data.pref_family_values),
+            working_status: toArr(data.pref_working_status),
+            employed_in: toArr(data.pref_employed_in),
+            pref_residing_status: toArr(data.pref_residing_status),
+        };
+        try {
+            await prefMutation.mutateAsync(payload);
+            setSavedTab('preferences'); setTimeout(()=>setSavedTab(null),2000);
+            showSuccessToast('Preferences updated successfully.');
+        } catch(err:unknown) {
+            showErrorToast(getErrorMessage(err), 'Update failed');
+            const apiErrors = (err as {response?:{data?:{errors?:Record<string,string[]>}}})?.response?.data?.errors;
+            if (apiErrors) {
+                const fieldMap: Record<string, keyof PreferencesForm> = {
+                    age_min: 'age_min', age_max: 'age_max',
+                    height_min_cm: 'height_min_cm', height_max_cm: 'height_max_cm',
+                    income_min_bdt: 'income_min_bdt', income_max_bdt: 'income_max_bdt',
+                };
+                for (const [apiField, formField] of Object.entries(fieldMap)) {
+                    if (apiErrors[apiField]?.[0]) {
+                        preferencesForm.setError(formField, { type: 'server', message: apiErrors[apiField][0] });
+                    }
+                }
+            }
+        }
+    };
 
-  const handleDeletePhoto = async (photoId: number) => {
-    await profileService.deletePhoto(photoId);
-    queryClient.invalidateQueries({ queryKey: ['my-profile'] });
-    queryClient.invalidateQueries({ queryKey: ['profile-completion'] });
-  };
+    const handleChangePassword = async(data:ChangePasswordForm)=>{
+        setPwSuccess(false);
+        try {
+            await changePasswordMutation.mutateAsync(data);
+            setPwSuccess(true); changePasswordForm.reset(); setTimeout(()=>setPwSuccess(false),3000);
+            showSuccessToast('Password updated successfully.');
+        } catch (err: unknown) {
+            showErrorToast(getErrorMessage(err), 'Password update failed');
+        }
+    };
 
-  const handleSetPrimary = async (photoId: number) => {
-    await profileService.setPrimaryPhoto(photoId);
-    queryClient.invalidateQueries({ queryKey: ['my-profile'] });
-  };
+    const handlePhotoUpload = async(e:React.ChangeEvent<HTMLInputElement>)=>{
+        const file=e.target.files?.[0]; if(!file) return;
+        setUploadingPhoto(true); setPhotoError(null);
+        try{await profileService.uploadPhoto(file);queryClient.invalidateQueries({queryKey:['my-profile']});queryClient.invalidateQueries({queryKey:['profile-completion']});}
+        catch{setPhotoError('Upload failed. Please try a smaller image (max 5 MB).');}
+        finally{setUploadingPhoto(false);if(fileInputRef.current)fileInputRef.current.value='';}
+    };
+    const handleDeletePhoto=async(id:number)=>{await profileService.deletePhoto(id);queryClient.invalidateQueries({queryKey:['my-profile']});queryClient.invalidateQueries({queryKey:['profile-completion']});};
+    const handleSetPrimary=async(id:number)=>{await profileService.setPrimaryPhoto(id);queryClient.invalidateQueries({queryKey:['my-profile']});};
 
-  if (isLoading) {
+    const dobValue = basicForm.watch('dob');
+    const age = useMemo(()=>{
+        if (!dobValue) return null;
+        const diff=Date.now()-new Date(dobValue).getTime();
+        const a=Math.floor(diff/(1000*60*60*24*365.25));
+        return isNaN(a)?null:a;
+    },[dobValue]);
+
+    if (isLoading) return <div className="max-w-3xl mx-auto"><div className="skeleton-gold h-96"/></div>;
+    const photos:ProfilePhoto[]=profile?.photos??[];
+
+    const btnStyle={height:'2.5rem',borderRadius:'0.75rem',padding:'0 1.25rem'};
+
     return (
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-2xl h-96 animate-pulse" />
-      </div>
-    );
-  }
+        <div className="max-w-4xl mx-auto pb-20 md:pb-6 space-y-5 animate-fade-in">
+            <div className="animate-fade-in-up">
+                <h1 className="page-title">Edit Profile</h1>
+                <p className="text-sm text-muted-foreground mt-0.5">Keep your profile up to date for the best matches</p>
+            </div>
+            {completionRes && <ProfileCompletionBar status={completionRes}/>}
 
-  const selectClass =
-    'w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A227]';
-  const photos: ProfilePhoto[] = profile?.photos ?? [];
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <div className="overflow-x-auto pb-1 mb-2">
+                    <TabsList className="flex min-w-max gap-1 h-auto p-1 rounded-xl bg-muted">
+                        {[
+                            {value:'basic',label:'Basic Info'},{value:'location',label:'Location'},
+                            {value:'religion',label:'Religion'},{value:'career',label:'Career'},
+                            {value:'lifestyle',label:'Lifestyle'},{value:'family',label:'Family'},
+                            {value:'horoscope',label:'Horoscope'},{value:'photo',label:'Photos'},
+                            {value:'preferences',label:'Preferences'},{value:'security',label:'Security'},
+                        ].map(tab=>(
+                            <TabsTrigger key={tab.value} value={tab.value}
+                                className="rounded-lg px-3 py-2 text-xs font-medium whitespace-nowrap data-[state=active]:bg-card data-[state=active]:text-primary">
+                                {tab.label}
+                            </TabsTrigger>
+                        ))}
+                    </TabsList>
+                </div>
 
-  return (
-    <div className="max-w-3xl mx-auto pb-20 md:pb-6 space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-[#1F2937]">Edit Profile</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Keep your profile up to date for the best matches</p>
-      </div>
+                {/* ── Basic Info ─────────────────────────────────────────── */}
+                <TabsContent value="basic">
+                    <form onSubmit={basicForm.handleSubmit(d=>handleSave(d,'basic'))} className="card-premium p-6 space-y-5">
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="font-semibold text-foreground">Basic Information</h2>
+                            <SaveStatus saved={savedTab==='basic'} saving={saveMutation.isPending}/>
+                        </div>
 
-      {completionRes && <ProfileCompletionBar status={completionRes} />}
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            <FieldRow label="Profile Created By" required>
+                                <Controller name="profile_created_by" control={basicForm.control} render={({field})=>(
+                                    <SearchableSelect id="pcb" options={profileCreatedByOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Profile Created For" required>
+                                <Controller name="profile_created_for" control={basicForm.control} render={({field})=>(
+                                    <SearchableSelect id="pcf" options={profileCreatedForOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Looking For" required>
+                                <Controller name="looking_for" control={basicForm.control} render={({field})=>(
+                                    <SearchableSelect id="lf" options={lookingForOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                        </div>
 
-      <Tabs defaultValue={initialTab} className="w-full">
-        {/* Scrollable tabs */}
-        <div className="overflow-x-auto pb-1">
-          <TabsList className="flex min-w-max gap-1 h-auto p-1 rounded-xl bg-gray-100 mb-6">
-            {[
-              { value: 'basic', label: '👤 Basic' },
-              { value: 'religion', label: '🕌 Religion' },
-              { value: 'career', label: '🎓 Career' },
-              { value: 'lifestyle', label: '🌿 Lifestyle' },
-              { value: 'family', label: '👨‍👩‍👧 Family' },
-              { value: 'horoscope', label: '🔯 Horoscope' },
-              { value: 'photo', label: '📷 Photos' },
-              { value: 'preferences', label: '💑 Preferences' },
-            ].map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className="rounded-lg px-3 py-2 text-xs font-medium whitespace-nowrap data-[state=active]:bg-white data-[state=active]:text-[#C9A227]"
-              >
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </div>
+                        <hr className="border-border"/>
 
-        {/* ── Basic Info ─────────────────────────────────────────────────── */}
-        <TabsContent value="basic">
-          <form
-            onSubmit={basicForm.handleSubmit((d) => handleSave(d, 'basic'))}
-            className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="font-semibold text-[#1F2937]">Basic Information</h2>
-              <SaveStatus saved={savedTab === 'basic'} saving={saveMutation.isPending} />
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <FieldRow label="Date of Birth">
-                <Input type="date" className="focus-visible:ring-[#C9A227]" {...basicForm.register('dob')} />
-              </FieldRow>
-              <FieldRow label="Marital Status">
-                <select {...basicForm.register('marital_status')} className={selectClass}>
-                  <option value="">Select…</option>
-                  <option value="never_married">Never Married</option>
-                  <option value="divorced">Divorced</option>
-                  <option value="widowed">Widowed</option>
-                  <option value="awaiting_divorce">Awaiting Divorce</option>
-                </select>
-              </FieldRow>
-              <FieldRow label="Height (cm)">
-                <Input type="number" placeholder="e.g. 165" className="focus-visible:ring-[#C9A227]" {...basicForm.register('height_cm')} />
-              </FieldRow>
-              <FieldRow label="Weight (kg)">
-                <Input type="number" placeholder="e.g. 60" className="focus-visible:ring-[#C9A227]" {...basicForm.register('weight_kg')} />
-              </FieldRow>
-              <FieldRow label="Complexion">
-                <select {...basicForm.register('complexion')} className={selectClass}>
-                  <option value="">Select…</option>
-                  <option value="very_fair">Very Fair</option>
-                  <option value="fair">Fair</option>
-                  <option value="wheatish">Wheatish</option>
-                  <option value="dark">Dark</option>
-                </select>
-              </FieldRow>
-              <FieldRow label="Blood Group">
-                <select {...basicForm.register('blood_group')} className={selectClass}>
-                  <option value="">Select…</option>
-                  {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map((bg) => (
-                    <option key={bg} value={bg}>{bg}</option>
-                  ))}
-                </select>
-              </FieldRow>
-              <FieldRow label="Mother Tongue">
-                <Input placeholder="e.g. Bengali" className="focus-visible:ring-[#C9A227]" {...basicForm.register('mother_tongue')} />
-              </FieldRow>
-              <FieldRow label="Nationality">
-                <Input placeholder="e.g. Bangladeshi" className="focus-visible:ring-[#C9A227]" {...basicForm.register('nationality')} />
-              </FieldRow>
-              <FieldRow label="Country">
-                <Input placeholder="e.g. Bangladesh" className="focus-visible:ring-[#C9A227]" {...basicForm.register('country')} />
-              </FieldRow>
-              <FieldRow label="City">
-                <Input placeholder="e.g. Dhaka" className="focus-visible:ring-[#C9A227]" {...basicForm.register('city')} />
-              </FieldRow>
-            </div>
-            <FieldRow label="About Me (min. 50 characters for full score)">
-              <Textarea
-                rows={4}
-                placeholder="Tell potential matches about yourself…"
-                className="resize-none focus-visible:ring-[#C9A227]"
-                {...basicForm.register('about_me')}
-              />
-            </FieldRow>
-            <Button type="submit" disabled={saveMutation.isPending} className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl">
-              {saveMutation.isPending ? 'Saving…' : 'Save Changes'}
-            </Button>
-          </form>
-        </TabsContent>
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            <FieldRow label="Full Name" required>
+                                <Input placeholder="Your full name" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...basicForm.register('name')}/>
+                            </FieldRow>
+                            <FieldRow label="Nick Name">
+                                <Input placeholder="Optional nickname" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...basicForm.register('nick_name')}/>
+                            </FieldRow>
+                            <FieldRow label="Date of Birth" required>
+                                <Controller name="dob" control={basicForm.control} render={({field})=>(
+                                    <DobPicker value={field.value??''} onChange={field.onChange}/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Age">
+                                <div className="flex items-center h-[37px] px-3 border border-border rounded-xl bg-input/50 text-sm text-muted-foreground">
+                                    {age!=null ? `${age} years old` : 'Auto-calculated from DOB'}
+                                </div>
+                            </FieldRow>
+                        </div>
 
-        {/* ── Religious ──────────────────────────────────────────────────── */}
-        <TabsContent value="religion">
-          <form
-            onSubmit={religiousForm.handleSubmit((d) => handleSave(d, 'religion'))}
-            className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="font-semibold text-[#1F2937]">Religious Background</h2>
-              <SaveStatus saved={savedTab === 'religion'} saving={saveMutation.isPending} />
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <FieldRow label="Religion">
-                <Input placeholder="e.g. Islam, Hindu" className="focus-visible:ring-[#C9A227]" {...religiousForm.register('religion')} />
-              </FieldRow>
-              <FieldRow label="Caste">
-                <Input placeholder="e.g. Sunni" className="focus-visible:ring-[#C9A227]" {...religiousForm.register('caste')} />
-              </FieldRow>
-              <FieldRow label="Sub Caste">
-                <Input placeholder="Optional" className="focus-visible:ring-[#C9A227]" {...religiousForm.register('sub_caste')} />
-              </FieldRow>
-              <FieldRow label="Manglik Status">
-                <select {...religiousForm.register('manglik_status')} className={selectClass}>
-                  <option value="">Select…</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                  <option value="partial">Partial</option>
-                  <option value="dont_know">Don&apos;t Know</option>
-                </select>
-              </FieldRow>
-            </div>
-            <Button type="submit" disabled={saveMutation.isPending} className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl">
-              Save Changes
-            </Button>
-          </form>
-        </TabsContent>
+                        <hr className="border-border"/>
 
-        {/* ── Career ─────────────────────────────────────────────────────── */}
-        <TabsContent value="career">
-          <form
-            onSubmit={educationForm.handleSubmit((d) => handleSave(d, 'career'))}
-            className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="font-semibold text-[#1F2937]">Education &amp; Career</h2>
-              <SaveStatus saved={savedTab === 'career'} saving={saveMutation.isPending} />
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <FieldRow label="Highest Education">
-                <select {...educationForm.register('highest_education')} className={selectClass}>
-                  <option value="">Select…</option>
-                  {['below_ssc', 'ssc', 'hsc', 'diploma', 'bachelors', 'masters', 'phd', 'postdoctoral'].map((e) => (
-                    <option key={e} value={e}>
-                      {e.replace(/_/g, ' ').toUpperCase()}
-                    </option>
-                  ))}
-                </select>
-              </FieldRow>
-              <FieldRow label="College / University">
-                <Input placeholder="University name" className="focus-visible:ring-[#C9A227]" {...educationForm.register('college_university')} />
-              </FieldRow>
-              <FieldRow label="Profession">
-                <Input placeholder="e.g. Software Engineer" className="focus-visible:ring-[#C9A227]" {...educationForm.register('profession')} />
-              </FieldRow>
-              <FieldRow label="Employed In">
-                <select {...educationForm.register('employed_in')} className={selectClass}>
-                  <option value="">Select…</option>
-                  <option value="private">Private Sector</option>
-                  <option value="government">Government</option>
-                  <option value="business">Business</option>
-                  <option value="self_employed">Self-Employed</option>
-                  <option value="not_working">Not Working</option>
-                </select>
-              </FieldRow>
-              <FieldRow label="Annual Income (BDT)">
-                <Input type="number" placeholder="e.g. 600000" className="focus-visible:ring-[#C9A227]" {...educationForm.register('annual_income_bdt')} />
-              </FieldRow>
-            </div>
-            <Button type="submit" disabled={saveMutation.isPending} className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl">
-              Save Changes
-            </Button>
-          </form>
-        </TabsContent>
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            <FieldRow label="Marital Status" required>
+                                <Controller name="marital_status" control={basicForm.control} render={({field})=>(
+                                    <SearchableSelect id="ms" options={maritalStatusOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                        </div>
 
-        {/* ── Lifestyle ──────────────────────────────────────────────────── */}
-        <TabsContent value="lifestyle">
-          <form
-            onSubmit={lifestyleForm.handleSubmit((d) => handleSave(d, 'lifestyle'))}
-            className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="font-semibold text-[#1F2937]">Lifestyle</h2>
-              <SaveStatus saved={savedTab === 'lifestyle'} saving={saveMutation.isPending} />
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <FieldRow label="Diet">
-                <select {...lifestyleForm.register('diet')} className={selectClass}>
-                  <option value="">Select…</option>
-                  <option value="non_vegetarian">Non-Vegetarian</option>
-                  <option value="vegetarian">Vegetarian</option>
-                  <option value="vegan">Vegan</option>
-                  <option value="jain">Jain</option>
-                </select>
-              </FieldRow>
-              <FieldRow label="Smoking">
-                <select {...lifestyleForm.register('smoking')} className={selectClass}>
-                  <option value="">Select…</option>
-                  <option value="non_smoker">Non-Smoker</option>
-                  <option value="smoker">Smoker</option>
-                  <option value="occasionally">Occasionally</option>
-                </select>
-              </FieldRow>
-              <FieldRow label="Drinking">
-                <select {...lifestyleForm.register('drinking')} className={selectClass}>
-                  <option value="">Select…</option>
-                  <option value="non_drinker">Non-Drinker</option>
-                  <option value="drinker">Drinker</option>
-                  <option value="occasionally">Occasionally</option>
-                </select>
-              </FieldRow>
-            </div>
-            <Button type="submit" disabled={saveMutation.isPending} className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl">
-              Save Changes
-            </Button>
-          </form>
-        </TabsContent>
+                        <hr className="border-border"/>
 
-        {/* ── Family ─────────────────────────────────────────────────────── */}
-        <TabsContent value="family">
-          <form
-            onSubmit={familyForm.handleSubmit((d) => handleSave(d, 'family'))}
-            className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="font-semibold text-[#1F2937]">Family Details</h2>
-              <SaveStatus saved={savedTab === 'family'} saving={saveMutation.isPending} />
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <FieldRow label="Family Type">
-                <select {...familyForm.register('family_type')} className={selectClass}>
-                  <option value="">Select…</option>
-                  <option value="nuclear">Nuclear</option>
-                  <option value="joint">Joint</option>
-                  <option value="extended">Extended</option>
-                </select>
-              </FieldRow>
-              <FieldRow label="Family Status">
-                <select {...familyForm.register('family_status')} className={selectClass}>
-                  <option value="">Select…</option>
-                  <option value="middle_class">Middle Class</option>
-                  <option value="upper_middle_class">Upper Middle Class</option>
-                  <option value="rich">Rich</option>
-                  <option value="affluent">Affluent</option>
-                </select>
-              </FieldRow>
-              <FieldRow label="Monthly Family Income (BDT)">
-                <Input
-                  type="number"
-                  placeholder="e.g. 80000"
-                  className="focus-visible:ring-[#C9A227]"
-                  {...familyForm.register('family_income_bdt_per_month')}
-                />
-              </FieldRow>
-              <FieldRow label="Father's Occupation">
-                <Input placeholder="e.g. Businessman" className="focus-visible:ring-[#C9A227]" {...familyForm.register('father_occupation')} />
-              </FieldRow>
-              <FieldRow label="Mother's Occupation">
-                <Input placeholder="e.g. Homemaker" className="focus-visible:ring-[#C9A227]" {...familyForm.register('mother_occupation')} />
-              </FieldRow>
-              <FieldRow label="Number of Brothers">
-                <Input type="number" min="0" placeholder="0" className="focus-visible:ring-[#C9A227]" {...familyForm.register('brothers_count')} />
-              </FieldRow>
-              <FieldRow label="Number of Sisters">
-                <Input type="number" min="0" placeholder="0" className="focus-visible:ring-[#C9A227]" {...familyForm.register('sisters_count')} />
-              </FieldRow>
-            </div>
-            <Button type="submit" disabled={saveMutation.isPending} className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl">
-              {saveMutation.isPending ? 'Saving…' : 'Save Changes'}
-            </Button>
-          </form>
-        </TabsContent>
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            <FieldRow label="Height" required>
+                                <Controller name="height_cm" control={basicForm.control} render={({field})=>(
+                                    <SearchableSelect id="ht" options={heightOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select height…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Weight">
+                                <Controller name="weight_kg" control={basicForm.control} render={({field})=>(
+                                    <SearchableSelect id="wt" options={weightOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select weight…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Body Type" required>
+                                <Controller name="body_type" control={basicForm.control} render={({field})=>(
+                                    <SearchableSelect id="bt" options={bodyTypeOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Complexion" required>
+                                <Controller name="complexion" control={basicForm.control} render={({field})=>(
+                                    <SearchableSelect id="cx" options={complexionOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Eyes">
+                                <Controller name="eye_color" control={basicForm.control} render={({field})=>(
+                                    <SearchableSelect id="ec" options={eyeColorOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select eye color…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Hair">
+                                <Controller name="hair_color" control={basicForm.control} render={({field})=>(
+                                    <SearchableSelect id="hc2" options={hairColorOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select hair color…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Blood Group">
+                                <Controller name="blood_group" control={basicForm.control} render={({field})=>(
+                                    <SearchableSelect id="bg" options={bloodGroupOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Any Disability" required>
+                                <Controller name="disability" control={basicForm.control} render={({field})=>(
+                                    <SearchableSelect id="dis" options={disabilityOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Mother Tongue" required>
+                                <Controller name="mother_tongue" control={basicForm.control} render={({field})=>(
+                                    <SearchableSelect id="mt" options={motherTongueOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Search language…"/>
+                                )}/>
+                            </FieldRow>
+                        </div>
 
-        {/* ── Horoscope ──────────────────────────────────────────────────── */}
-        <TabsContent value="horoscope">
-          <form
-            onSubmit={horoscopeForm.handleSubmit((d) => handleSave(d, 'horoscope'))}
-            className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <h2 className="font-semibold text-[#1F2937]">Horoscope Details</h2>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Filling at least one field here completes the Horoscope section (5%).
-                </p>
-              </div>
-              <SaveStatus saved={savedTab === 'horoscope'} saving={saveMutation.isPending} />
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <FieldRow label="Birth Place">
-                <Input placeholder="e.g. Dhaka" className="focus-visible:ring-[#C9A227]" {...horoscopeForm.register('birth_place')} />
-              </FieldRow>
-              <FieldRow label="Birth Time">
-                <Input type="time" className="focus-visible:ring-[#C9A227]" {...horoscopeForm.register('birth_time')} />
-              </FieldRow>
-              <FieldRow label="Rashi (Moon Sign)">
-                <Input placeholder="e.g. Aries, Taurus" className="focus-visible:ring-[#C9A227]" {...horoscopeForm.register('rashi')} />
-              </FieldRow>
-              <FieldRow label="Nakshatra">
-                <Input placeholder="e.g. Ashwini" className="focus-visible:ring-[#C9A227]" {...horoscopeForm.register('nakshatra')} />
-              </FieldRow>
-            </div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" className="w-4 h-4 accent-[#C9A227]" {...horoscopeForm.register('manglik')} />
-              <span className="text-sm text-gray-700">Manglik</span>
-            </label>
-            <Button type="submit" disabled={saveMutation.isPending} className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl">
-              {saveMutation.isPending ? 'Saving…' : 'Save Changes'}
-            </Button>
-          </form>
-        </TabsContent>
+                        <hr className="border-border"/>
 
-        {/* ── Photos ─────────────────────────────────────────────────────── */}
-        <TabsContent value="photo">          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
-            <div>
-              <h2 className="font-semibold text-[#1F2937]">Profile Photos</h2>
-              <p className="text-xs text-gray-400 mt-0.5">
-                Upload clear, recent photos. Hover a photo to set it as primary or delete it.
-              </p>
-            </div>
+                        <FieldRow label="My Details / About Me" required hint="Min. 50 characters for full profile score">
+                            <Textarea rows={4} placeholder="Tell potential matches about yourself…"
+                                className="resize-none border-border bg-input focus-visible:ring-ring focus-visible:border-primary"
+                                {...basicForm.register('about_me')}/>
+                        </FieldRow>
+                        <FieldRow label="What I Am Looking For" required>
+                            <Textarea rows={3} placeholder="Describe the qualities you're looking for in a partner…"
+                                className="resize-none border-border bg-input focus-visible:ring-ring focus-visible:border-primary"
+                                {...basicForm.register('what_looking_for')}/>
+                        </FieldRow>
+                        <Button type="submit" disabled={saveMutation.isPending} className="btn-gold" style={btnStyle}>
+                            {saveMutation.isPending ? 'Saving…' : 'Save Changes'}
+                        </Button>
+                    </form>
+                </TabsContent>
 
-            {/* Upload */}
-            <div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                className="hidden"
-                onChange={handlePhotoUpload}
-              />
-              <Button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingPhoto}
-                className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl"
-              >
-                {uploadingPhoto ? 'Uploading…' : '+ Upload Photo'}
-              </Button>
-              {photoError && <p className="text-xs text-red-500 mt-2">{photoError}</p>}
-            </div>
+                {/* ── Location ──────────────────────────────────────────────── */}
+                <TabsContent value="location">
+                    <form onSubmit={locationForm.handleSubmit(d=>handleSave(d,'location'))} className="card-premium p-6 space-y-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="font-semibold text-foreground">Location Details</h2>
+                            <SaveStatus saved={savedTab==='location'} saving={saveMutation.isPending}/>
+                        </div>
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            <FieldRow label="Nationality" required>
+                                <Controller name="nationality" control={locationForm.control} render={({field})=>(
+                                    <SearchableSelect id="nat" options={nationalityOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Search nationality…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Country Living In" required>
+                                <Controller name="country" control={locationForm.control} render={({field})=>(
+                                    <SearchableSelect id="cnt" options={countryOptions} value={field.value} onChange={v=>{field.onChange(v??'');locationForm.setValue('city','');locationForm.setValue('state','');}} placeholder="Search country…"/>
+                                )}/>
+                            </FieldRow>
+                            {locationLevel2Opts.length > 0 ? (
+                                <>
+                                    {isBangladeshLocation ? (
+                                        <>
+                                            <FieldRow label={level2Label} required>
+                                                <Controller name="city" control={locationForm.control} render={({field})=>(
+                                                    <SearchableSelect id="div" options={locationLevel2Opts} value={field.value} onChange={v=>{field.onChange(v??'');locationForm.setValue('state','');}} placeholder={`Select ${level2Label.toLowerCase()}…`}/>
+                                                )}/>
+                                            </FieldRow>
+                                            {locationLevel3Opts.length > 0 && (
+                                                <FieldRow label="District / City">
+                                                    <Controller name="state" control={locationForm.control} render={({field})=>(
+                                                        <SearchableSelect id="dist" options={locationLevel3Opts} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select district / city…"/>
+                                                    )}/>
+                                                </FieldRow>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <FieldRow label={level2Label} required>
+                                            <Controller name="state" control={locationForm.control} render={({field})=>(
+                                                <SearchableSelect id="state" options={locationLevel2Opts} value={field.value} onChange={v=>{field.onChange(v??'');locationForm.setValue('city','');}} placeholder={`Select ${level2Label.toLowerCase()}…`}/>
+                                            )}/>
+                                        </FieldRow>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    {/*<FieldRow label="City" required>*/}
+                                    {/*    <Input placeholder="e.g. London" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...locationForm.register('city')}/>*/}
+                                    {/*</FieldRow>*/}
+                                    <FieldRow label="State / Province" required>
+                                        <Input placeholder="e.g. England" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...locationForm.register('state')}/>
+                                    </FieldRow>
+                                </>
+                            )}
+                            <FieldRow label="Postal / Zip Code" required>
+                                <Input placeholder="e.g. 1215" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...locationForm.register('postal_code')}/>
+                            </FieldRow>
+                            <FieldRow label="Residing Status" required>
+                                <Controller name="residing_status" control={locationForm.control} render={({field})=>(
+                                    <SearchableSelect id="rs" options={residingStatusOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                        </div>
+                        <Button type="submit" disabled={saveMutation.isPending} className="btn-gold" style={btnStyle}>
+                            {saveMutation.isPending ? 'Saving…' : 'Save Changes'}
+                        </Button>
+                    </form>
+                </TabsContent>
 
-            {/* Photo grid */}
-            {photos.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {photos.map((photo) => (
-                  <div key={photo.id} className="relative group rounded-xl overflow-hidden border border-gray-100">
-                    <img
-                      src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${photo.file_path}`}
-                      alt="Profile photo"
-                      className="w-full aspect-square object-cover"
-                    />
-                    {photo.is_primary && (
-                      <span className="absolute top-2 left-2 bg-[#C9A227] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                        Primary
-                      </span>
-                    )}
-                    {photo.moderation_status === 'pending' && (
-                      <span className="absolute top-2 right-2 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                        Pending
-                      </span>
-                    )}
-                    {photo.moderation_status === 'rejected' && (
-                      <span className="absolute top-2 right-2 bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                        Rejected
-                      </span>
-                    )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-end gap-1 pb-3">
-                      {!photo.is_primary && (
-                        <button
-                          onClick={() => handleSetPrimary(photo.id)}
-                          className="text-white text-xs bg-[#C9A227] rounded-full px-3 py-1 hover:bg-[#b8911f] transition-colors"
-                        >
-                          Set Primary
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDeletePhoto(photo.id)}
-                        className="text-white text-xs bg-red-500 rounded-full px-3 py-1 hover:bg-red-600 transition-colors"
-                      >
-                        Delete
-                      </button>
+                {/* ── Religion ──────────────────────────────────────────────── */}
+                <TabsContent value="religion">
+                    <form onSubmit={religiousForm.handleSubmit(d=>handleSave(d,'religion'))} className="card-premium p-6 space-y-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="font-semibold text-foreground">Religious Background</h2>
+                            <SaveStatus saved={savedTab==='religion'} saving={saveMutation.isPending}/>
+                        </div>
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            <FieldRow label="Religion" required>
+                                <Controller name="religion" control={religiousForm.control} render={({field})=>(
+                                    <SearchableSelect id="rel" options={religionOptions} value={field.value} onChange={v=>{field.onChange(v??'');religiousForm.setValue('caste','');}} placeholder="Select religion…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Caste" required>
+                                <Controller name="caste" control={religiousForm.control} render={({field})=>(
+                                    <SearchableSelect id="cst" options={casteOpts} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select caste…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Sub Caste">
+                                <Input placeholder="Optional" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...religiousForm.register('sub_caste')}/>
+                            </FieldRow>
+                            <FieldRow label="Religiousness">
+                                <Controller name="religiousness" control={religiousForm.control} render={({field})=>(
+                                    <SearchableSelect id="rns" options={religiousnessOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Pray">
+                                <Controller name="pray" control={religiousForm.control} render={({field})=>(
+                                    <SearchableSelect id="prv" options={prayOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Manglik Status">
+                                <Controller name="manglik_status" control={religiousForm.control} render={({field})=>(
+                                    <SearchableSelect id="mst" options={manglikStatusOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                        </div>
+                        <Button type="submit" disabled={saveMutation.isPending} className="btn-gold" style={btnStyle}>Save Changes</Button>
+                    </form>
+                </TabsContent>
+
+                {/* ── Career ────────────────────────────────────────────────── */}
+                <TabsContent value="career">
+                    <form onSubmit={educationForm.handleSubmit(d=>handleSave(d,'career'))} className="card-premium p-6 space-y-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="font-semibold text-foreground">Education &amp; Career</h2>
+                            <SaveStatus saved={savedTab==='career'} saving={saveMutation.isPending}/>
+                        </div>
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            <FieldRow label="Education Level" required>
+                                <Controller name="highest_education" control={educationForm.control} render={({field})=>(
+                                    <SearchableSelect id="he" options={educationLevelOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select education…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Institution Name &amp; Year">
+                                <Input placeholder="e.g. Dhaka University, 2018" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...educationForm.register('institution_name_year')}/>
+                            </FieldRow>
+                            <FieldRow label="College / University">
+                                <Input placeholder="University or college name" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...educationForm.register('college_university')}/>
+                            </FieldRow>
+                            <FieldRow label="Employer / Institution Name">
+                                <Input placeholder="Current employer or institution" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...educationForm.register('employer_name')}/>
+                            </FieldRow>
+                            <FieldRow label="Profession" required>
+                                <Controller name="profession" control={educationForm.control} render={({field})=>(
+                                    <SearchableSelect id="prf" options={professionOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Search profession…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Working As / Designation">
+                                <Input placeholder="e.g. Senior Software Engineer" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...educationForm.register('designation')}/>
+                            </FieldRow>
+                            <FieldRow label="Job Location">
+                                <Input placeholder="e.g. Dhaka, Bangladesh" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...educationForm.register('job_location')}/>
+                            </FieldRow>
+                            <FieldRow label="Experience">
+                                <Controller name="experience_years" control={educationForm.control} render={({field})=>(
+                                    <SearchableSelect id="exp" options={experienceOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select years…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Employed In">
+                                <Controller name="employed_in" control={educationForm.control} render={({field})=>(
+                                    <SearchableSelect id="ei" options={employedInOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Annual Income (BDT)">
+                                <Input type="number" placeholder="e.g. 600000" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...educationForm.register('annual_income_bdt')}/>
+                            </FieldRow>
+                        </div>
+                        <Button type="submit" disabled={saveMutation.isPending} className="btn-gold" style={btnStyle}>Save Changes</Button>
+                    </form>
+                </TabsContent>
+
+                {/* ── Lifestyle ─────────────────────────────────────────────── */}
+                <TabsContent value="lifestyle">
+                    <form onSubmit={lifestyleForm.handleSubmit(d=>handleSave(d,'lifestyle'))} className="card-premium p-6 space-y-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="font-semibold text-foreground">Lifestyle</h2>
+                            <SaveStatus saved={savedTab==='lifestyle'} saving={saveMutation.isPending}/>
+                        </div>
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            <FieldRow label="Diet" required>
+                                <Controller name="diet" control={lifestyleForm.control} render={({field})=>(
+                                    <SearchableSelect id="dt" options={dietOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Smoke" required>
+                                <Controller name="smoking" control={lifestyleForm.control} render={({field})=>(
+                                    <SearchableSelect id="smk" options={smokingOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Drink" required>
+                                <Controller name="drinking" control={lifestyleForm.control} render={({field})=>(
+                                    <SearchableSelect id="drk" options={drinkingOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Eye-Wear" required>
+                                <Controller name="eye_wear" control={lifestyleForm.control} render={({field})=>(
+                                    <SearchableSelect id="ew" options={eyeWearOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                        </div>
+                        <FieldRow label="Hobbies / Interests">
+                            <Controller name="hobbies" control={lifestyleForm.control} render={({field})=>(
+                                <MultiSearchableSelect id="hob" options={hobbiesOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select hobbies…"/>
+                            )}/>
+                        </FieldRow>
+                        <Button type="submit" disabled={saveMutation.isPending} className="btn-gold" style={btnStyle}>Save Changes</Button>
+                    </form>
+                </TabsContent>
+
+                {/* ── Family ────────────────────────────────────────────────── */}
+                <TabsContent value="family">
+                    <form onSubmit={familyForm.handleSubmit(d=>handleSave(d,'family'))} className="card-premium p-6 space-y-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="font-semibold text-foreground">Family Details</h2>
+                            <SaveStatus saved={savedTab==='family'} saving={saveMutation.isPending}/>
+                        </div>
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            <FieldRow label="Family Type">
+                                <Controller name="family_type" control={familyForm.control} render={({field})=>(
+                                    <SearchableSelect id="ft" options={familyTypeOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Family Status">
+                                <Controller name="family_status" control={familyForm.control} render={({field})=>(
+                                    <SearchableSelect id="fst" options={familyStatusOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Family Values" required>
+                                <Controller name="family_values" control={familyForm.control} render={({field})=>(
+                                    <SearchableSelect id="fv" options={familyValuesOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Monthly Family Income (BDT)">
+                                <Input type="number" placeholder="e.g. 80000" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...familyForm.register('family_income_bdt_per_month')}/>
+                            </FieldRow>
+                            <FieldRow label="Father's Occupation">
+                                <Controller name="father_occupation" control={familyForm.control} render={({field})=>(
+                                    <SearchableSelect id="fo" options={occupationOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Search occupation…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Mother's Occupation">
+                                <Controller name="mother_occupation" control={familyForm.control} render={({field})=>(
+                                    <SearchableSelect id="mo" options={occupationOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Search occupation…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Brother(s)" required>
+                                <Controller name="brothers_count" control={familyForm.control} render={({field})=>(
+                                    <SearchableSelect id="br" options={siblingCountOptions} value={field.value} onChange={v=>field.onChange(v??'0')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Sister(s)" required>
+                                <Controller name="sisters_count" control={familyForm.control} render={({field})=>(
+                                    <SearchableSelect id="sr" options={siblingCountOptions} value={field.value} onChange={v=>field.onChange(v??'0')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Position Among Siblings">
+                                <Controller name="sibling_position" control={familyForm.control} render={({field})=>(
+                                    <SearchableSelect id="sp" options={siblingPositionOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select position…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Have Children">
+                                <Controller name="has_children" control={familyForm.control} render={({field})=>(
+                                    <SearchableSelect id="hc3" options={haveChildrenOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                            <FieldRow label="Child Living Status">
+                                <Controller name="child_living_status" control={familyForm.control} render={({field})=>(
+                                    <SearchableSelect id="cls2" options={childLivingStatusOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select…"/>
+                                )}/>
+                            </FieldRow>
+                        </div>
+                        <Button type="submit" disabled={saveMutation.isPending} className="btn-gold" style={btnStyle}>
+                            {saveMutation.isPending ? 'Saving…' : 'Save Changes'}
+                        </Button>
+                    </form>
+                </TabsContent>
+
+                {/* ── Horoscope ─────────────────────────────────────────────── */}
+                <TabsContent value="horoscope">
+                    <form onSubmit={horoscopeForm.handleSubmit(d=>handleSave(d,'horoscope'))} className="card-premium p-6 space-y-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <div>
+                                <h2 className="font-semibold text-foreground">Horoscope Details</h2>
+                                <p className="text-xs text-muted-foreground mt-0.5">Filling at least one field here completes this section (5%).</p>
+                            </div>
+                            <SaveStatus saved={savedTab==='horoscope'} saving={saveMutation.isPending}/>
+                        </div>
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            <FieldRow label="Birth Place"><Input placeholder="e.g. Dhaka" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...horoscopeForm.register('birth_place')}/></FieldRow>
+                            <FieldRow label="Birth Time"><Input type="time" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...horoscopeForm.register('birth_time')}/></FieldRow>
+                            <FieldRow label="Rashi (Moon Sign)"><Input placeholder="e.g. Aries, Taurus" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...horoscopeForm.register('rashi')}/></FieldRow>
+                            <FieldRow label="Nakshatra"><Input placeholder="e.g. Ashwini" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...horoscopeForm.register('nakshatra')}/></FieldRow>
+                        </div>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" className="w-4 h-4 accent-primary" {...horoscopeForm.register('manglik')}/>
+                            <span className="text-sm text-foreground">Manglik</span>
+                        </label>
+                        <Button type="submit" disabled={saveMutation.isPending} className="btn-gold" style={btnStyle}>
+                            {saveMutation.isPending ? 'Saving…' : 'Save Changes'}
+                        </Button>
+                    </form>
+                </TabsContent>
+
+                {/* ── Photos ────────────────────────────────────────────────── */}
+                <TabsContent value="photo">
+                    <div className="card-premium p-6 space-y-5">
+                        <div>
+                            <h2 className="font-semibold text-foreground">Profile Photos</h2>
+                            <p className="text-xs text-muted-foreground mt-0.5">Upload clear, recent photos. Hover a photo to set it as primary or delete it.</p>
+                        </div>
+                        <div>
+                            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handlePhotoUpload}/>
+                            <Button type="button" onClick={()=>fileInputRef.current?.click()} disabled={uploadingPhoto} className="btn-gold" style={btnStyle}>
+                                {uploadingPhoto ? 'Uploading…' : '+ Upload Photo'}
+                            </Button>
+                            {photoError && <p className="text-xs text-red-500 mt-2">{photoError}</p>}
+                        </div>
+                        {photos.length>0 ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                {photos.map(photo=>(
+                                    <div key={photo.id} className="relative group rounded-xl overflow-hidden border border-gray-100">
+                                        <img src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${photo.file_path}`} alt="Profile photo" className="w-full aspect-square object-cover"/>
+                                        {photo.is_primary && <span className="absolute top-2 left-2 bg-[#C9A227] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Primary</span>}
+                                        {photo.moderation_status==='pending' && <span className="absolute top-2 right-2 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Pending</span>}
+                                        {photo.moderation_status==='rejected' && <span className="absolute top-2 right-2 bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full">Rejected</span>}
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-end gap-1 pb-2">
+                                             {!photo.is_primary && <button onClick={()=>handleSetPrimary(photo.id)} className="text-white text-xs bg-[#C9A227] rounded-full px-2.5 py-1 hover:bg-[#b8911f] transition-colors text-[11px]">Primary</button>}
+                                             <button onClick={()=>handleDeletePhoto(photo.id)} className="text-white text-xs bg-red-500 rounded-full px-2.5 py-1 hover:bg-red-600 transition-colors text-[11px]">Delete</button>
+                                         </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 mx-auto text-gray-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/>
+                                </svg>
+                                <p className="text-gray-500 font-medium text-sm">No photos yet</p>
+                                <p className="text-xs text-gray-400 mt-1">Upload your first photo to attract more matches</p>
+                            </div>
+                        )}
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center">
-                <p className="text-4xl mb-3">📷</p>
-                <p className="text-gray-500 font-medium text-sm">No photos yet</p>
-                <p className="text-xs text-gray-400 mt-1">Upload your first photo to attract more matches</p>
-              </div>
-            )}
-          </div>
-        </TabsContent>
+                </TabsContent>
 
-        {/* ── Partner Preferences ────────────────────────────────────────── */}
-        <TabsContent value="preferences">
-          <form
-            onSubmit={preferencesForm.handleSubmit(handleSavePreferences)}
-            className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="font-semibold text-[#1F2937]">Partner Preferences</h2>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  What you are looking for in a partner.
-                </p>
-              </div>
-              <SaveStatus saved={savedTab === 'preferences'} saving={prefMutation.isPending} />
-            </div>
+                {/* ── Partner Preferences ───────────────────────────────────── */}
+                <TabsContent value="preferences">
+                    <form onSubmit={preferencesForm.handleSubmit(handleSavePreferences)} className="card-premium p-6 space-y-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h2 className="font-semibold text-foreground">Partner Preferences</h2>
+                                <p className="text-xs text-muted-foreground mt-0.5">The more specific you are, the better your matches.</p>
+                            </div>
+                            <SaveStatus saved={savedTab==='preferences'} saving={prefMutation.isPending}/>
+                        </div>
 
-            {/* Age & Height ranges */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              <FieldRow label="Partner's Age Range">
-                <div className="flex gap-2 items-center">
-                  <Input type="number" placeholder="Min (e.g. 22)" className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('age_min')} />
-                  <span className="text-gray-400 text-sm">–</span>
-                  <Input type="number" placeholder="Max (e.g. 30)" className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('age_max')} />
-                </div>
-              </FieldRow>
-              <FieldRow label="Partner's Height Range (cm)">
-                <div className="flex gap-2 items-center">
-                  <Input type="number" placeholder="Min (e.g. 150)" className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('height_min_cm')} />
-                  <span className="text-gray-400 text-sm">–</span>
-                  <Input type="number" placeholder="Max (e.g. 180)" className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('height_max_cm')} />
-                </div>
-              </FieldRow>
-              <FieldRow label="Partner's Annual Income Range (BDT)">
-                <div className="flex gap-2 items-center">
-                  <Input type="number" placeholder="Min" className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('income_min_bdt')} />
-                  <span className="text-gray-400 text-sm">–</span>
-                  <Input type="number" placeholder="Max" className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('income_max_bdt')} />
-                </div>
-              </FieldRow>
-            </div>
+                        {/* ── Basic Range ── */}
+                        <div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Age, Height &amp; Income</p>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <FieldRow label="Age Range">
+                                    <div className="flex gap-2 items-center">
+                                        <Input type="number" placeholder="Min" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('age_min')}/>
+                                        <span className="text-muted-foreground text-sm">–</span>
+                                        <Input type="number" placeholder="Max" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('age_max')}/>
+                                    </div>
+                                    {preferencesForm.formState.errors.age_min && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.age_min.message}</p>}
+                                    {preferencesForm.formState.errors.age_max && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.age_max.message}</p>}
+                                </FieldRow>
+                                <FieldRow label="Height Range (cm)">
+                                    <div className="flex gap-2 items-center">
+                                        <Input type="number" placeholder="Min" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('height_min_cm')}/>
+                                        <span className="text-muted-foreground text-sm">–</span>
+                                        <Input type="number" placeholder="Max" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('height_max_cm')}/>
+                                    </div>
+                                    {preferencesForm.formState.errors.height_min_cm && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.height_min_cm.message}</p>}
+                                    {preferencesForm.formState.errors.height_max_cm && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.height_max_cm.message}</p>}
+                                </FieldRow>
+                                <FieldRow label="Annual Income (BDT)">
+                                    <div className="flex gap-2 items-center">
+                                        <Input type="number" placeholder="Min" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('income_min_bdt')}/>
+                                        <span className="text-muted-foreground text-sm">–</span>
+                                        <Input type="number" placeholder="Max" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('income_max_bdt')}/>
+                                    </div>
+                                    {preferencesForm.formState.errors.income_min_bdt && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.income_min_bdt.message}</p>}
+                                    {preferencesForm.formState.errors.income_max_bdt && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.income_max_bdt.message}</p>}
+                                </FieldRow>
+                            </div>
+                        </div>
 
-            {/* Marital Status — checkboxes (strict enum on backend) */}
-            <FieldRow label="Acceptable Marital Status">
-              <div className="flex flex-wrap gap-x-5 gap-y-2 pt-1">
-                {[
-                  { value: 'never_married', label: 'Never Married' },
-                  { value: 'divorced', label: 'Divorced' },
-                  { value: 'widowed', label: 'Widowed' },
-                  { value: 'awaiting_divorce', label: 'Awaiting Divorce' },
-                ].map((opt) => (
-                  <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value={opt.value}
-                      className="w-4 h-4 accent-[#C9A227]"
-                      {...preferencesForm.register('pref_marital_status')}
-                    />
-                    <span className="text-sm text-gray-700">{opt.label}</span>
-                  </label>
-                ))}
-              </div>
-            </FieldRow>
+                        <hr className="border-border"/>
 
-            {/* Diet — checkboxes (strict enum on backend) */}
-            <FieldRow label="Acceptable Diet">
-              <div className="flex flex-wrap gap-x-5 gap-y-2 pt-1">
-                {[
-                  { value: 'non_vegetarian', label: 'Non-Vegetarian' },
-                  { value: 'vegetarian', label: 'Vegetarian' },
-                  { value: 'vegan', label: 'Vegan' },
-                  { value: 'jain', label: 'Jain' },
-                ].map((opt) => (
-                  <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value={opt.value}
-                      className="w-4 h-4 accent-[#C9A227]"
-                      {...preferencesForm.register('pref_diet')}
-                    />
-                    <span className="text-sm text-gray-700">{opt.label}</span>
-                  </label>
-                ))}
-              </div>
-            </FieldRow>
+                        {/* ── Physical ── */}
+                        <div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Physical Appearance</p>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <FieldRow label="Body Type">
+                                    <Controller name="pref_body_type" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pbt" options={bodyTypeOptions} value={field.value??[]} onChange={field.onChange} placeholder="Any body type…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Complexion">
+                                    <Controller name="pref_complexion" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pcx" options={complexionOptions} value={field.value??[]} onChange={field.onChange} placeholder="Any complexion…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Blood Group">
+                                    <Controller name="pref_blood_group" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pbg" options={bloodGroupOptions} value={field.value??[]} onChange={field.onChange} placeholder="Any blood group…"/>
+                                    )}/>
+                                </FieldRow>
+                            </div>
+                        </div>
 
-            {/* Education — checkboxes (known values) */}
-            <FieldRow label="Minimum Education Level">
-              <div className="flex flex-wrap gap-x-5 gap-y-2 pt-1">
-                {[
-                  { value: 'below_ssc', label: 'Below SSC' },
-                  { value: 'ssc', label: 'SSC' },
-                  { value: 'hsc', label: 'HSC' },
-                  { value: 'diploma', label: 'Diploma' },
-                  { value: 'bachelors', label: 'Bachelors' },
-                  { value: 'masters', label: 'Masters' },
-                  { value: 'phd', label: 'PhD' },
-                  { value: 'postdoctoral', label: 'Postdoctoral' },
-                ].map((opt) => (
-                  <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value={opt.value}
-                      className="w-4 h-4 accent-[#C9A227]"
-                      {...preferencesForm.register('pref_education')}
-                    />
-                    <span className="text-sm text-gray-700">{opt.label}</span>
-                  </label>
-                ))}
-              </div>
-            </FieldRow>
+                        <hr className="border-border"/>
 
-            {/* Free-text fields (no strict enum on backend) */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              <FieldRow label="Partner's Religion" hint="Comma-separated, e.g. Islam, Hindu">
-                <Input placeholder="Islam, Hindu" className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('pref_religion')} />
-              </FieldRow>
-              <FieldRow label="Partner's Caste" hint="Comma-separated, e.g. Sunni, Brahmin">
-                <Input placeholder="Sunni, Brahmin" className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('pref_caste')} />
-              </FieldRow>
-              <FieldRow label="Partner's Profession" hint="Comma-separated, e.g. Doctor, Engineer">
-                <Input placeholder="Doctor, Engineer" className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('pref_profession')} />
-              </FieldRow>
-              <FieldRow label="Partner's Country" hint="e.g. Bangladesh, India">
-                <Input placeholder="Bangladesh, India" className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('pref_country')} />
-              </FieldRow>
-              <FieldRow label="Partner's City" hint="e.g. Dhaka, Chittagong">
-                <Input placeholder="Dhaka, Chittagong" className="focus-visible:ring-[#C9A227]" {...preferencesForm.register('pref_city')} />
-              </FieldRow>
-            </div>
+                        {/* ── Religion & Spirituality ── */}
+                        <div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Religion &amp; Spirituality</p>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <FieldRow label="Religion">
+                                    <Controller name="pref_religion" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pr" options={religionOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select religions…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Caste" hint="Comma-separated e.g. Sunni, Brahmin">
+                                    <Input placeholder="Sunni, Brahmin" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('pref_caste')}/>
+                                </FieldRow>
+                                <FieldRow label="Religiousness">
+                                    <Controller name="pref_religiousness" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="prns" options={religiousnessOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Religious, Moderate…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Prayer Frequency">
+                                    <Controller name="pref_pray" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pprv" options={prayOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Always, Usually…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Manglik Status">
+                                    <Controller name="pref_manglik_status" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pmst" options={manglikStatusOptions} value={field.value??[]} onChange={field.onChange} placeholder="Any manglik status…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Rashi / Zodiac Sign">
+                                    <Controller name="pref_rashi" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="prsh" options={rashiOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Aries, Leo…"/>
+                                    )}/>
+                                </FieldRow>
+                            </div>
+                        </div>
 
-            {/* Lifestyle acceptability */}
-            <div className="flex gap-6 pt-1">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 accent-[#C9A227]" {...preferencesForm.register('smoking_acceptable')} />
-                <span className="text-sm text-gray-700">Smoking acceptable</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 accent-[#C9A227]" {...preferencesForm.register('drinking_acceptable')} />
-                <span className="text-sm text-gray-700">Drinking acceptable</span>
-              </label>
-            </div>
+                        <hr className="border-border"/>
 
-            <Button
-              type="submit"
-              disabled={prefMutation.isPending}
-              className="bg-[#C9A227] hover:bg-[#b8911f] text-white rounded-xl"
-            >
-              {prefMutation.isPending ? 'Saving…' : 'Save Preferences'}
-            </Button>
-          </form>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
+                        {/* ── Family ── */}
+                        <div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Family</p>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <FieldRow label="Family Type">
+                                    <Controller name="pref_family_type" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pft" options={familyTypeOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Nuclear, Joint…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Family Values">
+                                    <Controller name="pref_family_values" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pfv" options={familyValuesOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Traditional, Moderate…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Has Children">
+                                    <Controller name="pref_has_children" control={preferencesForm.control} render={({field})=>(
+                                        <SearchableSelect id="phch" options={prefHasChildrenOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Any / select…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Child Living Status">
+                                    <Controller name="pref_child_living_status" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pcls" options={childLivingStatusOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select…"/>
+                                    )}/>
+                                </FieldRow>
+                            </div>
+                        </div>
+
+                        <hr className="border-border"/>
+
+                        {/* ── Career & Employment ── */}
+                        <div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Career &amp; Employment</p>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <FieldRow label="Working Status">
+                                    <Controller name="pref_working_status" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pws" options={workingStatusOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Working, Student…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Employed In">
+                                    <Controller name="pref_employed_in" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pei" options={employedInOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Government, Private…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Profession">
+                                    <Controller name="pref_profession" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="ppr" options={professionOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select professions…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Minimum Education Level">
+                                    <Controller name="pref_education" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="ped" options={educationLevelOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select education levels…"/>
+                                    )}/>
+                                </FieldRow>
+                            </div>
+                        </div>
+
+                        <hr className="border-border"/>
+
+                        {/* ── Location & Identity ── */}
+                        <div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Location &amp; Identity</p>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <FieldRow label="Mother Tongue">
+                                    <Controller name="pref_mother_tongue" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pmt" options={motherTongueOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Bengali, Urdu…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Residing Status">
+                                    <Controller name="pref_residing_status" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="prst" options={residingStatusOptions} value={field.value??[]} onChange={field.onChange} placeholder="e.g. Citizen, PR…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Country">
+                                    <Controller name="pref_country" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pct" options={countryOptions} value={field.value??[]} onChange={v=>{field.onChange(v);preferencesForm.setValue('pref_divisions',[]);preferencesForm.setValue('pref_districts',[]);preferencesForm.setValue('pref_provinces',[]);preferencesForm.setValue('pref_states',[]);}} placeholder="Select countries…"/>
+                                    )}/>
+                                </FieldRow>
+
+                                {/* ── Bangladesh Divisions & Districts ── */}
+                                {isBangladeshSelected && (
+                                    <>
+                                        <FieldRow label="Division (Bangladesh)">
+                                            <Controller name="pref_divisions" control={preferencesForm.control} render={({field})=>(
+                                                <MultiSearchableSelect id="pdiv" options={prefDivisionOpts} value={field.value??[]} onChange={(v)=>{field.onChange(v);preferencesForm.setValue('pref_districts',[]);}} placeholder="Select divisions…"/>
+                                            )}/>
+                                        </FieldRow>
+                                        {selectedPrefDivisionIds.length > 0 && (
+                                            <FieldRow label="District / City (Bangladesh)">
+                                                <Controller name="pref_districts" control={preferencesForm.control} render={({field})=>(
+                                                    <MultiSearchableSelect id="pdist" options={prefDistrictOpts} value={field.value??[]} onChange={field.onChange} placeholder="Select districts / cities…"/>
+                                                )}/>
+                                            </FieldRow>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* ── Canada Provinces ── */}
+                                {isCanadaSelected && (
+                                    <FieldRow label="Provinces / Territories (Canada)">
+                                        <Controller name="pref_provinces" control={preferencesForm.control} render={({field})=>(
+                                            <MultiSearchableSelect id="pprov" options={prefProvinceOpts} value={field.value??[]} onChange={field.onChange} placeholder="Select provinces…"/>
+                                        )}/>
+                                    </FieldRow>
+                                )}
+
+                                {/* ── USA States ── */}
+                                {isUsaSelected && (
+                                    <FieldRow label="States (USA)">
+                                        <Controller name="pref_states" control={preferencesForm.control} render={({field})=>(
+                                            <MultiSearchableSelect id="pst" options={prefStateOpts} value={field.value??[]} onChange={field.onChange} placeholder="Select states…"/>
+                                        )}/>
+                                    </FieldRow>
+                                )}
+
+                            </div>
+                        </div>
+
+                        <hr className="border-border"/>
+
+                        {/* ── Lifestyle ── */}
+                        <div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Lifestyle &amp; More</p>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <FieldRow label="Marital Status">
+                                    <Controller name="pref_marital_status" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pms" options={maritalStatusOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select marital status…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Diet">
+                                    <Controller name="pref_diet" control={preferencesForm.control} render={({field})=>(
+                                        <MultiSearchableSelect id="pdt" options={dietOptions} value={field.value??[]} onChange={field.onChange} placeholder="Select diet preferences…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Smoking Acceptable">
+                                    <Controller name="smoking_acceptable" control={preferencesForm.control} render={({field})=>(
+                                        <SearchableSelect id="psmk" isClearable={false} options={[{value:'true',label:'Yes, acceptable'},{value:'false',label:'No, not acceptable'}]} value={field.value===true?'true':field.value===false?'false':''} onChange={v=>field.onChange(v==='true')} placeholder="Select…"/>
+                                    )}/>
+                                </FieldRow>
+                                <FieldRow label="Drinking Acceptable">
+                                    <Controller name="drinking_acceptable" control={preferencesForm.control} render={({field})=>(
+                                        <SearchableSelect id="pdrk" isClearable={false} options={[{value:'true',label:'Yes, acceptable'},{value:'false',label:'No, not acceptable'}]} value={field.value===true?'true':field.value===false?'false':''} onChange={v=>field.onChange(v==='true')} placeholder="Select…"/>
+                                    )}/>
+                                </FieldRow>
+                            </div>
+                        </div>
+
+                        <Button type="submit" disabled={prefMutation.isPending} className="btn-gold" style={btnStyle}>
+                            {prefMutation.isPending ? 'Saving…' : 'Save Preferences'}
+                        </Button>
+                    </form>
+                </TabsContent>
+
+                {/* ── Security ──────────────────────────────────────────────── */}
+                <TabsContent value="security">
+                    <form onSubmit={changePasswordForm.handleSubmit(handleChangePassword)} className="card-premium p-6 space-y-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <div>
+                                <h2 className="font-semibold text-foreground">Change Password</h2>
+                                <p className="text-xs text-muted-foreground mt-0.5">Choose a strong password of at least 8 characters.</p>
+                            </div>
+                            {pwSuccess && <span className="text-xs text-green-600 flex items-center gap-1"><svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Password updated</span>}
+                        </div>
+                        {changePasswordMutation.isError && (
+                            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                                {(changePasswordMutation.error as {response?:{data?:{message?:string}}})?.response?.data?.message ?? 'Something went wrong. Please try again.'}
+                            </div>
+                        )}
+                        <div className="space-y-4 max-w-md">
+                            <FieldRow label="Current Password">
+                                <Input type="password" placeholder="Enter your current password" autoComplete="current-password" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...changePasswordForm.register('current_password')}/>
+                                {changePasswordForm.formState.errors.current_password && <p className="text-xs text-red-500 mt-1">{changePasswordForm.formState.errors.current_password.message}</p>}
+                            </FieldRow>
+                            <FieldRow label="New Password">
+                                <Input type="password" placeholder="At least 8 characters" autoComplete="new-password" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...changePasswordForm.register('new_password')}/>
+                                {changePasswordForm.formState.errors.new_password && <p className="text-xs text-red-500 mt-1">{changePasswordForm.formState.errors.new_password.message}</p>}
+                            </FieldRow>
+                            <FieldRow label="Confirm New Password">
+                                <Input type="password" placeholder="Repeat new password" autoComplete="new-password" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...changePasswordForm.register('new_password_confirmation')}/>
+                                {changePasswordForm.formState.errors.new_password_confirmation && <p className="text-xs text-red-500 mt-1">{changePasswordForm.formState.errors.new_password_confirmation.message}</p>}
+                            </FieldRow>
+                        </div>
+                        <Button type="submit" disabled={changePasswordMutation.isPending} className="btn-gold" style={btnStyle}>
+                            {changePasswordMutation.isPending ? 'Updating…' : 'Update Password'}
+                        </Button>
+                    </form>
+                </TabsContent>
+            </Tabs>
+        </div>
+    );
 }
-
-// ── Page export (Suspense for useSearchParams) ────────────────────────────────
 
 export default function ProfileEditPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="max-w-3xl mx-auto">
-          <div className="bg-white rounded-2xl h-96 animate-pulse" />
-        </div>
-      }
-    >
-      <ProfileEditInner />
-    </Suspense>
-  );
+    return (
+        <Suspense fallback={<div className="max-w-3xl mx-auto"><div className="skeleton-gold h-96"/></div>}>
+            <ProfileEditInner/>
+        </Suspense>
+    );
 }
-

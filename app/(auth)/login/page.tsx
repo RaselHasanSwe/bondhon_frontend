@@ -1,117 +1,121 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import {useState} from 'react';
+import {useRouter} from 'next/navigation';
+import {useForm} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {z} from 'zod';
 import Link from 'next/link';
-import { authService } from '@/services/authService';
-import { useAuthStore } from '@/store/authStore';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {authService} from '@/services/authService';
+import {useAuthStore} from '@/store/authStore';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
 
 const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+    email: z.string().email('Please enter a valid email address'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
 });
-
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const router = useRouter();
-  const setAuth = useAuthStore((s) => s.setAuth);
-  const [serverError, setServerError] = useState<string | null>(null);
+    const router = useRouter();
+    const setAuth = useAuthStore((s) => s.setAuth);
+    const [serverError, setServerError] = useState<string | null>(null);
+    const {register, handleSubmit, formState: {errors, isSubmitting}} = useForm<LoginForm>({resolver: zodResolver(loginSchema)});
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
+    const onSubmit = async (data: LoginForm) => {
+        setServerError(null);
+        try {
+            const res = await authService.login(data);
+            const {user, token} = res.data.data;
+            setAuth(user, token);
+            //router.push(user.email_verified_at ? '/dashboard' : '/verify-email');
+            // location to redirect with reload
+            window.location.href = user.email_verified_at ? '/dashboard' : '/verify-email';
 
-  const onSubmit = async (data: LoginForm) => {
-    setServerError(null);
-    try {
-      const res = await authService.login(data);
-      const { user, token } = res.data.data;
-      setAuth(user, token);
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { message?: string } } };
+            setServerError(axiosErr.response?.data?.message ?? 'Login failed. Please try again.');
+        }
+    };
 
-      if (!user.email_verified_at) {
-        router.push('/verify-email');
-      } else {
-        router.push('/dashboard');
-      }
-    } catch (err: unknown) {
-      console.error('Full error object:', err);
-      const axiosErr = err as { response?: { data?: { message?: string } } };
-      setServerError(axiosErr.response?.data?.message ?? 'Login failed. Please try again.');
-    }
-  };
+    return (
+        <div className="bg-white rounded-2xl overflow-hidden"
+             style={{boxShadow: '0 4px 40px rgba(201,162,39,0.12), 0 1px 8px rgba(0,0,0,0.06)'}}>
+            {/* Header accent */}
+            <div className="h-1.5 w-full" style={{background: 'linear-gradient(90deg, #C9A227, #E8C547, #C9A227)'}}/>
 
-  return (
-    <Card className="shadow-sm border-0 rounded-2xl">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-2xl font-bold text-[#1F2937]">Welcome back</CardTitle>
-        <CardDescription>Sign in to your Bondhon account</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-          {serverError && (
-            <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
-              {serverError}
+            <div className="p-8">
+                <div className="mb-7">
+                    <h2 className="text-2xl font-bold text-[#1A1208]" style={{fontFamily: 'var(--font-heading)'}}>
+                        Welcome back
+                    </h2>
+                    <p className="text-sm text-[#8A7A62] mt-1">Sign in to your MyBouma account</p>
+                </div>
+
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+                    {serverError && (
+                        <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600 flex items-center gap-2">
+                            <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            {serverError}
+                        </div>
+                    )}
+
+                    <div className="space-y-1.5">
+                        <Label htmlFor="email" className="text-[#5A4A2A] font-medium text-sm">Email address</Label>
+                        <Input
+                            id="email" type="email" autoComplete="email"
+                            placeholder="you@example.com"
+                            className="h-11 rounded-xl border-[#E8DFCC] bg-[#FEFCF8] focus-visible:ring-[#C9A227] focus-visible:border-[#C9A227]"
+                            {...register('email')}
+                        />
+                        {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="password" className="text-[#5A4A2A] font-medium text-sm">Password</Label>
+                            <Link href="/forgot-password" className="text-xs text-[#C9A227] hover:text-[#A07810] font-medium transition-colors">
+                                Forgot password?
+                            </Link>
+                        </div>
+                        <Input
+                            id="password" type="password" autoComplete="current-password"
+                            placeholder="••••••••"
+                            className="h-11 rounded-xl border-[#E8DFCC] bg-[#FEFCF8] focus-visible:ring-[#C9A227] focus-visible:border-[#C9A227]"
+                            {...register('password')}
+                        />
+                        {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="btn-gold w-full disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+                        style={{height: '2.75rem', borderRadius: '0.875rem'}}
+                    >
+                        {isSubmitting ? (
+                            <span className="flex items-center justify-center gap-2">
+                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                    <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" strokeWidth="3"/>
+                                    <path d="M12 2a10 10 0 0110 10" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+                                </svg>
+                                Signing in…
+                            </span>
+                        ) : 'Sign In'}
+                    </button>
+                </form>
+
+                <div className="mt-6 pt-5 border-t border-[#F0EAD9] text-center">
+                    <p className="text-sm text-[#8A7A62]">
+                        Don&apos;t have an account?{' '}
+                        <Link href="/register" className="text-[#C9A227] font-semibold hover:text-[#A07810] transition-colors">
+                            Create one free
+                        </Link>
+                    </p>
+                </div>
             </div>
-          )}
-
-          <div className="space-y-1.5">
-            <Label htmlFor="email">Email address</Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              className="focus-visible:ring-[#C9A227]"
-              {...register('email')}
-            />
-            {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <Link href="/forgot-password" className="text-xs text-[#C9A227] hover:underline">
-                Forgot password?
-              </Link>
-            </div>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              placeholder="••••••••"
-              className="focus-visible:ring-[#C9A227]"
-              {...register('password')}
-            />
-            {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
-          </div>
-
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-[#C9A227] hover:bg-[#b8911f] text-white font-semibold rounded-xl h-11"
-          >
-            {isSubmitting ? 'Signing in…' : 'Sign In'}
-          </Button>
-        </form>
-
-        <p className="mt-5 text-center text-sm text-gray-500">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-[#C9A227] font-medium hover:underline">
-            Create one free
-          </Link>
-        </p>
-      </CardContent>
-    </Card>
-  );
+        </div>
+    );
 }
-
