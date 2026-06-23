@@ -189,7 +189,12 @@ export default function ProfileViewPage() {
     const messageMutation = useMutation({
         mutationFn: (userId: number) => chatService.getOrCreateConversation(userId),
         onSuccess: (conv) => router.push(`/chat/${conv.id}`),
-        onError: () => setMessageError('Chat is only available after a mutual interest is accepted.'),
+        onError: (error: any) => {
+            const errorMessage = error?.response?.data?.message
+                || error?.message
+                || 'Chat is only available after a mutual interest is accepted.';
+            setMessageError(errorMessage);
+        },
     });
 
     const reportMutation = useMutation({
