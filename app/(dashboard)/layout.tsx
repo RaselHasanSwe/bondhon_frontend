@@ -62,7 +62,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
         if (!mounted || !isAuthenticated || !user) return;
 
         const faceScanEnabled = settings.face_scan_enabled === '1' || settings.face_scan_enabled === 'true' || settings.face_scan_enabled === 'yes' || settings.face_scan_enabled === 'on';
-        const faceScanDone = ['submitted', 'approved', 'pending'].includes(user.face_scan_status ?? '');
+        const faceScanDone = ['submitted', 'approved'].includes(user.face_scan_status ?? '');
         const isOnFaceScan = pathname === '/face-scan';
 
         if (faceScanEnabled && user.face_scan_required && !faceScanDone && !isOnFaceScan) {

@@ -294,14 +294,14 @@ export default function FaceScanPage() {
         if (!mounted) return;
         if (!isAuthenticated) { router.replace('/login'); return; }
         const s = user?.face_scan_status;
-        if (!faceScanEnabled || s === 'submitted' || s === 'approved' || s === 'rejected') {
+        if (!faceScanEnabled || s === 'submitted' || s === 'approved') {
             router.replace('/dashboard'); return;
         }
         void faceScanService.getStatus().then(res => {
             const srv = res.data.data.session;
             setSession(srv);
             setCompletedSteps(requiredStepsFromSession(srv));
-            if (srv && (srv.status === 'submitted' || srv.status === 'approved' || srv.status === 'rejected')) {
+            if (srv && (srv.status === 'submitted' || srv.status === 'approved')) {
                 router.replace('/dashboard');
             }
         }).catch(() => { });
