@@ -243,15 +243,6 @@ export default function ProfileViewsPage() {
                                                         Verified
                                                     </span>
                                                 )}
-                                                {view.viewer.subscription_plan && view.viewer.subscription_plan !== 'free' && (
-                                                    <span className={cn(
-                                                        'flex-shrink-0 text-xs px-1.5 py-0.5 rounded-full capitalize font-medium',
-                                                        getPlanBadge(view.viewer.subscription_plan).bg,
-                                                        getPlanBadge(view.viewer.subscription_plan).text,
-                                                    )}>
-                                                        {view.viewer.subscription_plan}
-                                                    </span>
-                                                )}
                                             </div>
 
                                             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
