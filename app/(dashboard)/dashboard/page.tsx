@@ -37,8 +37,9 @@ export default function DashboardPage() {
     });
 
     const matches: MatchScore[] = (matchesData?.data as { data?: MatchScore[] })?.data ?? [];
-    const pendingInterests = (interestsData?.data as { total?: number })?.total ?? 0;
-    const totalViewers = (viewersData?.data as { total?: number })?.total ?? 0;
+    const pendingInterests = (interestsData?.data?.meta as { total?: number })?.total ?? 0;
+    const totalViewers = (viewersData?.data?.meta as { total?: number })?.total ?? 0;
+    const yourMatch = matches.length;
 
     const greeting = () => {
         const h = new Date().getHours();
@@ -81,7 +82,7 @@ export default function DashboardPage() {
                     },
                     {
                         label: 'Your Matches',
-                        value: (matchesData?.data as { total?: number })?.total ?? 0,
+                        value: yourMatch,
                         Icon: HeartIcon,
                         href: '/matches',
                         color: 'text-pink-500',
@@ -125,7 +126,7 @@ export default function DashboardPage() {
                 </div>
 
                 {matches.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 stagger">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 stagger">
                         {matches.slice(0, 6).map((match) => (
                             <MatchCard
                                 key={match.id}
