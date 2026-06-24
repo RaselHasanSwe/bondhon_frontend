@@ -1,6 +1,6 @@
 'use client';
 
-import {useState, useEffect} from 'react';
+import React, {useState, useEffect} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
@@ -127,12 +127,9 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
             {/* Photo */}
             <Link href={profileUrl} className="block relative aspect-[4/5] bg-[var(--gold-50)]">
                 {resolvePhotoUrl(profile.primary_photo) ? (
-                    <Image
-                        src={resolvePhotoUrl(profile.primary_photo)!}
-                        alt={`${profile.name}'s photo`}
-                        fill
-                        className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                        sizes="(max-width: 768px) 50vw, 25vw"
+                    <img
+                        src={`${profile.primary_photo}`}
+                        className="w-full h-full object-cover"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">
