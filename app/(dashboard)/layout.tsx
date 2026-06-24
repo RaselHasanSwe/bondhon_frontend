@@ -7,6 +7,7 @@ import {useAuthStore} from '@/store/authStore';
 import {authService} from '@/services/authService';
 import {cn} from '@/lib/utils';
 import {useSettings} from '@/lib/useSettings';
+import {needsEmailVerification} from '@/lib/authRedirect';
 import {NotificationBell} from '@/components/notification/NotificationBell';
 import {CallProvider} from '@/components/providers/CallProvider';
 import {
@@ -62,6 +63,11 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
     useEffect(() => {
         if (!mounted || !isAuthenticated || !user) return;
 
+        if (needsEmailVerification(user)) {
+            router.replace('/verify-email');
+            return;
+        }
+
         const faceScanEnabled = settings.face_scan_enabled === '1' || settings.face_scan_enabled === 'true' || settings.face_scan_enabled === 'yes' || settings.face_scan_enabled === 'on';
         const faceScanDone = ['submitted', 'approved'].includes(user.face_scan_status ?? '');
         const isOnFaceScan = pathname === '/face-scan';
@@ -69,7 +75,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
         if (faceScanEnabled && user.face_scan_required && !faceScanDone && !isOnFaceScan) {
             router.replace('/face-scan');
         }
-    }, [mounted, isAuthenticated, user, settings.face_scan_enabled, router]);
+    }, [mounted, isAuthenticated, user, settings.face_scan_enabled, router, pathname]);
 
 
 

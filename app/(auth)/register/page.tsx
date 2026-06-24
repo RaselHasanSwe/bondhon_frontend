@@ -8,6 +8,7 @@ import {z} from 'zod';
 import Link from 'next/link';
 import {authService} from '@/services/authService';
 import {useAuthStore} from '@/store/authStore';
+import {getPostAuthRedirect} from '@/lib/authRedirect';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 
@@ -44,8 +45,9 @@ export default function RegisterPage() {
         setFieldErrors({});
         try {
             const res = await authService.register(data);
-            setAuth(res.data.data.user, res.data.data.token);
-            router.push('/face-scan');
+            const {user, token} = res.data.data;
+            setAuth(user, token);
+            router.push(getPostAuthRedirect(user));
         } catch (err: unknown) {
             const axiosErr = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
             setServerError(axiosErr.response?.data?.message ?? 'Registration failed. Please try again.');

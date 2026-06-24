@@ -8,6 +8,7 @@ import {z} from 'zod';
 import Link from 'next/link';
 import {authService} from '@/services/authService';
 import {useAuthStore} from '@/store/authStore';
+import {getPostAuthRedirect} from '@/lib/authRedirect';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
@@ -30,9 +31,7 @@ export default function LoginPage() {
             const res = await authService.login(data);
             const {user, token} = res.data.data;
             setAuth(user, token);
-            //router.push(user.email_verified_at ? '/dashboard' : '/verify-email');
-            // location to redirect with reload
-            window.location.href = user.email_verified_at ? '/dashboard' : '/verify-email';
+            window.location.href = getPostAuthRedirect(user);
 
         } catch (err: unknown) {
             const axiosErr = err as { response?: { data?: { message?: string } } };

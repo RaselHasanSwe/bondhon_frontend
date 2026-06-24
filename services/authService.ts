@@ -44,6 +44,9 @@ export const authService = {
     resendVerification: () =>
         api.post<ApiResponse<null>>('/auth/email/resend'),
 
+    verifyEmailOtp: (code: string) =>
+        api.post<ApiResponse<{ email_verified_at: string }>>('/auth/email/verify-otp', {code}),
+
     verifyEmail: (id: string, hash: string, expires: string, signature: string) =>
         api.get<ApiResponse<null>>(`/auth/email/verify/${id}/${hash}`, {
             params: {expires, signature},

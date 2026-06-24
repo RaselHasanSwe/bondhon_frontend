@@ -10,6 +10,7 @@ export interface User {
     subscription_plan: string;   // free-text tier: free | silver | gold | platinum | vip …
     subscription_expires_at: string | null;
     email_verified_at: string | null;
+    email_verification_required?: boolean;
     face_scan_required?: boolean;
     face_scan_status?: 'pending' | 'submitted' | 'approved' | 'rejected' | null;
     face_scan_completed_at?: string | null;

@@ -8,6 +8,7 @@ export interface SiteSettings {
   contact_phone: string | null;
   contact_address: string | null;
   face_scan_enabled: string | null;
+  email_verification_enabled: string | null;
   facebook_url: string | null;
   twitter_url: string | null;
   instagram_url: string | null;
