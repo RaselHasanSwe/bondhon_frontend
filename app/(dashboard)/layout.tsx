@@ -11,7 +11,7 @@ import {NotificationBell} from '@/components/notification/NotificationBell';
 import {CallProvider} from '@/components/providers/CallProvider';
 import {
     HomeIcon, MatchesIcon, SearchIcon, InterestIcon, ChatIcon,
-    StarIcon, BellIcon, UserIcon, LogOutIcon,
+    StarIcon, BellIcon, UserIcon, LogOutIcon, EyeIcon,
 } from '@/components/ui/icons';
 import type {ComponentType, SVGProps} from 'react';
 
@@ -31,6 +31,7 @@ function CrownIcon({size = 24, strokeWidth = 1.8, ...props}: NavIconProps) {
 const NAV_ITEMS: { href: string; label: string; Icon: ComponentType<NavIconProps>; adminOnly?: boolean }[] = [
     {href: '/dashboard',    label: 'Dashboard',    Icon: HomeIcon},
     {href: '/matches',      label: 'Matches',      Icon: MatchesIcon},
+    {href: '/profile-views', label: 'Profile Views', Icon: EyeIcon},
     {href: '/search',       label: 'Search',       Icon: SearchIcon},
     {href: '/interests',    label: 'Interests',    Icon: InterestIcon},
     {href: '/chat',         label: 'Messages',     Icon: ChatIcon},

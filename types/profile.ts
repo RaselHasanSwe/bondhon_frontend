@@ -179,3 +179,9 @@ export interface FullProfile {
     partner_preference: PartnerPreference | null;
     photos: ProfilePhoto[];
 }
+
+export interface ProfileView {
+    viewer_id: number;
+    viewed_at: string;
+    viewer: ProfileCard;
+}
