@@ -3,6 +3,7 @@ import type {ApiResponse, PaginatedResponse} from '@/types/user';
 import type {FullProfile, PartnerPreference} from '@/types/profile';
 import type {MatchScore, SearchFilters} from '@/types/match';
 import type {ProfileCard} from '@/types/profile';
+import type { ProfileView } from '@/types/profile';
 
 export const profileService = {
     getMyProfile: () =>
@@ -50,6 +51,9 @@ export const profileService = {
 
     setPrimaryPhoto: (photoId: number) =>
         api.put(`/profile/photos/${photoId}/primary`),
+
+    getMyViewers: (page = 1) =>
+        api.get<ApiResponse<PaginatedResponse<ProfileView>>>('/profile-views', { params: { page } }),
 };
 
 export const matchService = {

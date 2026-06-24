@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { useSettings } from '@/lib/useSettings';
+import { getPostAuthRedirect, needsEmailVerification } from '@/lib/authRedirect';
 import { faceScanService, type FaceScanSessionResponse } from '@/services/faceScanService';
 import {
     FaceLandmarker,
@@ -293,6 +294,10 @@ export default function FaceScanPage() {
     useEffect(() => {
         if (!mounted) return;
         if (!isAuthenticated) { router.replace('/login'); return; }
+        if (needsEmailVerification(user)) {
+            router.replace('/verify-email');
+            return;
+        }
         const s = user?.face_scan_status;
         if (!faceScanEnabled || s === 'submitted' || s === 'approved') {
             router.replace('/dashboard'); return;

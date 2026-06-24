@@ -7,11 +7,12 @@ import {useAuthStore} from '@/store/authStore';
 import {authService} from '@/services/authService';
 import {cn} from '@/lib/utils';
 import {useSettings} from '@/lib/useSettings';
+import {needsEmailVerification} from '@/lib/authRedirect';
 import {NotificationBell} from '@/components/notification/NotificationBell';
 import {CallProvider} from '@/components/providers/CallProvider';
 import {
     HomeIcon, MatchesIcon, SearchIcon, InterestIcon, ChatIcon,
-    StarIcon, BellIcon, UserIcon, LogOutIcon,
+    StarIcon, BellIcon, UserIcon, LogOutIcon, EyeIcon,
 } from '@/components/ui/icons';
 import type {ComponentType, SVGProps} from 'react';
 
@@ -31,6 +32,7 @@ function CrownIcon({size = 24, strokeWidth = 1.8, ...props}: NavIconProps) {
 const NAV_ITEMS: { href: string; label: string; Icon: ComponentType<NavIconProps>; adminOnly?: boolean }[] = [
     {href: '/dashboard',    label: 'Dashboard',    Icon: HomeIcon},
     {href: '/matches',      label: 'Matches',      Icon: MatchesIcon},
+    {href: '/profile-views', label: 'Profile Views', Icon: EyeIcon},
     {href: '/search',       label: 'Search',       Icon: SearchIcon},
     {href: '/interests',    label: 'Interests',    Icon: InterestIcon},
     {href: '/chat',         label: 'Messages',     Icon: ChatIcon},
@@ -61,6 +63,11 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
     useEffect(() => {
         if (!mounted || !isAuthenticated || !user) return;
 
+        if (needsEmailVerification(user)) {
+            router.replace('/verify-email');
+            return;
+        }
+
         const faceScanEnabled = settings.face_scan_enabled === '1' || settings.face_scan_enabled === 'true' || settings.face_scan_enabled === 'yes' || settings.face_scan_enabled === 'on';
         const faceScanDone = ['submitted', 'approved'].includes(user.face_scan_status ?? '');
         const isOnFaceScan = pathname === '/face-scan';
@@ -68,7 +75,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
         if (faceScanEnabled && user.face_scan_required && !faceScanDone && !isOnFaceScan) {
             router.replace('/face-scan');
         }
-    }, [mounted, isAuthenticated, user, settings.face_scan_enabled, router]);
+    }, [mounted, isAuthenticated, user, settings.face_scan_enabled, router, pathname]);
 
 
 

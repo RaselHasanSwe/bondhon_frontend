@@ -1,39 +1,50 @@
 'use client';
 
 import {useState, useEffect} from 'react';
-import {useRouter} from 'next/navigation';
+import {useRouter, usePathname} from 'next/navigation';
 import {useAuthStore} from '@/store/authStore';
+import {getPostAuthRedirect} from '@/lib/authRedirect';
 
 /**
  * GuestGuard — wraps auth pages (login, register, forgot-password …).
  *
  * • During SSR / before Zustand has hydrated from localStorage, renders children
  *   as-is so there is no flash of empty content.
- * • After hydration, if the user IS authenticated they are immediately
- *   redirected to /dashboard and the auth page is hidden.
+ * • After hydration, authenticated users are redirected to their next onboarding
+ *   step (verify-email, face-scan, or dashboard).
+ * • /verify-email is allowed while the user still needs email verification.
  */
 export function GuestGuard({children}: { children: React.ReactNode }) {
     const [mounted, setMounted] = useState(false);
     const router = useRouter();
+    const pathname = usePathname();
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+    const user = useAuthStore((s) => s.user);
 
-    // Wait for client-side hydration before trusting the auth state
     useEffect(() => {
         setMounted(true);
     }, []);
 
     useEffect(() => {
-        if (mounted && isAuthenticated) {
-            router.replace('/dashboard');
-        }
-    }, [mounted, isAuthenticated, router]);
+        if (!mounted || !isAuthenticated || !user) return;
 
-    // Before hydration: render children (avoid flicker)
+        const destination = getPostAuthRedirect(user);
+
+        if (pathname === '/verify-email' && destination === '/verify-email') {
+            return;
+        }
+
+        router.replace(destination);
+    }, [mounted, isAuthenticated, user, pathname, router]);
+
     if (!mounted) return <>{children}</>;
 
-    // Authenticated → hide the auth page while the redirect fires
-    if (isAuthenticated) return null;
+    if (isAuthenticated && user) {
+        const destination = getPostAuthRedirect(user);
+        if (pathname !== '/verify-email' || destination !== '/verify-email') {
+            return null;
+        }
+    }
 
     return <>{children}</>;
 }
-

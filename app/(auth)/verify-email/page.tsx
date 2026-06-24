@@ -1,14 +1,17 @@
 'use client';
 
-import {useEffect, useState, Suspense} from 'react';
-import {useSearchParams} from 'next/navigation';
+import {useEffect, useRef, useState, Suspense} from 'react';
+import {useSearchParams, useRouter} from 'next/navigation';
 import Link from 'next/link';
 import {authService} from '@/services/authService';
 import {useAuthStore} from '@/store/authStore';
+import {getPostAuthRedirect} from '@/lib/authRedirect';
 
 // ── Mode A: Verification callback (user clicked the email link) ─────────────
 function VerifyCallback({vUrl}: { vUrl: string }) {
+    const router = useRouter();
     const updateUser = useAuthStore((s) => s.updateUser);
+    const user = useAuthStore((s) => s.user);
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
     const [status, setStatus] = useState<'loading' | 'success' | 'already' | 'error'>('loading');
     const [errorMsg, setErrorMsg] = useState('');
@@ -16,11 +19,9 @@ function VerifyCallback({vUrl}: { vUrl: string }) {
     useEffect(() => {
         const run = async () => {
             try {
-                // Parse the backend signed URL to extract path params + query params
                 const decoded = decodeURIComponent(vUrl);
                 const parsed = new URL(decoded);
                 const parts = parsed.pathname.split('/').filter(Boolean);
-                // pathname: /api/v1/auth/email/verify/{id}/{hash}
                 const id = parts[parts.length - 2];
                 const hash = parts[parts.length - 1];
                 const expires = parsed.searchParams.get('expires') ?? '';
@@ -28,7 +29,6 @@ function VerifyCallback({vUrl}: { vUrl: string }) {
 
                 const res = await authService.verifyEmail(id, hash, expires, signature);
 
-                // Update local store if user is already logged in (same device / same browser)
                 if (isAuthenticated) {
                     updateUser({email_verified_at: new Date().toISOString()});
                 }
@@ -49,7 +49,15 @@ function VerifyCallback({vUrl}: { vUrl: string }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vUrl]);
 
-    // ── loading ──
+    useEffect(() => {
+        if ((status === 'success' || status === 'already') && isAuthenticated && user) {
+            const timer = setTimeout(() => {
+                router.replace(getPostAuthRedirect({...user, email_verified_at: user.email_verified_at ?? new Date().toISOString()}));
+            }, 1500);
+            return () => clearTimeout(timer);
+        }
+    }, [status, isAuthenticated, user, router]);
+
     if (status === 'loading') {
         return (
             <div className="p-8 text-center">
@@ -63,7 +71,6 @@ function VerifyCallback({vUrl}: { vUrl: string }) {
         );
     }
 
-    // ── success ──
     if (status === 'success') {
         return (
             <div className="p-8 text-center space-y-4">
@@ -72,21 +79,22 @@ function VerifyCallback({vUrl}: { vUrl: string }) {
                 </div>
                 <h2 className="text-2xl font-bold text-green-700" style={{fontFamily:'var(--font-heading)'}}>Email Verified!</h2>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                    Your email has been verified successfully. Welcome to{' '}
-                    <span className="font-semibold text-[var(--primary)]">MyBouma</span>!
+                    Your email has been verified successfully.
+                    {isAuthenticated ? ' Redirecting you to the next step…' : ' You can now sign in to continue.'}
                 </p>
-                <Link href="/login">
-                    <button className="btn-gold w-full flex items-center justify-center gap-1.5"
-                            style={{height:'2.75rem', borderRadius:'0.875rem'}}>
-                        Sign In to Continue
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                    </button>
-                </Link>
+                {!isAuthenticated && (
+                    <Link href="/login">
+                        <button className="btn-gold w-full flex items-center justify-center gap-1.5"
+                                style={{height:'2.75rem', borderRadius:'0.875rem'}}>
+                            Sign In to Continue
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </button>
+                    </Link>
+                )}
             </div>
         );
     }
 
-    // ── already verified ──
     if (status === 'already') {
         return (
             <div className="p-8 text-center space-y-4">
@@ -95,18 +103,21 @@ function VerifyCallback({vUrl}: { vUrl: string }) {
                 </div>
                 <h2 className="text-2xl font-bold text-foreground" style={{fontFamily:'var(--font-heading)'}}>Already Verified</h2>
                 <p className="text-muted-foreground text-sm">Your email address is already verified.</p>
-                <Link href="/login">
-                    <button className="btn-gold w-full flex items-center justify-center gap-1.5"
-                            style={{height:'2.75rem', borderRadius:'0.875rem'}}>
-                        Go to Sign In
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                    </button>
-                </Link>
+                {!isAuthenticated ? (
+                    <Link href="/login">
+                        <button className="btn-gold w-full flex items-center justify-center gap-1.5"
+                                style={{height:'2.75rem', borderRadius:'0.875rem'}}>
+                            Go to Sign In
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </button>
+                    </Link>
+                ) : (
+                    <p className="text-sm text-muted-foreground">Redirecting…</p>
+                )}
             </div>
         );
     }
 
-    // ── error ──
     return (
         <div className="p-8 text-center space-y-4">
             <div className="mx-auto mb-4 w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
@@ -117,94 +128,178 @@ function VerifyCallback({vUrl}: { vUrl: string }) {
                 {errorMsg}
             </div>
             <p className="text-xs text-muted-foreground">
-                Links expire after 60 minutes. If your link has expired, sign in and request a new one.
+                Links expire after 60 minutes. Enter the 6-digit code from your email or request a new one below.
             </p>
-            <Link href="/login">
+            <Link href="/verify-email">
                 <button className="btn-gold w-full"
                         style={{height:'2.75rem', borderRadius:'0.875rem'}}>
-                    Sign In
+                    Enter Verification Code
                 </button>
             </Link>
         </div>
     );
 }
 
-// ── Mode B: "Check your inbox" (redirect here after registration) ───────────
-function CheckInbox() {
+// ── Mode B: 6-digit OTP entry ───────────────────────────────────────────────
+function OtpVerification() {
+    const router = useRouter();
+    const user = useAuthStore((s) => s.user);
+    const updateUser = useAuthStore((s) => s.updateUser);
+    const [digits, setDigits] = useState<string[]>(['', '', '', '', '', '']);
+    const [submitting, setSubmitting] = useState(false);
+    const [resending, setResending] = useState(false);
     const [resent, setResent] = useState(false);
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+    const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+    const code = digits.join('');
+
+    const handleDigitChange = (index: number, value: string) => {
+        const cleaned = value.replace(/\D/g, '').slice(-1);
+        const next = [...digits];
+        next[index] = cleaned;
+        setDigits(next);
+        setError(null);
+
+        if (cleaned && index < 5) {
+            inputRefs.current[index + 1]?.focus();
+        }
+    };
+
+    const handleKeyDown = (index: number, key: string) => {
+        if (key === 'Backspace' && !digits[index] && index > 0) {
+            inputRefs.current[index - 1]?.focus();
+        }
+    };
+
+    const handlePaste = (e: React.ClipboardEvent) => {
+        e.preventDefault();
+        const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+        if (!pasted) return;
+
+        const next = pasted.split('').concat(Array(6).fill('')).slice(0, 6);
+        setDigits(next);
+        setError(null);
+        inputRefs.current[Math.min(pasted.length, 5)]?.focus();
+    };
+
+    const handleVerify = async () => {
+        if (code.length !== 6) {
+            setError('Please enter the full 6-digit code.');
+            return;
+        }
+
+        setSubmitting(true);
+        setError(null);
+        try {
+            const res = await authService.verifyEmailOtp(code);
+            const verifiedAt = res.data.data.email_verified_at ?? new Date().toISOString();
+            updateUser({email_verified_at: verifiedAt});
+
+            const updatedUser = user ? {...user, email_verified_at: verifiedAt} : null;
+            router.replace(updatedUser ? getPostAuthRedirect(updatedUser) : '/dashboard');
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { message?: string } } };
+            setError(axiosErr.response?.data?.message ?? 'Invalid or expired verification code.');
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     const handleResend = async () => {
-        setLoading(true);
+        setResending(true);
         setError(null);
         try {
             await authService.resendVerification();
             setResent(true);
+            setDigits(['', '', '', '', '', '']);
+            inputRefs.current[0]?.focus();
         } catch {
             setError('Failed to resend. Please try again shortly.');
         } finally {
-            setLoading(false);
+            setResending(false);
         }
     };
 
     return (
-        <div className="p-8 text-center space-y-4">
-            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl flex items-center justify-center"
-                 style={{background: 'var(--gradient-gold-btn)', boxShadow: 'var(--shadow-btn)'}}>
-                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            </div>
-            <h2 className="text-2xl font-bold text-foreground" style={{fontFamily:'var(--font-heading)'}}>Verify your email</h2>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-                We&apos;ve sent a verification link to your email address. Please check your inbox and
-                click the link to activate your account.
-            </p>
-
-            {resent && (
-                <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-600 flex items-center justify-center gap-1.5">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    Verification email resent successfully!
+        <div className="p-8 space-y-5">
+            <div className="text-center">
+                <div className="mx-auto mb-4 w-14 h-14 rounded-2xl flex items-center justify-center"
+                     style={{background: 'var(--gradient-gold-btn)', boxShadow: 'var(--shadow-btn)'}}>
+                    <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                 </div>
-            )}
+                <h2 className="text-2xl font-bold text-foreground" style={{fontFamily:'var(--font-heading)'}}>Verify your email</h2>
+                <p className="text-muted-foreground text-sm leading-relaxed mt-2">
+                    We sent a 6-digit code to{' '}
+                    <span className="font-semibold text-foreground">{user?.email ?? 'your email'}</span>.
+                    Enter it below to continue.
+                </p>
+            </div>
+
+            <div className="flex justify-center gap-2 sm:gap-3" onPaste={handlePaste}>
+                {digits.map((digit, index) => (
+                    <input
+                        key={index}
+                        ref={(el) => { inputRefs.current[index] = el; }}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleDigitChange(index, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(index, e.key)}
+                        className="w-11 h-14 sm:w-12 sm:h-16 rounded-xl border-2 border-[var(--border)] bg-[var(--input)] text-center text-xl font-bold text-foreground focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--ring)]"
+                        autoComplete={index === 0 ? 'one-time-code' : 'off'}
+                    />
+                ))}
+            </div>
 
             {error && (
-                <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
+                <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600 text-center">
                     {error}
                 </div>
             )}
 
-            <p className="text-xs text-muted-foreground">Didn&apos;t receive it? Check your spam folder.</p>
-
-            {isAuthenticated && (
-                <button
-                    onClick={handleResend}
-                    disabled={loading || resent}
-                    className="btn-outline-gold w-full disabled:opacity-60 disabled:cursor-not-allowed"
-                    style={{display:'inline-flex', alignItems:'center', justifyContent:'center'}}
-                >
-                    {loading ? 'Sending…' : resent ? 'Email sent!' : 'Resend verification email'}
-                </button>
+            {resent && (
+                <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-600 text-center flex items-center justify-center gap-1.5">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    A new verification code has been sent.
+                </div>
             )}
 
-            <p className="text-xs text-muted-foreground">
-                Already verified?{' '}
-                <Link href="/login" className="text-[var(--primary)] hover:text-[var(--gold-600)] font-medium transition-colors">
-                    Sign in
-                </Link>
+            <button
+                onClick={handleVerify}
+                disabled={submitting || code.length !== 6}
+                className="btn-gold w-full disabled:opacity-60 disabled:cursor-not-allowed"
+                style={{height:'2.75rem', borderRadius:'0.875rem'}}
+            >
+                {submitting ? 'Verifying…' : 'Verify Email'}
+            </button>
+
+            <p className="text-xs text-muted-foreground text-center">
+                Didn&apos;t receive it? Check your spam folder or{' '}
+                <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={resending}
+                    className="text-[var(--primary)] hover:text-[var(--gold-600)] font-medium transition-colors disabled:opacity-60"
+                >
+                    {resending ? 'sending…' : 'resend code'}
+                </button>
+            </p>
+
+            <p className="text-xs text-muted-foreground text-center">
+                You can also click the verification link in the same email.
             </p>
         </div>
     );
 }
 
-// ── Inner component that reads searchParams (needs Suspense) ────────────────
 function VerifyEmailContent() {
     const searchParams = useSearchParams();
     const vUrl = searchParams.get('v_url');
-    return vUrl ? <VerifyCallback vUrl={vUrl}/> : <CheckInbox/>;
+    return vUrl ? <VerifyCallback vUrl={vUrl}/> : <OtpVerification/>;
 }
 
-// ── Page export ─────────────────────────────────────────────────────────────
 export default function VerifyEmailPage() {
     return (
         <div className="bg-card rounded-2xl overflow-hidden animate-fade-in-up"

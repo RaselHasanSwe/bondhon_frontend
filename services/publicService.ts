@@ -38,6 +38,7 @@ export async function getSettings(): Promise<SiteSettings> {
       contact_phone: null,
       contact_address: 'Dhaka, Bangladesh',
       face_scan_enabled: '1',
+      email_verification_enabled: '1',
       facebook_url: null,
       twitter_url: null,
       instagram_url: null,
