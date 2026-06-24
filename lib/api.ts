@@ -39,7 +39,11 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-// Response interceptor — handle 401
+// Auth endpoints that legitimately return 401 (invalid credentials, etc.) — the page
+// must handle these errors instead of redirecting (which would reload and hide them).
+const AUTH_ENDPOINTS_401_OK = /\/auth\/(login|register|password\/forgot|password\/reset)(\/|$|\?)/;
+
+// Response interceptor — handle 401 for expired sessions only
 // Clears BOTH auth_token and the Zustand persisted store so the dashboard layout
 // correctly detects the logged-out state on the next render and redirects to /login
 // without triggering an infinite 401 → redirect loop.
@@ -47,6 +51,15 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401 && typeof window !== 'undefined') {
+            const requestUrl = error.config?.url ?? '';
+            const onLoginPage = window.location.pathname === '/login';
+            const isPublicAuthRequest = AUTH_ENDPOINTS_401_OK.test(requestUrl);
+
+            // Let login/register pages show their own error messages — do not reload.
+            if (onLoginPage || isPublicAuthRequest) {
+                return Promise.reject(error);
+            }
+
             // Remove standalone token key
             localStorage.removeItem('auth_token');
             // Remove / reset the Zustand persisted store so isAuthenticated becomes false

@@ -12,6 +12,7 @@ import {getPostAuthRedirect} from '@/lib/authRedirect';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
+import {showErrorToast} from '@/lib/toast';
 
 const loginSchema = z.object({
     email: z.string().email('Please enter a valid email address'),
@@ -23,18 +24,46 @@ export default function LoginPage() {
     const router = useRouter();
     const setAuth = useAuthStore((s) => s.setAuth);
     const [serverError, setServerError] = useState<string | null>(null);
+    const [banInfo, setBanInfo] = useState<{ reason: string } | null>(null);
     const {register, handleSubmit, formState: {errors, isSubmitting}} = useForm<LoginForm>({resolver: zodResolver(loginSchema)});
 
     const onSubmit = async (data: LoginForm) => {
         setServerError(null);
+        setBanInfo(null);
         try {
             const res = await authService.login(data);
             const {user, token} = res.data.data;
             setAuth(user, token);
-            window.location.href = getPostAuthRedirect(user);
-
+            //window.location.href = getPostAuthRedirect(user);
+            router.push(getPostAuthRedirect(user));
         } catch (err: unknown) {
-            const axiosErr = err as { response?: { data?: { message?: string } } };
+            const axiosErr = err as {
+                response?: {
+                    data?: {
+                        message?: string;
+                        data?: { status?: string; ban_reason?: string };
+                    };
+                };
+            };
+            const payload = axiosErr.response?.data?.data;
+            if (payload?.status === 'banned') {
+                setBanInfo({
+                    reason: payload.ban_reason ?? 'No reason provided. Please contact support.',
+                });
+                return;
+            }
+
+            if (payload?.status === 'unverified') {
+                showErrorToast('Please verify your email before logging in.');
+                router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+                return;
+            }
+
+            if (payload?.status === 'inactive') {
+                setServerError('Your account is deactivated. Please contact support for assistance.');
+                return;
+            }
+
             setServerError(axiosErr.response?.data?.message ?? 'Login failed. Please try again.');
         }
     };
@@ -54,6 +83,18 @@ export default function LoginPage() {
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+                    {banInfo && (
+                        <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-4 text-sm text-red-700 space-y-2">
+                            <div className="flex items-center gap-2 font-semibold">
+                                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                                Account status: Banned
+                            </div>
+                            <p className="leading-relaxed">
+                                <span className="font-medium">Reason:</span> {banInfo.reason}
+                            </p>
+                        </div>
+                    )}
+
                     {serverError && (
                         <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600 flex items-center gap-2">
                             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
