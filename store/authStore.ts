@@ -36,7 +36,7 @@ export const useAuthStore = create<AuthState>()(
                 })),
         }),
         {
-            name: 'mybouma-auth',
+            name: 'Enorsia-auth',
             partialize: (state) => ({user: state.user, token: state.token, isAuthenticated: state.isAuthenticated}),
         }
     )

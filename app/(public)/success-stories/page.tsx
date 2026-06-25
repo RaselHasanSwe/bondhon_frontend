@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
         description: `Real couples who found their life partner on ${settings.site_name}. Read their matrimony success stories.`,
         openGraph: {
             title: `Success Stories — ${settings.site_name}`,
-            description: 'Read real matrimony success stories from couples who found each other on My Bouma.',
+            description: 'Read real matrimony success stories from couples who found each other on Enorsia.',
             type: 'website',
         },
     };
@@ -31,7 +31,7 @@ const stories = [
         initials: 'FN',
         occupation: 'Software Engineer & MBBS Doctor',
         religion: 'Muslim',
-        text: `We both signed up on My Bouma in early 2024, initially just to see what it was like. Within the first week, Nusrat's profile appeared in my daily suggestions with a compatibility score of 91%.
+        text: `We both signed up on Enorsia in early 2024, initially just to see what it was like. Within the first week, Nusrat's profile appeared in my daily suggestions with a compatibility score of 91%.
 
 I sent an interest, she accepted, and we started chatting. The conversations felt natural and respectful from the very beginning. Our families connected after just three weeks, and after two months, Alhamdulillah, we got married.
 
@@ -47,11 +47,11 @@ The profile verification feature gave our families real confidence — knowing e
         initials: 'SM',
         occupation: 'Bank Manager & Primary School Teacher',
         religion: 'Muslim',
-        text: `I had been registered on My Bouma for about two months when Sabbir's profile caught my attention — he seemed serious, had a verified profile, and his family background matched what my parents were looking for.
+        text: `I had been registered on Enorsia for about two months when Sabbir's profile caught my attention — he seemed serious, had a verified profile, and his family background matched what my parents were looking for.
 
 He sent an interest. I accepted. We chatted for about four weeks before exchanging numbers through the platform's secure contact feature. Our families met in February and the wedding was in April.
 
-The whole process was dignified and felt very safe. I never once felt pressured or uncomfortable. Highly recommend My Bouma to anyone seriously looking.`,
+The whole process was dignified and felt very safe. I never once felt pressured or uncomfortable. Highly recommend Enorsia to anyone seriously looking.`,
         featured: true,
         tags: ['Silver Plan', 'Teacher', 'Chittagong'],
     },
@@ -63,11 +63,11 @@ The whole process was dignified and felt very safe. I never once felt pressured 
         initials: 'RS',
         occupation: 'Entrepreneur & Graphic Designer',
         religion: 'Muslim',
-        text: `My family was hesitant about online matrimony at first. But when I showed them My Bouma's NID verification system and how contact details are protected, they agreed to try.
+        text: `My family was hesitant about online matrimony at first. But when I showed them Enorsia's NID verification system and how contact details are protected, they agreed to try.
 
 Sumaiya's profile came up in my search — same district, similar values, both non-smokers with similar family types. I sent an interest and we matched within a day.
 
-After 3 months of getting to know each other through the app and family meetings, we got married in November 2023. My Bouma made the whole process feel safe and traditional at the same time.`,
+After 3 months of getting to know each other through the app and family meetings, we got married in November 2023. Enorsia made the whole process feel safe and traditional at the same time.`,
         featured: false,
         tags: ['Advanced Search', 'Sylhet', 'Family Match'],
     },
@@ -79,7 +79,7 @@ After 3 months of getting to know each other through the app and family meetings
         initials: 'KR',
         occupation: 'Government Officer & Nurse',
         religion: 'Muslim',
-        text: `I found Rima through My Bouma's location filter — I wanted someone from Rajshahi and she appeared in the top results. Her profile was verified and complete, which made the first message easy to send.
+        text: `I found Rima through Enorsia's location filter — I wanted someone from Rajshahi and she appeared in the top results. Her profile was verified and complete, which made the first message easy to send.
 
 After two weeks of chatting, our parents spoke on the phone. A month later, we had our engagement ceremony. The Gold plan's voice call feature was genuinely helpful — we got to hear each other's voices before the family meeting which made things much more comfortable.`,
         featured: false,
@@ -93,9 +93,9 @@ After two weeks of chatting, our parents spoke on the phone. A month later, we h
         initials: 'TF',
         occupation: 'NRB UK (IT Manager) & Pharmacist',
         religion: 'Muslim',
-        text: `I was based in the UK and needed a platform that had verified profiles back in Bangladesh. My Bouma's NRB filter made it so easy. I found Farhana in Khulna through the "Abroad / NRB" search option.
+        text: `I was based in the UK and needed a platform that had verified profiles back in Bangladesh. Enorsia's NRB filter made it so easy. I found Farhana in Khulna through the "Abroad / NRB" search option.
 
-The video call feature on the Gold plan was essential for us — we had several family calls over video before I flew back to Bangladesh for the wedding. Without My Bouma, this would have taken years. Our nikah was in May 2023.`,
+The video call feature on the Gold plan was essential for us — we had several family calls over video before I flew back to Bangladesh for the wedding. Without Enorsia, this would have taken years. Our nikah was in May 2023.`,
         featured: false,
         tags: ['NRB', 'Video Call', 'Gold Plan', 'UK'],
     },
@@ -118,8 +118,8 @@ We chatted for 6 weeks before our families met. No pressure, no rushing. The pla
 const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: 'My Bouma Success Stories',
-    description: 'Real couples who found their life partner on My Bouma matrimony platform.',
+    name: 'Enorsia Success Stories',
+    description: 'Real couples who found their life partner on Enorsia matrimony platform.',
     itemListElement: stories.map((s, i) => ({
         '@type': 'ListItem',
         position: i + 1,

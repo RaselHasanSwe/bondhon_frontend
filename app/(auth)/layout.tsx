@@ -3,7 +3,7 @@ import {GuestGuard} from '@/components/auth/GuestGuard';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: {default: 'Sign In', template: '%s | MyBouma'},
+    title: {default: 'Sign In', template: '%s | Enorsia'},
 };
 
 export default function AuthLayout({children}: { children: React.ReactNode }) {
@@ -41,8 +41,8 @@ export default function AuthLayout({children}: { children: React.ReactNode }) {
                                     backgroundClip: 'text',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
-                                }}>MyBouma</h1>
-                                <p className="text-[10px] text-[#C9A227]/70 tracking-widest uppercase">MyBouma Matrimony</p>
+                                }}>Enorsia</h1>
+                                <p className="text-[10px] text-[#C9A227]/70 tracking-widest uppercase">Enorsia Matrimony</p>
                             </div>
                         </Link>
                     </div>
@@ -64,7 +64,7 @@ export default function AuthLayout({children}: { children: React.ReactNode }) {
                                 }}>Perfect Match</span>
                             </h2>
                             <p className="text-white/55 text-sm leading-relaxed max-w-xs">
-                                Join thousands of families who found their perfect life partner through MyBouma's intelligent matchmaking.
+                                Join thousands of families who found their perfect life partner through Enorsia's intelligent matchmaking.
                             </p>
                         </div>
 
@@ -108,8 +108,8 @@ export default function AuthLayout({children}: { children: React.ReactNode }) {
                             backgroundClip: 'text',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
-                        }}>MyBouma</h1>
-                        <p className="text-xs text-[#8A7A62] mt-1 tracking-widest uppercase">MyBouma Matrimony</p>
+                        }}>Enorsia</h1>
+                        <p className="text-xs text-[#8A7A62] mt-1 tracking-widest uppercase">Enorsia Matrimony</p>
                     </div>
 
                     <div className="w-full max-w-md animate-fade-in-up">

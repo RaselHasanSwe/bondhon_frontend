@@ -12,14 +12,14 @@
 
 ### 1. Site Name
 
-* Currently showing **"MyBouma"** as a static value.
+* Currently showing **"Enorsia"** as a static value.
 * Make it dynamic and load from:
 
   * **Site Settings → Site Name**
 
 ### 2. Slogan
 
-* Currently showing **"MyBouma Matrimony"** as a static value.
+* Currently showing **"Enorsia Matrimony"** as a static value.
 * Create a new field:
 
   * **Site Settings → Slogan**
@@ -44,7 +44,7 @@ Premium Matrimony Platform
 Find Your
 Perfect Match
 
-Join thousands of families who found their perfect life partner through MyBouma's intelligent matchmaking.
+Join thousands of families who found their perfect life partner through Enorsia's intelligent matchmaking.
 
 50K+
 Members
@@ -87,7 +87,7 @@ Start Your Journey Today
 Replace:
 
 ```text
-Sign in to your MyBouma account
+Sign in to your Enorsia account
 ```
 
 With:
@@ -112,6 +112,7 @@ When a user clicks the password reset link from email:
 ```text
 T
 ```
+
 ---
 
 # OTP Confirmation Email & Reset Password Email Template
@@ -155,7 +156,7 @@ Replace with:
 Replace:
 
 ```text
-Welcome to My Bouma
+Welcome to Enorsia
 ```
 
 With:
@@ -228,18 +229,18 @@ Remove the URL displayed below it.
 
 ---
 
-### 7. Replace "My Bouma" Globally
+### 7. Replace "Enorsia" Globally
 
 Replace all occurrences of:
 
 ```text
-My Bouma
+Enorsia
 ```
 
 or
 
 ```text
-MyBouma
+Enorsia
 ```
 
 with:
@@ -273,6 +274,7 @@ Replace with:
 ```text
 {Slogan}
 ```
+
 add social link on footer.
 
 loaded dynamically from Site Settings.
@@ -308,7 +310,7 @@ Apply this change globally to all email templates.
 1. Rename button text:
 
    * **Apply Filters** → **Apply**
-2. Apply **Verified** badge/filter for all verified profiles.
+2. Apply **Verified** badge/filter for all verified (face approved) profiles.
 3. Display profile images from Cloudflare and ensure image sizing matches card dimensions.
 4. When a user clicks **Send Interest**, send an email notification to the recipient.
 5. Implement infinite scroll / scroll pagination.
@@ -324,7 +326,6 @@ Apply this change globally to all email templates.
 
    * Received Interests
    * Sent Interests
-
 2. If an interest request has been accepted, display a **Message** button.
 
 ### New Contacts Tab
@@ -466,8 +467,6 @@ Fields:
    * Privacy
    * Contact
 
-
-
 # Home Page Content Update
 
 ## Section 1 - Hero Section
@@ -583,29 +582,32 @@ Display the following feature cards/items:
   * Successful Marriages
 * Future statistics should only be displayed when actual data is available from the platform.
 
-
 ## Section 4: Platform Benefits (Keep IT)
 
-## Section 5: Newly Joined Members (Keep IT) 
--  Make it dynamic
+## Section 5: Newly Joined Members (Keep IT)
+
+- Make it dynamic
 
 ## Section 6: Your Journey to a Perfect Match (Keep IT)
 
 ## Section 7: Your Safety is Our Priority (Keep it)
+
 - Replace NID verified to Face Verified and content.
 
 ## Section 7: Membership Plans (Keep IT)
--  Make dynamic
 
-Remove 'Real Couples, Educated · Verified · From All 64 Districts, FAQ' section 
+- Make dynamic
+
+Remove 'Real Couples, Educated · Verified · From All 64 Districts, FAQ' section
 
 ## Section 7: Membership Plans (Keep IT)
 
 ## Section 8: Begin Your Journey Today (Keep IT)
+
 - Remove '50,000+ Members'
 
-
 # Implement Search prfile page same like exising search page. but user can not see profile details.
+
 - Scroll pagiantion must.
 
 # Implement Pricing page with dynamic content.

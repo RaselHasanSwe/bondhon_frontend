@@ -393,7 +393,7 @@ function InvoiceModal({item, onClose, currencySymbol}: {
                 <div ref={printRef} className="px-6 py-5 space-y-4">
                     <div className="flex justify-between items-start">
                         <div>
-                            <div className="text-xl font-black text-[#C9A227]">💍 My Bouma</div>
+                            <div className="text-xl font-black text-[#C9A227]">💍 Enorsia</div>
                             <div className="text-xs text-gray-400">Matrimony Platform</div>
                         </div>
                         <div className="text-right text-xs text-gray-500">
@@ -429,7 +429,7 @@ function InvoiceModal({item, onClose, currencySymbol}: {
                         <span
                             className="text-2xl font-extrabold text-gray-900">{currencySymbol}{item.amount_bdt.toLocaleString()}</span>
                     </div>
-                    <p className="text-xs text-gray-400 text-center">Thank you for subscribing to My Bouma Premium!
+                    <p className="text-xs text-gray-400 text-center">Thank you for subscribing to Enorsia Premium!
                         💍</p>
                 </div>
             </div>

@@ -11,7 +11,7 @@ import type { PageDetail, PageListItem } from '@/types/page';
 import { notFound } from 'next/navigation';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
-const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'My Bouma';
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'Enorsia';
 
 interface ApiResponse<T> {
   success: boolean;

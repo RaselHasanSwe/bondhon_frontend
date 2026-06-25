@@ -502,7 +502,7 @@ export const DEMO_NOTIFICATIONS: AppNotification[] = [
     {
         id: 'n008',
         type: 'system',
-        title: 'Welcome to My Bouma! 🎊',
+        title: 'Welcome to Enorsia! 🎊',
         body: 'Complete your profile to increase your chances of finding the perfect match.',
         action_url: '/profile/edit',
         avatar: null,

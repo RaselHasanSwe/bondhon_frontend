@@ -45,7 +45,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {/* Logo */}
                 <div className="mb-8 px-2">
                     <h1 className="text-xl font-bold text-gold-gradient">Admin Panel</h1>
-                    <p className="text-[10px] text-gray-400 tracking-widest uppercase mt-0.5">My Bouma Matrimony</p>
+                    <p className="text-[10px] text-gray-400 tracking-widest uppercase mt-0.5">Enorsia Matrimony</p>
                 </div>
 
                 {/* Navigation */}

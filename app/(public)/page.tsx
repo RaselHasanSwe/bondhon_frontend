@@ -15,11 +15,11 @@ import AnimateSection from '@/components/public/AnimateSection';
 export async function generateMetadata(): Promise<Metadata> {
     const settings = await getSettings();
     return {
-        title: settings.meta_title ?? 'My Bouma — Premium Matrimony Platform',
-        description: settings.meta_description ?? 'Find your perfect life partner on My Bouma.',
+        title: settings.meta_title ?? 'Enorsia — Premium Matrimony Platform',
+        description: settings.meta_description ?? 'Find your perfect life partner on Enorsia.',
         keywords: settings.meta_keywords ?? 'matrimony, marriage, Bangladesh, bride, groom, matchmaking',
         openGraph: {
-            title: settings.meta_title ?? 'My Bouma — Premium Matrimony',
+            title: settings.meta_title ?? 'Enorsia — Premium Matrimony',
             description: settings.meta_description ?? '',
             type: 'website',
         },
@@ -48,7 +48,7 @@ const steps = [
     { step: '01', icon: BadgeCheck, title: 'Create Your Profile',  desc: 'Sign up free. Build a rich profile with photos, preferences, religion, education, and family info.' },
     { step: '02', icon: Search,     title: 'Discover Matches',      desc: 'Browse daily smart suggestions or use advanced filters — age, height, location, career, and more.' },
     { step: '03', icon: HandHeart,  title: 'Send Interest',         desc: "Express interest. Once mutual, both of you unlock private chat and voice calls." },
-    { step: '04', icon: Heart,      title: 'Find Your Match',       desc: 'With families connected and hearts aligned, your My Bouma begins — and ours is just the beginning.' },
+    { step: '04', icon: Heart,      title: 'Find Your Match',       desc: 'With families connected and hearts aligned, your Enorsia begins — and ours is just the beginning.' },
 ];
 
 const plans = [
@@ -64,9 +64,9 @@ const plans = [
 
 const testimonials = [
     { name: 'Farhan & Nusrat',  location: 'Dhaka',     year: '2024', initials: 'FN', occupation: 'Engineer & Doctor',
-      text: 'We met through My Bouma in 2024. The verified profiles gave our families great confidence. Alhamdulillah, we are happily married now — forever grateful!' },
+      text: 'We met through Enorsia in 2024. The verified profiles gave our families great confidence. Alhamdulillah, we are happily married now — forever grateful!' },
     { name: 'Sabbir & Mitu',    location: 'Chittagong', year: '2024', initials: 'SM', occupation: 'Banker & Teacher',
-      text: "My Bouma's smart matching suggested Sabbir to me. We chatted for weeks and our families connected. It was the most natural and respectful process." },
+      text: "Enorsia's smart matching suggested Sabbir to me. We chatted for weeks and our families connected. It was the most natural and respectful process." },
     { name: 'Rakib & Sumaiya',  location: 'Sylhet',    year: '2023', initials: 'RS', occupation: 'Businessman & Designer',
       text: "I was skeptical initially, but the profile verification process built real trust. Found my life partner within 3 months. Will recommend to everyone." },
 ];
@@ -124,10 +124,10 @@ export default async function HomePage() {
     const jsonLd = {
         '@context': 'https://schema.org', '@type': 'WebSite',
         name: settings.site_name, description: settings.meta_description,
-        url: process.env.NEXT_PUBLIC_APP_URL ?? 'https://mybouma.com',
+        url: process.env.NEXT_PUBLIC_APP_URL ?? 'https://Enorsia.com',
         potentialAction: {
             '@type': 'SearchAction',
-            target: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://mybouma.com'}/search?query={search_term_string}`,
+            target: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://Enorsia.com'}/search?query={search_term_string}`,
             'query-input': 'required name=search_term_string',
         },
     };
@@ -144,7 +144,7 @@ export default async function HomePage() {
                 <div className="absolute inset-0 z-0">
                     <Image
                         src="https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=1920&auto=format&fit=crop&q=80"
-                        alt="Happy couple — My Bouma matrimony"
+                        alt="Happy couple — Enorsia matrimony"
                         fill priority
                         className="object-cover object-center"
                         sizes="100vw"
@@ -623,7 +623,7 @@ export default async function HomePage() {
                         </div>
                         <div className="space-y-3 stagger">
                             {[
-                                { q: 'Is My Bouma free to use?',
+                                { q: 'Is Enorsia free to use?',
                                   a: 'Yes! Creating a profile and browsing matches is 100% free. Premium plans unlock contact views, voice/video calls, and profile boosts.' },
                                 { q: 'How does profile verification work?',
                                   a: 'Members submit NID or passport plus a selfie. Our admin team manually verifies every document before approving the profile.' },
