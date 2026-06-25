@@ -5,9 +5,16 @@ import {useRouter, usePathname} from 'next/navigation';
 import Link from 'next/link';
 import {useAuthStore} from '@/store/authStore';
 import {authService} from '@/services/authService';
+import {faceScanService} from '@/services/faceScanService';
 import {cn} from '@/lib/utils';
 import {useSettings} from '@/lib/useSettings';
-import {needsEmailVerification} from '@/lib/authRedirect';
+import {
+    needsEmailVerification,
+    isFaceScanEnabled,
+    isFaceScanComplete,
+    needsFaceScan,
+    mergeUserUpdate,
+} from '@/lib/authRedirect';
 import {NotificationBell} from '@/components/notification/NotificationBell';
 import {CallProvider} from '@/components/providers/CallProvider';
 import {
@@ -48,10 +55,11 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
     const {isAuthenticated, user, clearAuth, updateUser} = useAuthStore();
     const {settings} = useSettings();
 
-    // Zustand persist hydrates from localStorage asynchronously after the first render.
-    // We must wait until the client is mounted before trusting isAuthenticated,
-    // otherwise the layout redirects to /login on every page refresh.
     const [mounted, setMounted] = useState(false);
+    const [accessReady, setAccessReady] = useState(false);
+
+    const faceScanEnabled = isFaceScanEnabled(settings.face_scan_enabled);
+
     useEffect(() => setMounted(true), []);
 
     useEffect(() => {
@@ -60,6 +68,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
         }
     }, [mounted, isAuthenticated, router]);
 
+    // Verify face-scan access before showing dashboard (prevents flash redirect)
     useEffect(() => {
         if (!mounted || !isAuthenticated || !user) return;
 
@@ -68,28 +77,52 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
             return;
         }
 
-        const faceScanEnabled = settings.face_scan_enabled === '1' || settings.face_scan_enabled === 'true' || settings.face_scan_enabled === 'yes' || settings.face_scan_enabled === 'on';
-        const faceScanDone = ['submitted', 'approved'].includes(user.face_scan_status ?? '');
-        const isOnFaceScan = pathname === '/face-scan';
-
-        if (faceScanEnabled && user.face_scan_required && !faceScanDone && !isOnFaceScan) {
-            router.replace('/face-scan');
+        if (!needsFaceScan(user, faceScanEnabled)) {
+            setAccessReady(true);
+            return;
         }
-    }, [mounted, isAuthenticated, user, settings.face_scan_enabled, router, pathname]);
 
+        if (isFaceScanComplete(user.face_scan_status)) {
+            setAccessReady(true);
+            return;
+        }
 
+        let cancelled = false;
 
-    // ── Sync fresh user data from the server on every mount so the sidebar
-    //    always shows the latest subscription_plan (auth store can be stale
-    //    if the plan was purchased after the last login).
+        faceScanService.getStatus()
+            .then(res => {
+                if (cancelled) return;
+                const session = res.data.data.session;
+                const status = session?.status ?? user.face_scan_status;
+
+                if (status) {
+                    updateUser({
+                        face_scan_status: status,
+                        face_scan_review_note: session?.review_note ?? user.face_scan_review_note,
+                    });
+                }
+
+                if (!isFaceScanComplete(status)) {
+                    router.replace('/face-scan');
+                } else {
+                    setAccessReady(true);
+                }
+            })
+            .catch(() => {
+                if (!cancelled) setAccessReady(true);
+            });
+
+        return () => { cancelled = true; };
+    }, [mounted, isAuthenticated, user, faceScanEnabled, router]);
+
     useEffect(() => {
         if (!mounted || !isAuthenticated) return;
         authService.me()
             .then(res => {
                 const freshUser = res.data?.data?.user;
-                if (freshUser) updateUser(freshUser);
+                if (freshUser) updateUser(mergeUserUpdate(useAuthStore.getState().user, freshUser));
             })
-            .catch(() => {/* silently ignore — stale store data is acceptable fallback */});
+            .catch(() => {/* silently ignore */});
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mounted, isAuthenticated]);
 
@@ -102,8 +135,16 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
         }
     };
 
-    // Render nothing until hydration is complete (avoids flash / false redirect)
-    if (!mounted || !isAuthenticated || !user) return null;
+    if (!mounted || !isAuthenticated || !user || !accessReady) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                    <p className="text-sm text-muted-foreground">Loading your account…</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen bg-background">
@@ -219,4 +260,3 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
         </div>
     );
 }
-

@@ -40,6 +40,8 @@ const TYPE_ICONS: Record<AppNotification['type'], ComponentType<IconProps>> = {
     subscription_expiry: AlertTriangleIcon,
     photo_approved: CheckCircleIcon,
     photo_rejected: XCircleIcon,
+    face_scan_approved: CheckCircleIcon,
+    face_scan_rejected: XCircleIcon,
     system: MegaphoneIcon,
     broadcast_message: MegaphoneIcon,
 };
@@ -47,6 +49,7 @@ const TYPE_ICONS: Record<AppNotification['type'], ComponentType<IconProps>> = {
 export function NotificationBell({placement = 'default'}: { placement?: 'default' | 'sidebar' }) {
     const router = useRouter();
     const user = useAuthStore((s) => s.user);
+    const clearAuth = useAuthStore((s) => s.clearAuth);
     const {notifications, unreadCount, fetchNotifications, markRead, markAllRead, addNotification} =
         useNotificationStore();
     const [open, setOpen] = useState(false);
@@ -89,10 +92,15 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
             if (!echo) return;
             echo.private(`user.${user.id}`)
                 .listen('.notification.created', (e: BackendNotification) => {
+                    if (e.type === 'face_scan_rejected') {
+                        clearAuth();
+                        window.location.href = '/login?face_scan_rejected=1';
+                        return;
+                    }
                     addNotification(notificationService.transformNotification(e));
                 });
         })();
-    }, [user?.id, addNotification]);
+    }, [user?.id, addNotification, clearAuth]);
 
     // Close dropdown on outside click — handles both wrapper and portal
     useEffect(() => {

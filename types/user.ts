@@ -14,6 +14,7 @@ export interface User {
     face_scan_required?: boolean;
     face_scan_status?: 'pending' | 'submitted' | 'approved' | 'rejected' | null;
     face_scan_completed_at?: string | null;
+    face_scan_review_note?: string | null;
 }
 
 export interface AuthResponse {

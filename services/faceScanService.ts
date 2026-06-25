@@ -18,6 +18,12 @@ export interface FaceScanSessionResponse {
   completed_at: string | null;
   reviewed_at: string | null;
   review_note: string | null;
+  review_history?: Array<{
+    decision: string;
+    reason: string;
+    reviewed_by: number;
+    reviewed_at: string;
+  }> | null;
   captures: Array<{
     id: number;
     capture_key: string;

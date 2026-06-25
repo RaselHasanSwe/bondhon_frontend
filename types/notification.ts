@@ -9,6 +9,8 @@ export type NotificationType =
     | 'subscription_expiry'
     | 'photo_approved'
     | 'photo_rejected'
+    | 'face_scan_approved'
+    | 'face_scan_rejected'
     | 'interest_expired'
     | 'system'
     | 'broadcast_message';
