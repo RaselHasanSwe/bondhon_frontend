@@ -19,13 +19,13 @@ export interface User {
 export interface AuthResponse {
     success: boolean;
     data: {
-        user: User;
         token: string;
+        token_type: string;
+        user: User;
     };
     message: string;
     errors: Record<string, string[]> | null;
 }
-
 export interface ApiResponse<T> {
     success: boolean;
     data: T;
