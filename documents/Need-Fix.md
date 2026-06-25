@@ -607,3 +607,5 @@ Remove 'Real Couples, Educated · Verified · From All 64 Districts, FAQ' sectio
 
 # Implement Search prfile page same like exising search page. but user can not see profile details.
 - Scroll pagiantion must.
+
+# Implement Pricing page with dynamic content.
