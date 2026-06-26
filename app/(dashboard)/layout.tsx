@@ -28,7 +28,8 @@ type NavIconProps = SVGProps<SVGSVGElement> & { size?: number; strokeWidth?: num
 // Crown icon for subscription
 function CrownIcon({size = 24, strokeWidth = 1.8, ...props}: NavIconProps) {
     return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth}
+             strokeLinecap="round" strokeLinejoin="round" {...props}>
             <path d="M2 20h20M5 20V9l7-5 7 5v11"/>
             <path d="M9 20v-5h6v5"/>
         </svg>
@@ -37,16 +38,16 @@ function CrownIcon({size = 24, strokeWidth = 1.8, ...props}: NavIconProps) {
 
 
 const NAV_ITEMS: { href: string; label: string; Icon: ComponentType<NavIconProps>; adminOnly?: boolean }[] = [
-    {href: '/dashboard',    label: 'Dashboard',    Icon: HomeIcon},
-    {href: '/matches',      label: 'Matches',      Icon: MatchesIcon},
-    {href: '/profile-views', label: 'Profile Views', Icon: EyeIcon},
-    {href: '/search',       label: 'Search',       Icon: SearchIcon},
-    {href: '/interests',    label: 'Interests',    Icon: InterestIcon},
-    {href: '/chat',         label: 'Messages',     Icon: ChatIcon},
-    {href: '/shortlist',    label: 'Shortlist',    Icon: StarIcon},
-    {href: '/notifications',label: 'Notifications',Icon: BellIcon},
+    {href: '/dashboard', label: 'Dashboard', Icon: HomeIcon},
+    {href: '/matches', label: 'Matches', Icon: MatchesIcon},
+    {href: '/search', label: 'Search', Icon: SearchIcon},
+    {href: '/interests', label: 'Interests', Icon: InterestIcon},
+    {href: '/chat', label: 'Messages', Icon: ChatIcon},
+    {href: '/shortlist', label: 'Shortlist', Icon: StarIcon},
+    {href: '/notifications', label: 'Notifications', Icon: BellIcon},
+    {href: '/profile-views', label: 'Profile Viewers', Icon: EyeIcon},
+    {href: '/profile/edit', label: 'My Profile', Icon: UserIcon},
     {href: '/subscription', label: 'Upgrade Plan', Icon: CrownIcon},
-    {href: '/profile/edit', label: 'My Profile',   Icon: UserIcon},
 ];
 
 export default function DashboardLayout({children}: { children: React.ReactNode }) {
@@ -54,6 +55,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
     const pathname = usePathname();
     const {isAuthenticated, user, clearAuth, updateUser} = useAuthStore();
     const {settings} = useSettings();
+    const [drawerOpen, setDrawerOpen] = useState(false);
 
     const [mounted, setMounted] = useState(false);
     const [accessReady, setAccessReady] = useState(false);
@@ -112,7 +114,9 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                 if (!cancelled) setAccessReady(true);
             });
 
-        return () => { cancelled = true; };
+        return () => {
+            cancelled = true;
+        };
     }, [mounted, isAuthenticated, user, faceScanEnabled, router]);
 
     useEffect(() => {
@@ -122,8 +126,9 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                 const freshUser = res.data?.data?.user;
                 if (freshUser) updateUser(mergeUserUpdate(useAuthStore.getState().user, freshUser));
             })
-            .catch(() => {/* silently ignore */});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+            .catch(() => {/* silently ignore */
+            });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mounted, isAuthenticated]);
 
     const handleLogout = async () => {
@@ -139,7 +144,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"/>
                     <p className="text-sm text-muted-foreground">Loading your account…</p>
                 </div>
             </div>
@@ -149,114 +154,181 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
     return (
         <div className="flex min-h-screen bg-background">
             <CallProvider>
-            {/* Sidebar */}
-            <aside
-                className="hidden md:flex flex-col w-64 border-r border-[var(--sidebar-border)] px-3 lg:px-4 py-4 lg:py-6 fixed h-full z-10 overflow-y-auto"
-                style={{background: 'var(--gradient-sidebar)'}}>
-                {/* Logo */}
-                <div className="mb-8 px-2">
-                    <div className="flex items-center gap-2.5">
-                        <a href="/">
-                            <h1 className="text-xl font-bold leading-none text-gold-gradient">{settings.site_name}</h1>
-                            <p className="text-[10px] text-muted-foreground/70 tracking-widest uppercase mt-0.5">Matrimony</p>
-                        </a>
+                {/* Sidebar */}
+                <aside
+                    className="hidden md:flex flex-col w-64 border-r border-[var(--sidebar-border)] px-3 lg:px-4 py-4 lg:py-6 fixed h-full z-10 overflow-y-auto"
+                    style={{background: 'var(--gradient-sidebar)'}}>
+                    {/* Logo */}
+                    <div className="mb-8 px-2">
+                        <div className="flex items-center gap-2.5">
+                            <a href="/">
+                                <h1 className="text-xl font-bold leading-none text-gold-gradient">{settings.site_name}</h1>
+                                <p className="text-[10px] text-muted-foreground/70 tracking-widest uppercase mt-2">{settings.site_slogan}</p>
+                            </a>
+                        </div>
                     </div>
-                </div>
 
-                {/* Navigation */}
-                <nav className="flex-1 space-y-0.5">
-                    {NAV_ITEMS.map((item) => {
-                        const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
-                        return (
+                    {/* Navigation */}
+                    <nav className="flex-1 space-y-0.5">
+                        {NAV_ITEMS.map((item) => {
+                            const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={cn(
+                                        'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
+                                        active
+                                            ? 'bg-[var(--sidebar-accent)] text-[var(--sidebar-primary)] border-l-2 border-[var(--primary)] pl-[10px]'
+                                            : 'text-[var(--sidebar-foreground)]/70 hover:bg-[var(--sidebar-accent)]/60 hover:text-[var(--sidebar-foreground)]'
+                                    )}
+                                >
+                                    <item.Icon size={18} strokeWidth={active ? 2.2 : 1.8}/>
+                                    {item.label}
+                                </Link>
+                            );
+                        })}
+                        {/* Admin link — only visible to admins */}
+                        {user.role === 'admin' && (
                             <Link
-                                key={item.href}
-                                href={item.href}
-                                className={cn(
-                                    'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
-                                    active
-                                        ? 'bg-[var(--sidebar-accent)] text-[var(--sidebar-primary)] border-l-2 border-[var(--primary)] pl-[10px]'
-                                        : 'text-[var(--sidebar-foreground)]/70 hover:bg-[var(--sidebar-accent)]/60 hover:text-[var(--sidebar-foreground)]'
-                                )}
+                                href="/admin/dashboard"
+                                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 text-amber-600 hover:bg-amber-50"
                             >
-                                <item.Icon size={18} strokeWidth={active ? 2.2 : 1.8}/>
-                                {item.label}
+                                <span className="text-base">⚙️</span>
+                                Admin Panel
                             </Link>
-                        );
-                    })}
-                    {/* Admin link — only visible to admins */}
-                    {user.role === 'admin' && (
-                        <Link
-                            href="/admin/dashboard"
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 text-amber-600 hover:bg-amber-50"
+                        )}
+                    </nav>
+
+                    {/* User section */}
+                    <div className="border-t border-[var(--sidebar-border)] pt-4 mt-4">
+                        <div className="flex items-center gap-3 px-2 mb-3">
+                            <div
+                                className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
+                                style={{
+                                    background: 'var(--gradient-gold-btn)',
+                                    boxShadow: '0 2px 8px rgba(201,162,39,0.3)'
+                                }}>
+                                {user.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-[var(--sidebar-foreground)] truncate">{user.name}</p>
+                                <span className="text-xs">{user.email}</span>
+                            </div>
+                            <NotificationBell placement="sidebar"/>
+                        </div>
+                        <button
+                            onClick={handleLogout}
+                            className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-destructive hover:bg-red-50 rounded-xl transition-colors flex items-center gap-2"
                         >
-                            <span className="text-base">⚙️</span>
-                            Admin Panel
-                        </Link>
-                    )}
-                </nav>
-
-                {/* User section */}
-                <div className="border-t border-[var(--sidebar-border)] pt-4 mt-4">
-                    <div className="flex items-center gap-3 px-2 mb-3">
-                        <div
-                            className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
-                            style={{background: 'var(--gradient-gold-btn)', boxShadow: '0 2px 8px rgba(201,162,39,0.3)'}}>
-                            {user.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-[var(--sidebar-foreground)] truncate">{user.name}</p>
-                            <span className="text-xs">{user.email}</span>
-                        </div>
-                        <NotificationBell placement="sidebar"/>
+                            <LogOutIcon size={16} strokeWidth={1.8}/>
+                            Sign out
+                        </button>
                     </div>
-                    <button
-                        onClick={handleLogout}
-                        className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-destructive hover:bg-red-50 rounded-xl transition-colors flex items-center gap-2"
-                    >
-                        <LogOutIcon size={16} strokeWidth={1.8}/>
-                        Sign out
-                    </button>
-                </div>
-            </aside>
+                </aside>
 
-            {/* Main content */}
-            <main className="flex-1 md:ml-64 min-w-0">
-                {/* Mobile top bar */}
-                <div
-                    className="md:hidden border-b border-[var(--sidebar-border)] px-3 sm:px-4 py-3 flex items-center justify-between sticky top-0 z-10 backdrop-blur-sm"
-                    style={{background: 'rgba(255,255,255,0.95)'}}>
-                    <h1 className="text-base sm:text-lg font-bold text-gold-gradient">{settings.site_name}</h1>
-                    <div className="flex items-center gap-2">
-                        <NotificationBell/>
-                        <span className="text-xs sm:text-sm text-muted-foreground truncate max-w-[120px]">{user.name}</span>
+                {/* Main content */}
+                <main className="flex-1 md:ml-64 min-w-0">
+                    {/* Mobile top bar */}
+                    <div
+                        className="md:hidden border-b border-[var(--sidebar-border)] px-3 sm:px-4 py-3 flex items-center justify-between sticky top-0 z-10 backdrop-blur-sm"
+                        style={{background: 'rgba(255,255,255,0.95)'}}>
+                        <h1 className="text-base sm:text-lg font-bold text-gold-gradient">{settings.site_name}</h1>
+                        <div className="flex items-center gap-2">
+                            <NotificationBell/>
+                            <a href="/profile/edit" className="text-xs sm:text-sm text-muted-foreground truncate max-w-[120px]">{user.name}</a>
+                        </div>
                     </div>
-                </div>
 
-                <div className="p-2 sm:p-4 lg:p-6 pb-20 md:pb-4">{children}</div>
+                    <div className="p-2 sm:p-4 lg:p-6 pb-20 md:pb-4">{children}</div>
 
-                {/* Mobile bottom nav */}
-                <nav
-                    className="md:hidden fixed bottom-0 left-0 right-0 border-t border-[var(--sidebar-border)] flex justify-around py-1.5 z-10 safe-area-pb backdrop-blur-sm"
-                    style={{background: 'rgba(255,255,255,0.97)'}}>
-                {NAV_ITEMS.slice(0, 5).map((item) => {
-                        const active = pathname === item.href;
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={cn(
-                                    'flex flex-col items-center gap-0.5 px-1 sm:px-2 py-1 rounded-lg text-[10px] sm:text-xs transition-colors min-w-0',
-                                    active ? 'text-[var(--primary)]' : 'text-muted-foreground'
-                                )}
+                    {/* Mobile bottom nav */}
+                    <nav
+                        className="md:hidden fixed bottom-0 left-0 right-0 border-t border-[var(--sidebar-border)] flex justify-around py-1.5 z-10 safe-area-pb backdrop-blur-sm"
+                        style={{background: 'rgba(255,255,255,0.97)'}}>
+                        {NAV_ITEMS.slice(0, 4).map((item) => {
+                            const active = pathname === item.href;
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={cn(
+                                        'flex flex-col items-center gap-0.5 px-1 sm:px-2 py-1 rounded-lg text-[10px] sm:text-xs transition-colors min-w-0',
+                                        active ? 'text-[var(--primary)]' : 'text-muted-foreground'
+                                    )}
+                                >
+                                    <item.Icon size={20} strokeWidth={active ? 2.2 : 1.8}/>
+                                    <span className="truncate w-full text-center leading-tight">{item.label}</span>
+                                </Link>
+                            );
+                        })}
+                        <button
+                            onClick={() => setDrawerOpen(true)}
+                            className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] text-muted-foreground transition-colors"
+                        >
+                            <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                                <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+                            </svg>
+                            <span>More</span>
+                        </button>
+                    </nav>
+
+                    {drawerOpen && (
+                        <div className="md:hidden fixed inset-0 z-50" onClick={() => setDrawerOpen(false)}>
+                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+                            <div
+                                className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl border-t border-[var(--sidebar-border)] pb-safe"
+                                onClick={e => e.stopPropagation()}
                             >
-                                <item.Icon size={20} strokeWidth={active ? 2.2 : 1.8}/>
-                                <span className="truncate w-full text-center leading-tight">{item.label}</span>
-                            </Link>
-                        );
-                    })}
-                </nav>
-            </main>
-        </CallProvider>
+                                {/* Handle */}
+                                <div className="w-9 h-1 bg-gray-200 rounded-full mx-auto mt-3 mb-1" />
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-widest px-4 py-2 font-medium">More options</p>
+
+                                {/* Grid of remaining nav items */}
+                                <div className="grid grid-cols-3 gap-1 px-3 pb-2">
+                                    {NAV_ITEMS.slice(4).map((item) => {
+                                        const active = pathname === item.href || pathname.startsWith(item.href);
+                                        const isUpgrade = item.href === '/subscription';
+                                        return (
+                                            <Link
+                                                key={item.href}
+                                                href={item.href}
+                                                onClick={() => setDrawerOpen(false)}
+                                                className={cn(
+                                                    'flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl text-[11px] text-center transition-colors',
+                                                    isUpgrade
+                                                        ? 'bg-amber-50 text-amber-600'
+                                                        : active
+                                                            ? 'bg-[var(--sidebar-accent)] text-[var(--primary)]'
+                                                            : 'text-muted-foreground hover:bg-gray-50'
+                                                )}
+                                            >
+                                                <item.Icon size={22} strokeWidth={isUpgrade || active ? 2.1 : 1.8}/>
+                                                <span className="leading-tight">{item.label}</span>
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+
+                                <div className="h-px bg-gray-100 mx-4 my-1" />
+
+                                {/* Sign out */}
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full flex items-center gap-3 px-5 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                                >
+                                    <LogOutIcon size={18} strokeWidth={1.8}/>
+                                    Sign out
+                                </button>
+
+                                {/* Safe area spacer */}
+                                <div className="h-4" />
+                            </div>
+                        </div>
+                    )}
+                </main>
+            </CallProvider>
         </div>
     );
 }

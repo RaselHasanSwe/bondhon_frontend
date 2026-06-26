@@ -117,7 +117,7 @@ T
 
 # OTP Confirmation Email & Reset Password Email Template
 
-## Global Email Template Changes
+## Global Email Template Changes (Done)
 
 ### Email Header
 
@@ -139,7 +139,7 @@ Both values should be loaded dynamically from Site Settings.
 
 ---
 
-## Registration OTP Email
+## Registration OTP Email (Done)
 
 ### 1. Email Subject
 
@@ -151,7 +151,7 @@ Replace with:
 
 ---
 
-### 2. Welcome Text
+### 2. Welcome Text (Done)
 
 Replace:
 
@@ -167,7 +167,7 @@ Welcome to {Site Name}
 
 ---
 
-### 3. Remove Verification Button Section
+### 3. Remove Verification Button Section (Done)
 
 Remove:
 
@@ -191,7 +191,7 @@ The email should only display the OTP code.
 
 ---
 
-### 4. OTP Expiry Time
+### 4. OTP Expiry Time (Done)
 
 Current text:
 
@@ -207,7 +207,7 @@ Requirements:
 
 ---
 
-### 5. Remove Verification Link Expiry Text
+### 5. Remove Verification Link Expiry Text (Done)
 
 Remove:
 
@@ -217,7 +217,7 @@ This verification link will expire in 60 minutes.
 
 ---
 
-### 6. Remove Fallback Link Section
+### 6. Remove Fallback Link Section (Done)
 
 Remove:
 
@@ -229,7 +229,7 @@ Remove the URL displayed below it.
 
 ---
 
-### 7. Replace "Enorsia" Globally
+### 7. Replace "Enorsia" Globally (Done)
 
 Replace all occurrences of:
 
@@ -253,7 +253,7 @@ across all email templates.
 
 ---
 
-### 8. Footer Updates
+### 8. Footer Updates (Done)
 
 #### Remove
 
@@ -283,13 +283,13 @@ Apply this change globally to all email templates.
 
 # Additional Frontend Fix Requirements
 
-## After Login - Global Sidebar
+## After Login - Global Sidebar (Done)
 
-1. Clicking the Site Name should redirect to the Home page.
-2. Display the **Slogan** after the Site Name and remove the static text **"Matrimony"**.
-3. Move **Upgrade Plan** menu directly below **My Profile**.
-4. Rename **Profile Views** to **Profile Viewers** and place it after **Notifications**.
-5. In Mobile View, all sidebar menu items are not visible. Investigate and ensure all menu items are accessible and displayed properly.
+1. Clicking the Site Name should redirect to the Home page. (Done)
+2. Display the **Slogan** after the Site Name and remove the static text **"Matrimony"**. (Done)
+3. Move **Upgrade Plan** menu directly below **My Profile**. (Done)
+4. Rename **Profile Views** to **Profile Viewers** and place it after **Notifications**. (Done)
+5. In Mobile View, all sidebar menu items are not visible. Investigate and ensure all menu items are accessible and displayed properly. (Done)
 
 ---
 

@@ -35,6 +35,8 @@ const FALLBACK: SiteSettings = {
   facebook_url:     null,
   twitter_url:      null,
   instagram_url:    null,
+  linkedin_url:     null,
+  email_otp_expiry_minutes: '15',
   meta_title:       null,
   meta_description: null,
   meta_keywords:    null,

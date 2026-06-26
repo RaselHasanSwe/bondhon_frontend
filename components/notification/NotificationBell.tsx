@@ -234,7 +234,7 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
             {/* Default placement → inline absolute dropdown (mobile top bar) */}
             {open && placement !== 'sidebar' && (
                 <div
-                    className="absolute right-0 top-11 w-72 sm:w-80 bg-white rounded-2xl border border-gray-100 shadow-xl z-50 overflow-hidden">
+                    className="absolute right-[-80px] top-11 w-72 sm:w-80 bg-white rounded-2xl border border-gray-100 shadow-xl z-50 overflow-hidden">
                     {dropdownContent}
                 </div>
             )}

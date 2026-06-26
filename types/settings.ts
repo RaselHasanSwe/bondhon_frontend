@@ -13,6 +13,8 @@ export interface SiteSettings {
     facebook_url: string | null;
     twitter_url: string | null;
     instagram_url: string | null;
+    linkedin_url: string | null;
+    email_otp_expiry_minutes: string | null;
     meta_title: string | null;
     meta_description: string | null;
     meta_keywords: string | null;
