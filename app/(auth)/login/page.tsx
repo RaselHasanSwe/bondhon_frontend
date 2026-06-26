@@ -13,6 +13,7 @@ import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {showErrorToast} from '@/lib/toast';
+import {useSettings} from '@/lib/useSettings';
 
 const loginSchema = z.object({
     email: z.string().email('Please enter a valid email address'),
@@ -26,6 +27,8 @@ export default function LoginPage() {
     const [serverError, setServerError] = useState<string | null>(null);
     const [banInfo, setBanInfo] = useState<{ reason: string } | null>(null);
     const {register, handleSubmit, formState: {errors, isSubmitting}} = useForm<LoginForm>({resolver: zodResolver(loginSchema)});
+
+    const {settings} = useSettings();
 
     const onSubmit = async (data: LoginForm) => {
         setServerError(null);
@@ -79,7 +82,7 @@ export default function LoginPage() {
                     <h2 className="text-2xl font-bold text-[#1A1208]" style={{fontFamily: 'var(--font-heading)'}}>
                         Welcome back
                     </h2>
-                    <p className="text-sm text-[#8A7A62] mt-1">Sign in to your Enorsia account</p>
+                    <p className="text-sm text-[#8A7A62] mt-1">Sign in to your {settings.site_name} account</p>
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>

@@ -10,14 +10,14 @@
 
 ## Left Side of Login Page
 
-### 1. Site Name
+### 1. Site Name (Done)
 
 * Currently showing **"Enorsia"** as a static value.
 * Make it dynamic and load from:
 
   * **Site Settings → Site Name**
 
-### 2. Slogan
+### 2. Slogan (Done)
 
 * Currently showing **"Enorsia Matrimony"** as a static value.
 * Create a new field:
@@ -25,7 +25,7 @@
   * **Site Settings → Slogan**
 * Display the slogan dynamically.
 
-### 3. Replace Hero Section Content
+### 3. Replace Hero Section Content (Done)
 
 Keep the existing design and indentation unchanged.
 
@@ -37,7 +37,7 @@ Replace the following text across all pages where it appears:
 * Forgot Password
 * Reset Password
 
-#### Remove
+#### Find
 
 ```text
 Premium Matrimony Platform
@@ -80,7 +80,7 @@ Start Your Journey Today
 
 ---
 
-## Right Side of Login Page
+## Right Side of Login Page (Done)
 
 ### Sign In Text
 
@@ -100,7 +100,7 @@ Where `{Site Name}` is loaded dynamically from Site Settings.
 
 ---
 
-## Reset Password Page
+## Reset Password Page (Done)
 
 ### Issue
 

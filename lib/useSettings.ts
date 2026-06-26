@@ -22,6 +22,7 @@ async function fetchSettings(): Promise<SiteSettings> {
 
 const FALLBACK: SiteSettings = {
   site_name:        APP_NAME,
+  site_slogan:      'Find Your Perfect Match',
   site_logo:        null,
   site_favicon:     null,
   currency:         'BDT',
