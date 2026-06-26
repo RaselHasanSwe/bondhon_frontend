@@ -47,6 +47,7 @@ export interface AdminPhoto {
     id: number;
     user_id: number;
     file_path: string;
+    url?: string | null;
     is_primary: boolean;
     is_approved: boolean;
     moderation_status: 'pending' | 'approved' | 'rejected';

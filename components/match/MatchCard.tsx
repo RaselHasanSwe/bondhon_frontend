@@ -128,7 +128,7 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
             <Link href={profileUrl} className="block relative aspect-[4/5] bg-[var(--gold-50)]">
                 {resolvePhotoUrl(profile.primary_photo) ? (
                     <img
-                        src={`${profile.primary_photo}`}
+                        src={resolvePhotoUrl(profile.primary_photo)!}
                         className="w-full h-full object-cover"
                     />
                 ) : (

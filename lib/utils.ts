@@ -23,6 +23,14 @@ export function resolvePhotoUrl(path: string | null | undefined): string | null 
     return `${base}${rel}`;
 }
 
+/** Resolve a profile photo using the API `url` field when present, else `file_path`. */
+export function resolveProfilePhotoUrl(
+    photo: { url?: string | null; file_path?: string | null } | null | undefined,
+): string | null {
+    if (!photo) return null;
+    return resolvePhotoUrl(photo.url ?? photo.file_path);
+}
+
 export function formatAge(dob: string | null | undefined): string {
     if (!dob) return 'N/A';
     const birth = new Date(dob);

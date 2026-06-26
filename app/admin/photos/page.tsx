@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '@/services/adminService';
 import type { AdminPhoto } from '@/types/admin';
-import { Button } from '@/components/ui/button';
+import { resolveProfilePhotoUrl } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 
 export default function AdminPhotosPage() {
@@ -37,8 +37,6 @@ export default function AdminPhotosPage() {
             setRejectReason('');
         },
     });
-
-    const apiBase = process.env.NEXT_PUBLIC_API_URL ?? '';
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
@@ -76,7 +74,7 @@ export default function AdminPhotosPage() {
                                 {/* Photo */}
                                 <div className="aspect-square overflow-hidden bg-gray-50">
                                     <img
-                                        src={`${apiBase}/storage/${photo.file_path}`}
+                                        src={resolveProfilePhotoUrl(photo) ?? ''}
                                         alt="Pending photo"
                                         className="w-full h-full object-cover"
                                     />

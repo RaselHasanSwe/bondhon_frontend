@@ -12,6 +12,7 @@ import {profileService} from '@/services/profileService';
 import {authService} from '@/services/authService';
 import api from '@/lib/api';
 import { showSuccessToast, showErrorToast, getErrorMessage } from '@/lib/toast';
+import { resolveProfilePhotoUrl } from '@/lib/utils';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -26,6 +27,12 @@ import {
     experienceOptions,
 } from '@/lib/profileOptions';
 import { useOptions, useChildOptions, type OptionItem } from '@/hooks/useSelectOptions';
+
+// ─── Tab order for auto-advance after save ───────────────────────────────────
+const PROFILE_EDIT_TABS = [
+    'basic', 'location', 'religion', 'career', 'lifestyle', 'family',
+    'horoscope', 'photo', 'preferences', 'security',
+] as const;
 
 // ─── ENUM fields that must not be sent as empty string ───────────────────────
 const ENUM_FIELDS = new Set([
@@ -506,6 +513,13 @@ function ProfileEditInner() {
         return out;
     };
 
+    const goToNextTab = (currentTab: string) => {
+        const idx = PROFILE_EDIT_TABS.indexOf(currentTab as typeof PROFILE_EDIT_TABS[number]);
+        if (idx >= 0 && idx < PROFILE_EDIT_TABS.length - 1) {
+            setActiveTab(PROFILE_EDIT_TABS[idx + 1]);
+        }
+    };
+
     const handleSave = async(data:Record<string,unknown>,tabKey:string)=>{
         let processed={...data};
         for(const k of Object.keys(processed)){if(ENUM_FIELDS.has(k)&&processed[k]==='')delete processed[k];}
@@ -514,6 +528,7 @@ function ProfileEditInner() {
             await saveMutation.mutateAsync(processed);
             setSavedTab(tabKey); setTimeout(()=>setSavedTab(null),2000);
             showSuccessToast('Profile updated successfully.');
+            goToNextTab(tabKey);
         } catch (err: unknown) {
             showErrorToast(getErrorMessage(err), 'Update failed');
         }
@@ -556,6 +571,7 @@ function ProfileEditInner() {
             await prefMutation.mutateAsync(payload);
             setSavedTab('preferences'); setTimeout(()=>setSavedTab(null),2000);
             showSuccessToast('Preferences updated successfully.');
+            goToNextTab('preferences');
         } catch(err:unknown) {
             showErrorToast(getErrorMessage(err), 'Update failed');
             const apiErrors = (err as {response?:{data?:{errors?:Record<string,string[]>}}})?.response?.data?.errors;
@@ -1069,7 +1085,7 @@ function ProfileEditInner() {
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                 {photos.map(photo=>(
                                     <div key={photo.id} className="relative group rounded-xl overflow-hidden border border-gray-100">
-                                        <img src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${photo.file_path}`} alt="Profile photo" className="w-full aspect-square object-cover"/>
+                                        <img src={resolveProfilePhotoUrl(photo) ?? ''} alt="Profile photo" className="w-full aspect-square object-cover"/>
                                         {photo.is_primary && <span className="absolute top-2 left-2 bg-[#C9A227] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Primary</span>}
                                         {photo.moderation_status==='pending' && <span className="absolute top-2 right-2 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Pending</span>}
                                         {photo.moderation_status==='rejected' && <span className="absolute top-2 right-2 bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full">Rejected</span>}

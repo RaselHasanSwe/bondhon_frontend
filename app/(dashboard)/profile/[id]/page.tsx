@@ -13,7 +13,7 @@ import {
 import {chatService} from '@/services/chatService';
 import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
 import {CompatibilityScore} from '@/components/match/CompatibilityScore';
-import {formatAge, formatHeight} from '@/lib/utils';
+import {formatAge, formatHeight, resolveProfilePhotoUrl} from '@/lib/utils';
 import {Dialog, DialogContent, DialogTitle} from '@/components/ui/dialog';
 import {Button} from '@/components/ui/button';
 import {Textarea} from '@/components/ui/textarea';
@@ -260,7 +260,7 @@ export default function ProfileViewPage() {
                                 <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl bg-gray-900">
                                     {activePhoto ? (
                                         <img
-                                            src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${activePhoto.file_path}`}
+                                            src={resolveProfilePhotoUrl(activePhoto) ?? ''}
                                             alt={`${p.name}'s photo`}
                                             className="w-full h-full object-cover"
                                         />
@@ -288,7 +288,7 @@ export default function ProfileViewPage() {
                                     {photos.map((ph, i) => (
                                         <button key={ph.id} onClick={() => setActivePhotoIdx(i)}
                                                 className={`shrink-0 w-14 h-14 rounded-lg overflow-hidden transition-all duration-200 ${i === activePhotoIdx ? 'ring-offset-2 ring-offset-transparent' : 'opacity-50 hover:opacity-80'}`}>
-                                            <img src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${ph.file_path}`}
+                                            <img src={resolveProfilePhotoUrl(ph) ?? ''}
                                                  alt="thumbnail" className="w-full h-full object-cover"/>
                                         </button>
                                     ))}

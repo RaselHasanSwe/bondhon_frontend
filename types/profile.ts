@@ -134,6 +134,7 @@ export interface PartnerPreference {
 export interface ProfilePhoto {
     id: number;
     file_path: string;
+    url?: string | null;
     is_primary: boolean;
     is_approved: boolean;
     is_private: boolean;

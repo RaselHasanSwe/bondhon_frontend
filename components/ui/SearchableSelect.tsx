@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback, useEffect, useState } from 'react';
 import ReactSelect, {
     StylesConfig,
     GroupBase,
@@ -113,24 +114,19 @@ function buildStyles(isMulti = false): StylesConfig<SelectOption, boolean, Group
         /* ── Dropdown container ─────────────────────────────── */
         menu: (base) => ({
             ...base,
-            /* Force a fully opaque background — CSS vars can be transparent
-               inside the detached portal node. */
             backgroundColor: menuBg,
             opacity: 1,
             border: `1px solid ${border}`,
             borderRadius: '0.75rem',
             boxShadow: '0 10px 30px rgba(0,0,0,0.18)',
-            overflow: 'hidden',
             zIndex: 99999,
-            // Prevent any parent transparency bleeding through
             isolation: 'isolate',
         }),
 
         menuList: (base) => ({
             ...base,
             padding: '0.25rem',
-            maxHeight: '240px',
-            backgroundColor: menuBg,  // repeat so the scrollable list is opaque too
+            backgroundColor: menuBg,
         }),
 
         /* ── Individual options ─────────────────────────────── */
@@ -140,7 +136,7 @@ function buildStyles(isMulti = false): StylesConfig<SelectOption, boolean, Group
                 ? PRIMARY
                 : state.isFocused
                     ? `${PRIMARY}18`
-                    : menuBg,          // opaque base colour — never transparent
+                    : menuBg,
             color: state.isSelected ? '#ffffff' : fg,
             borderRadius: '0.5rem',
             fontSize: '0.875rem',
@@ -157,6 +153,38 @@ function buildStyles(isMulti = false): StylesConfig<SelectOption, boolean, Group
         }),
     };
 }
+
+/** Keep dropdown menus fully visible on small screens by capping height to viewport space. */
+function useMenuMaxHeight() {
+    const [maxMenuHeight, setMaxMenuHeight] = useState(240);
+
+    useEffect(() => {
+        const update = () => {
+            const viewportPadding = 96;
+            setMaxMenuHeight(Math.max(120, window.innerHeight - viewportPadding));
+        };
+
+        update();
+        window.addEventListener('resize', update);
+        window.addEventListener('scroll', update, true);
+
+        return () => {
+            window.removeEventListener('resize', update);
+            window.removeEventListener('scroll', update, true);
+        };
+    }, []);
+
+    return maxMenuHeight;
+}
+
+const sharedSelectProps = {
+    classNamePrefix: 'rs' as const,
+    menuPortalTarget: typeof document !== 'undefined' ? document.body : undefined,
+    menuPosition: 'fixed' as const,
+    menuPlacement: 'auto' as const,
+    menuShouldScrollIntoView: true,
+    menuShouldBlockScroll: true,
+};
 
 // ─── Single-value Searchable Select ──────────────────────────────────────────
 
@@ -180,6 +208,13 @@ export function SearchableSelect({
     id,
 }: SearchableSelectProps) {
     const selected = value ? (options.find(o => o.value === value) ?? null) : null;
+    const maxMenuHeight = useMenuMaxHeight();
+
+    const handleMenuOpen = useCallback(() => {
+        requestAnimationFrame(() => {
+            document.querySelector('.rs__menu')?.scrollIntoView({ block: 'nearest', behavior: 'instant' as ScrollBehavior });
+        });
+    }, []);
 
     return (
         <ReactSelect<SelectOption>
@@ -191,10 +226,9 @@ export function SearchableSelect({
             isClearable={isClearable}
             isDisabled={isDisabled}
             styles={buildStyles()}
-            classNamePrefix="rs"
-            menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
-            menuPosition="fixed"
-            menuPlacement="auto"
+            maxMenuHeight={maxMenuHeight}
+            onMenuOpen={handleMenuOpen}
+            {...sharedSelectProps}
         />
     );
 }
@@ -220,6 +254,13 @@ export function MultiSearchableSelect({
 }: MultiSelectProps) {
     const selected = (value ?? [])
         .map(v => options.find(o => o.value === v) ?? { value: v, label: v });
+    const maxMenuHeight = useMenuMaxHeight();
+
+    const handleMenuOpen = useCallback(() => {
+        requestAnimationFrame(() => {
+            document.querySelector('.rs__menu')?.scrollIntoView({ block: 'nearest', behavior: 'instant' as ScrollBehavior });
+        });
+    }, []);
 
     return (
         <ReactSelect<SelectOption, true>
@@ -231,11 +272,10 @@ export function MultiSearchableSelect({
             placeholder={placeholder}
             isDisabled={isDisabled}
             styles={buildStyles(true) as StylesConfig<SelectOption, true, GroupBase<SelectOption>>}
-            classNamePrefix="rs"
-            menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
-            menuPosition="fixed"
-            menuPlacement="auto"
+            maxMenuHeight={maxMenuHeight}
+            onMenuOpen={handleMenuOpen}
             closeMenuOnSelect={false}
+            {...sharedSelectProps}
         />
     );
 }
