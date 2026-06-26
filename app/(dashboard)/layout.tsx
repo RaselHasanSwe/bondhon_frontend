@@ -156,10 +156,10 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                 {/* Logo */}
                 <div className="mb-8 px-2">
                     <div className="flex items-center gap-2.5">
-                        <div>
+                        <a href="/">
                             <h1 className="text-xl font-bold leading-none text-gold-gradient">{settings.site_name}</h1>
                             <p className="text-[10px] text-muted-foreground/70 tracking-widest uppercase mt-0.5">Matrimony</p>
-                        </div>
+                        </a>
                     </div>
                 </div>
 
