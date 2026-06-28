@@ -404,15 +404,15 @@ Tabs: (Done)
 
 ## Notifications
 
-1. Implement scroll pagination.
+1. Implement scroll pagination. (Done)
 
 ---
 
-## New Menu: Account Disable Request
+## New Menu: Account Disable (Done)
 
 Add a new sidebar menu:
 
-### Account Disable Request
+### Account Disable Request (Done)
 
 Fields:
 
@@ -425,7 +425,7 @@ Fields:
 
 * User entered message/reason
 
-### Admin Actions
+### Admin Actions (Done)
 
 * Admin receives the request.
 * Admin can disable/ban the account.

@@ -37,6 +37,19 @@ function CrownIcon({size = 24, strokeWidth = 1.8, ...props}: NavIconProps) {
 }
 
 
+// Account disable request icon
+function AccountDisableIcon({size = 24, strokeWidth = 1.8, ...props}: NavIconProps) {
+    return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth}
+             strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <line x1="17" y1="8" x2="23" y2="14"/>
+            <line x1="23" y1="8" x2="17" y2="14"/>
+        </svg>
+    );
+}
+
 const NAV_ITEMS: { href: string; label: string; Icon: ComponentType<NavIconProps>; adminOnly?: boolean }[] = [
     {href: '/dashboard', label: 'Dashboard', Icon: HomeIcon},
     {href: '/matches', label: 'Matches', Icon: MatchesIcon},
@@ -47,6 +60,7 @@ const NAV_ITEMS: { href: string; label: string; Icon: ComponentType<NavIconProps
     {href: '/notifications', label: 'Notifications', Icon: BellIcon},
     {href: '/profile-views', label: 'Profile Viewers', Icon: EyeIcon},
     {href: '/profile/edit', label: 'My Profile', Icon: UserIcon},
+    {href: '/account-disable-request', label: 'Account Disable Request', Icon: AccountDisableIcon},
     {href: '/subscription', label: 'Upgrade Plan', Icon: CrownIcon},
 ];
 

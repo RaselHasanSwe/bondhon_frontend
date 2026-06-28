@@ -58,9 +58,25 @@ function resolveActionUrl(type: string, data: BackendNotification['data']): stri
         case 'photo_approved':
         case 'photo_rejected':
             return '/profile/edit';
+        case 'account_disable_request_submitted':
+        case 'account_disable_request_dismissed':
+            return '/account-disable-request';
+        case 'account_disable_request_reactivated':
+        case 'admin_account_reactivated':
+            return '/login';
         default:
             return null;
     }
+}
+
+/** Append admin reason to notification body when stored separately */
+function formatNotificationBody(n: BackendNotification): string {
+    const message = n.data?.message ?? '';
+    const reason = n.data?.admin_message;
+    if (typeof reason === 'string' && reason && !message.includes(reason)) {
+        return message + (message ? ' Reason: ' : 'Reason: ') + reason;
+    }
+    return message;
 }
 
 /** Transform a backend notification to the frontend AppNotification shape */
@@ -69,14 +85,19 @@ function transformNotification(n: BackendNotification): AppNotification {
         interest_received: 1, interest_accepted: 1, interest_expired: 1,
         profile_viewed: 1, new_message: 1, match_suggestion: 1, match_digest: 1,
         subscription_expiring: 1, subscription_expiry: 1, photo_approved: 1,
-        photo_rejected: 1, system: 1, broadcast_message: 1,
+        photo_rejected: 1, face_scan_approved: 1, face_scan_rejected: 1,
+        account_disable_request_submitted: 1, account_disable_request_disabled: 1,
+        account_disable_request_banned: 1, account_disable_request_dismissed: 1,
+        account_disable_request_reactivated: 1,
+        admin_account_disabled: 1, admin_account_banned: 1, admin_account_reactivated: 1,
+        system: 1, broadcast_message: 1,
     } ? (n.type as NotificationType) : 'system' as NotificationType;
 
     return {
         id: n.id,
         type,
         title: n.data?.title ?? 'Notification',
-        body: n.data?.message ?? '',
+        body: formatNotificationBody(n),
         action_url: resolveActionUrl(n.type, n.data ?? {}),
         avatar: null,
         is_read: n.is_read,

@@ -44,6 +44,14 @@ const TYPE_ICONS: Record<AppNotification['type'], ComponentType<IconProps>> = {
     photo_rejected: XCircleIcon,
     face_scan_approved: CheckCircleIcon,
     face_scan_rejected: XCircleIcon,
+    account_disable_request_submitted: ClockIcon,
+    account_disable_request_disabled: XCircleIcon,
+    account_disable_request_banned: XCircleIcon,
+    account_disable_request_dismissed: MegaphoneIcon,
+    account_disable_request_reactivated: CheckCircleIcon,
+    admin_account_disabled: XCircleIcon,
+    admin_account_banned: XCircleIcon,
+    admin_account_reactivated: CheckCircleIcon,
     system: MegaphoneIcon,
     broadcast_message: MegaphoneIcon,
 };
@@ -97,6 +105,21 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
                     if (e.type === 'face_scan_rejected') {
                         clearAuth();
                         window.location.href = '/login?face_scan_rejected=1';
+                        return;
+                    }
+                    if (e.type === 'account_disable_request_banned') {
+                        clearAuth();
+                        window.location.href = '/login?account_banned=1';
+                        return;
+                    }
+                    if (e.type === 'admin_account_disabled' || e.type === 'account_disable_request_disabled') {
+                        clearAuth();
+                        window.location.href = '/login?account_disabled=1';
+                        return;
+                    }
+                    if (e.type === 'admin_account_banned') {
+                        clearAuth();
+                        window.location.href = '/login?account_banned=1';
                         return;
                     }
                     addNotification(notificationService.transformNotification(e));

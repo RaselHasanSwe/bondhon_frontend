@@ -1,7 +1,7 @@
 'use client';
 
-import {useState} from 'react';
-import {useRouter} from 'next/navigation';
+import {useState, useEffect} from 'react';
+import {useRouter, useSearchParams} from 'next/navigation';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
@@ -23,16 +23,30 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const setAuth = useAuthStore((s) => s.setAuth);
     const [serverError, setServerError] = useState<string | null>(null);
     const [banInfo, setBanInfo] = useState<{ reason: string } | null>(null);
+    const [inactiveInfo, setInactiveInfo] = useState<{ reason: string } | null>(null);
+    const [redirectNotice, setRedirectNotice] = useState<string | null>(null);
     const {register, handleSubmit, formState: {errors, isSubmitting}} = useForm<LoginForm>({resolver: zodResolver(loginSchema)});
 
     const {settings} = useSettings();
 
+    useEffect(() => {
+        if (searchParams.get('account_disabled') === '1') {
+            setRedirectNotice('Your account has been disabled following review of your disable request.');
+        } else if (searchParams.get('account_banned') === '1') {
+            setRedirectNotice('Your account has been suspended following review of your disable request.');
+        } else if (searchParams.get('face_scan_rejected') === '1') {
+            setRedirectNotice('Your face verification was rejected. Please sign in again to resubmit.');
+        }
+    }, [searchParams]);
+
     const onSubmit = async (data: LoginForm) => {
         setServerError(null);
         setBanInfo(null);
+        setInactiveInfo(null);
         try {
             const res = await authService.login(data);
             const {user, token} = res.data.data;
@@ -44,7 +58,7 @@ export default function LoginPage() {
                 response?: {
                     data?: {
                         message?: string;
-                        data?: { status?: string; ban_reason?: string };
+                        data?: { status?: string; ban_reason?: string; disable_reason?: string };
                     };
                 };
             };
@@ -63,7 +77,9 @@ export default function LoginPage() {
             }
 
             if (payload?.status === 'inactive') {
-                setServerError('Your account is deactivated. Please contact support for assistance.');
+                setInactiveInfo({
+                    reason: payload.disable_reason ?? 'Your account has been disabled. Please contact support.',
+                });
                 return;
             }
 
@@ -86,6 +102,24 @@ export default function LoginPage() {
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+                    {redirectNotice && (
+                        <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+                            {redirectNotice}
+                        </div>
+                    )}
+
+                    {inactiveInfo && (
+                        <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-4 text-sm text-amber-900 space-y-2">
+                            <div className="flex items-center gap-2 font-semibold">
+                                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                Account status: Disabled
+                            </div>
+                            <p className="leading-relaxed">
+                                <span className="font-medium">Reason:</span> {inactiveInfo.reason}
+                            </p>
+                        </div>
+                    )}
+
                     {banInfo && (
                         <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-4 text-sm text-red-700 space-y-2">
                             <div className="flex items-center gap-2 font-semibold">
