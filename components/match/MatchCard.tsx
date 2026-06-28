@@ -144,7 +144,7 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                     </div>
                 )}
 
-                {/* Verified badge */}
+                {/* Verified badge — shown only when face scan is approved */}
                 {profile.profile?.is_verified && (
                     <div
                         className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-green-600 font-medium flex items-center gap-1 shadow-sm">

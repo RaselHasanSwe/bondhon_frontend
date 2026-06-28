@@ -94,7 +94,7 @@ function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) 
                 <div className="flex gap-2">
                     <button onClick={onApply} className="btn-gold flex-1"
                         style={{ height: '2.5rem', borderRadius: '0.75rem', fontSize: '0.842rem' }}>
-                        Apply Filters
+                        Apply
                     </button>
                     <button onClick={onClear} className="btn-outline-gold px-4"
                         style={{ height: '2.5rem', borderRadius: '0.75rem', fontSize: '0.875rem' }}>

@@ -165,6 +165,7 @@ export interface ProfileCard {
     profession: string | null;
     diet: string | null;
     primary_photo: string | null;
+    face_scan_status?: 'pending' | 'submitted' | 'approved' | 'rejected' | null;
 }
 
 export interface FullProfile {
@@ -179,6 +180,7 @@ export interface FullProfile {
     horoscope_detail: HoroscopeDetail | null;
     partner_preference: PartnerPreference | null;
     photos: ProfilePhoto[];
+    face_scan_status?: 'pending' | 'submitted' | 'approved' | 'rejected' | null;
 }
 
 export interface ProfileView {

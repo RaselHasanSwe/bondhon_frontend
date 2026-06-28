@@ -293,15 +293,15 @@ Apply this change globally to all email templates.
 
 ---
 
-## Edit Profile
+## Edit Profile (Done)
 
-1. After successfully saving a tab, automatically navigate the user to the next tab.
-2. Fix dropdown positioning issues. On smaller screens, dropdown options are cut off and not fully visible (e.g., **Employed In** field).
+1. After successfully saving a tab, automatically navigate the user to the next tab. (Done)
+2. Fix dropdown positioning issues. On smaller screens, dropdown options are cut off and not fully visible (e.g., **Employed In** field). (Done)
 3. Add a new setting:
 
-   * **Site Settings → Photo Auto Approval**
-   * If enabled, uploaded photos should be approved automatically.
-4. Upload profile photos to Cloudflare from the backend and serve all profile images from Cloudflare.
+   * **Site Settings → Photo Auto Approval** (Done)
+   * If enabled, uploaded photos should be approved automatically. (Done)
+4. Upload profile photos to Cloudflare from the backend and serve all profile images from Cloudflare. (Done)
 
 ---
 
@@ -309,8 +309,8 @@ Apply this change globally to all email templates.
 
 1. Rename button text:
 
-   * **Apply Filters** → **Apply**
-2. Apply **Verified** badge/filter for all verified (face approved) profiles.
+   * **Apply Filters** → **Apply** (Done)
+2. Apply **Verified** badge/filter for all verified (face approved) profiles. (Done)
 3. Display profile images from Cloudflare and ensure image sizing matches card dimensions.
 4. When a user clicks **Send Interest**, send an email notification to the recipient.
 5. Implement infinite scroll / scroll pagination.

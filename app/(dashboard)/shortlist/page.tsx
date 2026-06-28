@@ -81,7 +81,7 @@ export default function ShortlistPage() {
                                 <MatchCard profile={item.user} showScore={false}/>
                                 <button
                                     onClick={() => removeMutation.mutate(item.user.id)}
-                                    className="absolute top-2 left-2 bg-card/90 backdrop-blur-sm rounded-full p-1.5 text-destructive hover:bg-red-50 transition-colors shadow-sm"
+                                    className="absolute top-2 right-2 bg-card/90 backdrop-blur-sm rounded-full p-1.5 text-destructive hover:bg-red-50 transition-colors shadow-sm"
                                     title="Remove from shortlist"
                                 >
                                     <XIcon size={12} strokeWidth={2.5}/>

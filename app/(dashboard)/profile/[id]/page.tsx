@@ -269,17 +269,16 @@ export default function ProfileViewPage() {
                                             <UserIcon size={80} className="text-gray-600" strokeWidth={1}/>
                                         </div>
                                     )}
+                                    {/* Verified badge — shown only when face scan is approved */}
+                                    {p.profile?.is_verified && (
+                                        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-green-600 font-medium flex items-center gap-1 shadow-sm z-10">
+                                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                            Verified
+                                        </div>
+                                    )}
                                     {/* Gradient overlay bottom */}
                                     <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/50 to-transparent"/>
                                 </div>
-
-                                {/* Verified badge */}
-                                {p.profile?.is_verified && (
-                                    <div className="absolute -top-2 -right-2 z-10 bg-[#C9A227] text-white text-[10px] font-bold rounded-full w-8 h-8 flex items-center justify-center shadow-lg"
-                                         title="Verified Profile">
-                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                    </div>
-                                )}
                             </div>
 
                             {/* Photo thumbnails */}
