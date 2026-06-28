@@ -2,6 +2,7 @@
 
 import {create} from 'zustand';
 import {persist} from 'zustand/middleware';
+import {resetSession} from '@/lib/resetSession';
 import type {User} from '@/types/user';
 
 interface AuthState {
@@ -21,6 +22,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: false,
 
             setAuth: (user, token) => {
+                resetSession();
                 localStorage.setItem('auth_token', token);
                 set({user, token, isAuthenticated: true});
             },
@@ -28,6 +30,7 @@ export const useAuthStore = create<AuthState>()(
             clearAuth: () => {
                 localStorage.removeItem('auth_token');
                 set({user: null, token: null, isAuthenticated: false});
+                resetSession();
             },
 
             updateUser: (partialUser) =>

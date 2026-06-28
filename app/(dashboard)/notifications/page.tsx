@@ -3,6 +3,7 @@
 import {useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {useQueryClient} from '@tanstack/react-query';
+import {invalidateNotificationQueries} from '@/lib/cacheInvalidation';
 import {useNotificationStore} from '@/store/notificationStore';
 import {notificationService} from '@/services/notificationService';
 import type {AppNotification} from '@/types/notification';
@@ -117,7 +118,7 @@ export default function NotificationsPage() {
 
     const handleMarkAllRead = async () => {
         await markAllRead();
-        queryClient.invalidateQueries({queryKey: ['notifications']});
+        invalidateNotificationQueries(queryClient);
     };
 
     return (

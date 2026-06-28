@@ -1,7 +1,8 @@
 'use client';
 
 import React, {useState} from 'react';
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+import {useUserQuery} from '@/hooks/useUserQuery';
+import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {useParams, useRouter} from 'next/navigation';
 import {
     profileService,
@@ -12,6 +13,11 @@ import {
 } from '@/services/profileService';
 import {chatService} from '@/services/chatService';
 import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
+import {
+    invalidateInterestQueries,
+    invalidateShortlistQueries,
+    invalidateConversationQueries,
+} from '@/lib/cacheInvalidation';
 import {CompatibilityScore} from '@/components/match/CompatibilityScore';
 import {formatAge, formatHeight, resolveProfilePhotoUrl} from '@/lib/utils';
 import {Dialog, DialogContent, DialogTitle} from '@/components/ui/dialog';
@@ -56,7 +62,7 @@ export default function ProfileViewPage() {
     const [reportDesc, setReportDesc] = useState('');
     const [activePhotoIdx, setActivePhotoIdx] = useState(0);
 
-    const {data: profileRes, isLoading, isError} = useQuery({
+    const {data: profileRes, isLoading, isError} = useUserQuery({
         queryKey: ['profile', params.id],
         queryFn: () => profileService.getProfileById(params.id).then((r) => r.data),
         enabled: !!params.id,
@@ -65,7 +71,7 @@ export default function ProfileViewPage() {
     // Determine if this is own profile early
     const isOwnProfile = currentUser?.id === profileRes?.data?.id;
 
-    const {data: scoreRes} = useQuery({
+    const {data: scoreRes} = useUserQuery({
         queryKey: ['compatibility-score', profileRes?.data?.id],
         queryFn: () =>
             profileRes?.data?.id
@@ -79,7 +85,7 @@ export default function ProfileViewPage() {
     });
 
     // Fetch interest status between current user and this profile
-    const {data: interestStatusRes} = useQuery({
+    const {data: interestStatusRes} = useUserQuery({
         queryKey: ['interests-status', profileRes?.data?.id],
         queryFn: () =>
             profileRes?.data?.id && !isOwnProfile
@@ -89,7 +95,7 @@ export default function ProfileViewPage() {
     });
 
     // Fetch shortlist status for this profile
-    const shortlistStatusQuery = useQuery({
+    const shortlistStatusQuery = useUserQuery({
         queryKey: ['shortlist-status', profileRes?.data?.id],
         queryFn: async () => {
             if (!profileRes?.data?.id || isOwnProfile) return false;
@@ -152,8 +158,7 @@ export default function ProfileViewPage() {
         mutationFn: (id: number) => interestService.send(id),
         onSuccess: () => {
             setInterestStatus('pending');
-            // Invalidate the interest status query to refresh
-            queryClient.invalidateQueries({queryKey: ['interests-status']});
+            invalidateInterestQueries(queryClient);
             showSuccessToast('Interest sent successfully!');
         },
         onError: (error: any) => {
@@ -166,10 +171,7 @@ export default function ProfileViewPage() {
          mutationFn: (id: number) => shortlistService.toggle(id),
          onSuccess: async () => {
              setShortlisted((s) => !s);
-             // Invalidate and refetch shortlist queries
-             queryClient.invalidateQueries({queryKey: ['shortlist-status'], exact: false});
-             queryClient.invalidateQueries({queryKey: ['shortlist'], exact: false});
-             // Force refetch immediately
+             invalidateShortlistQueries(queryClient);
              await shortlistStatusQuery.refetch();
              showSuccessToast(shortlisted ? 'Removed from shortlist' : 'Added to shortlist');
          },
@@ -188,7 +190,10 @@ export default function ProfileViewPage() {
 
     const messageMutation = useMutation({
         mutationFn: (userId: number) => chatService.getOrCreateConversation(userId),
-        onSuccess: (conv) => router.push(`/chat/${conv.id}`),
+        onSuccess: (conv) => {
+            invalidateConversationQueries(queryClient);
+            router.push(`/chat/${conv.id}`);
+        },
         onError: (error: any) => {
             const errorMessage = error?.response?.data?.message
                 || error?.message

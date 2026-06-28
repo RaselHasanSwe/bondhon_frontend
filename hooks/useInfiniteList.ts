@@ -1,6 +1,8 @@
 'use client';
 
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useAuthStore } from '@/store/authStore';
+import { userQueryKey } from '@/lib/userQueryKey';
 import type { NormalizedPage } from '@/lib/pagination';
 
 interface UseInfiniteListOptions<T> {
@@ -16,12 +18,14 @@ export function useInfiniteList<T>({
     enabled = true,
     retry = true,
 }: UseInfiniteListOptions<T>) {
+    const userId = useAuthStore((s) => s.user?.id);
+
     const query = useInfiniteQuery({
-        queryKey,
+        queryKey: userQueryKey(userId, ...queryKey),
         queryFn: ({ pageParam }) => queryFn(pageParam),
         initialPageParam: 1,
         getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.page + 1 : undefined),
-        enabled,
+        enabled: enabled && !!userId,
         retry,
     });
 

@@ -3,8 +3,10 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useAuthStore } from '@/store/authStore';
-import { authService } from '@/services/authService';
+import {queryClient} from '@/lib/queryClient';
+import {invalidateSubscriptionQueries, invalidateDashboardQueries} from '@/lib/cacheInvalidation';
+import {useAuthStore} from '@/store/authStore';
+import {authService} from '@/services/authService';
 
 const PLAN_LABELS: Record<string, string> = {
     silver:   'Silver',
@@ -25,6 +27,8 @@ export default function SubscriptionSuccessPage() {
 
     // Refresh the user profile so the auth store reflects the new plan
     useEffect(() => {
+        invalidateSubscriptionQueries(queryClient);
+        invalidateDashboardQueries(queryClient);
         authService.me().then((res) => {
             const u = res.data?.data?.user;
             if (u) updateUser(u);

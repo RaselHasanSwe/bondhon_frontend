@@ -3,7 +3,9 @@
 import {useState, useEffect, useRef, Suspense, useMemo} from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import {useQuery, useQueries, useMutation, useQueryClient} from '@tanstack/react-query';
+import {useUserQuery} from '@/hooks/useUserQuery';
+import {useQueries, useMutation, useQueryClient} from '@tanstack/react-query';
+import {invalidateProfileQueries, invalidateDashboardQueries} from '@/lib/cacheInvalidation';
 import {useForm, Controller} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
@@ -274,16 +276,21 @@ function ProfileEditInner() {
         setActiveTab(tabFromUrl);
     }, [searchParams]);
 
-    const {data:profileRes,isLoading} = useQuery({queryKey:['my-profile'],queryFn:()=>profileService.getMyProfile().then(r=>r.data)});
-    const {data:completionRes} = useQuery({queryKey:['profile-completion'],queryFn:()=>profileService.getCompletionStatus().then(r=>r.data.data)});
+    const {data:profileRes,isLoading} = useUserQuery({queryKey:['my-profile'],queryFn:()=>profileService.getMyProfile().then(r=>r.data)});
+    const {data:completionRes} = useUserQuery({queryKey:['profile-completion'],queryFn:()=>profileService.getCompletionStatus().then(r=>r.data.data)});
+
+    const invalidateProfileData = () => {
+        invalidateProfileQueries(queryClient);
+        invalidateDashboardQueries(queryClient);
+    };
 
     const saveMutation = useMutation({
         mutationFn:(data:Record<string,unknown>)=>profileService.updateProfile(data),
-        onSuccess:()=>{queryClient.invalidateQueries({queryKey:['my-profile']});queryClient.invalidateQueries({queryKey:['profile-completion']});},
+        onSuccess:()=>{invalidateProfileData();},
     });
     const prefMutation = useMutation({
         mutationFn:(data:Record<string,unknown>)=>profileService.updatePreferences(data),
-        onSuccess:()=>{queryClient.invalidateQueries({queryKey:['my-profile']});queryClient.invalidateQueries({queryKey:['profile-completion']});},
+        onSuccess:()=>{invalidateProfileData();},
     });
     const changePasswordMutation = useMutation({mutationFn:(data:ChangePasswordForm)=>authService.changePassword(data)});
 
@@ -604,12 +611,12 @@ function ProfileEditInner() {
     const handlePhotoUpload = async(e:React.ChangeEvent<HTMLInputElement>)=>{
         const file=e.target.files?.[0]; if(!file) return;
         setUploadingPhoto(true); setPhotoError(null);
-        try{await profileService.uploadPhoto(file);queryClient.invalidateQueries({queryKey:['my-profile']});queryClient.invalidateQueries({queryKey:['profile-completion']});}
+        try{await profileService.uploadPhoto(file);invalidateProfileData();}
         catch{setPhotoError('Upload failed. Please try a smaller image (max 5 MB).');}
         finally{setUploadingPhoto(false);if(fileInputRef.current)fileInputRef.current.value='';}
     };
-    const handleDeletePhoto=async(id:number)=>{await profileService.deletePhoto(id);queryClient.invalidateQueries({queryKey:['my-profile']});queryClient.invalidateQueries({queryKey:['profile-completion']});};
-    const handleSetPrimary=async(id:number)=>{await profileService.setPrimaryPhoto(id);queryClient.invalidateQueries({queryKey:['my-profile']});};
+    const handleDeletePhoto=async(id:number)=>{await profileService.deletePhoto(id);invalidateProfileData();};
+    const handleSetPrimary=async(id:number)=>{await profileService.setPrimaryPhoto(id);invalidateProfileQueries(queryClient);};
 
     const dobValue = basicForm.watch('dob');
     const age = useMemo(()=>{

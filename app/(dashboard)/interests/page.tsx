@@ -6,6 +6,7 @@ import {useRouter} from 'next/navigation';
 import {interestService} from '@/services/profileService';
 import {chatService} from '@/services/chatService';
 import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
+import {invalidateInterestQueries, invalidateConversationQueries, invalidateDashboardQueries} from '@/lib/cacheInvalidation';
 import {formatAge, resolvePhotoUrl} from '@/lib/utils';
 import {InfiniteScrollFooter} from '@/components/ui/InfiniteScrollFooter';
 import {useInfiniteList} from '@/hooks/useInfiniteList';
@@ -206,7 +207,11 @@ export default function InterestsPage() {
             return interestService.ignore(id);
         },
         onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({queryKey: ['interests']});
+            invalidateInterestQueries(queryClient);
+            invalidateDashboardQueries(queryClient);
+            if (variables.action === 'accept') {
+                invalidateConversationQueries(queryClient);
+            }
             const actionLabels = {
                 accept: 'Interest accepted!',
                 decline: 'Interest declined.',
@@ -223,10 +228,12 @@ export default function InterestsPage() {
         setMessagingId(interest.id);
         try {
             if (interest.conversation_id) {
+                invalidateConversationQueries(queryClient);
                 router.push(`/chat/${interest.conversation_id}`);
                 return;
             }
             const conv = await chatService.getOrCreateConversation(profile.id);
+            invalidateConversationQueries(queryClient);
             router.push(`/chat/${conv.id}`);
         } catch (error: unknown) {
             const err = error as { response?: { data?: { message?: string } }; message?: string };

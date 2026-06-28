@@ -1,6 +1,7 @@
 'use client';
 
 import {useMutation, useQueryClient} from '@tanstack/react-query';
+import {invalidateShortlistQueries} from '@/lib/cacheInvalidation';
 import {shortlistService} from '@/services/profileService';
 import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
 import {MatchCard} from '@/components/match/MatchCard';
@@ -36,7 +37,7 @@ export default function ShortlistPage() {
     const removeMutation = useMutation({
         mutationFn: (userId: number) => shortlistService.toggle(userId),
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['shortlist']});
+            invalidateShortlistQueries(queryClient);
             showSuccessToast('Removed from shortlist');
         },
         onError: (error: unknown) => {

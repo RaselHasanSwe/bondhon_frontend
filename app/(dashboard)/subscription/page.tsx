@@ -1,8 +1,12 @@
 'use client';
 
 import {useState, useRef} from 'react';
-import {useQuery, useQueryClient} from '@tanstack/react-query';
+import {useUserQuery} from '@/hooks/useUserQuery';
+import {useQueryClient} from '@tanstack/react-query';
+import {invalidateSubscriptionQueries, invalidateDashboardQueries} from '@/lib/cacheInvalidation';
 import {subscriptionService} from '@/services/subscriptionService';
+import {authService} from '@/services/authService';
+import {useAuthStore} from '@/store/authStore';
 import {tierStyle, planLabel} from '@/lib/plan-utils';
 import {useSettings} from '@/lib/useSettings';
 import type {
@@ -444,6 +448,7 @@ type Tab = 'plans' | 'history';
 
 export default function SubscriptionPage() {
     const queryClient = useQueryClient();
+    const updateUser = useAuthStore((s) => s.updateUser);
     const {settings} = useSettings();
     const currencySymbol = settings.currency_symbol || '৳';
 
@@ -456,17 +461,17 @@ export default function SubscriptionPage() {
     const [durationFilter, setDurationFilter] = useState<string>('all');
 
     // ── Queries ──────────────────────────────────────────────────────────────
-    const {data: plans = [], isLoading: plansLoading} = useQuery({
+    const {data: plans = [], isLoading: plansLoading} = useUserQuery({
         queryKey: ['subscription-plans'],
         queryFn: () => subscriptionService.getPlans(),
     });
 
-    const {data: status, isLoading: statusLoading} = useQuery<SubscriptionStatus>({
+    const {data: status, isLoading: statusLoading} = useUserQuery<SubscriptionStatus>({
         queryKey: ['subscription-status'],
         queryFn: () => subscriptionService.getStatus(),
     });
 
-    const {data: history = [], isLoading: historyLoading} = useQuery({
+    const {data: history = [], isLoading: historyLoading} = useUserQuery({
         queryKey: ['subscription-history'],
         queryFn: () => subscriptionService.getHistory(),
         enabled: tab === 'history',
@@ -483,6 +488,16 @@ export default function SubscriptionPage() {
     ));
 
     // ── Handlers ─────────────────────────────────────────────────────────────
+    const refreshAuthUser = async () => {
+        try {
+            const res = await authService.me();
+            const user = res.data?.data?.user;
+            if (user) updateUser(user);
+        } catch {
+            /* silent */
+        }
+    };
+
     const handleBuy = async (plan: SubscriptionPlan) => {
         setError(null);
         setLoadingPlanId(plan.id);
@@ -491,8 +506,9 @@ export default function SubscriptionPage() {
                 // Free plan — direct activation, no payment gateway
                 await subscriptionService.subscribeFree(plan.id);
                 setSwitchSuccess(`Successfully subscribed to ${plan.name} (Free)! ✓`);
-                await queryClient.invalidateQueries({queryKey: ['subscription-status']});
-                await queryClient.invalidateQueries({queryKey: ['subscription-history']});
+                await invalidateSubscriptionQueries(queryClient);
+                await invalidateDashboardQueries(queryClient);
+                await refreshAuthUser();
             } else {
                 const result = await subscriptionService.initiate(plan.id);
                 window.location.href = result.payment_url;
@@ -514,9 +530,9 @@ export default function SubscriptionPage() {
             setSwitchSuccess(
                 `Switched to ${result.subscription_plan?.name ?? result.plan} successfully! ✓`
             );
-            // Invalidate both status and auth user so UI refreshes
-            await queryClient.invalidateQueries({queryKey: ['subscription-status']});
-            await queryClient.invalidateQueries({queryKey: ['subscription-history']});
+            await invalidateSubscriptionQueries(queryClient);
+            await invalidateDashboardQueries(queryClient);
+            await refreshAuthUser();
         } catch (err: unknown) {
             const e = err as { response?: { data?: { message?: string } }; message?: string };
             setError(e.response?.data?.message ?? e.message ?? 'Failed to switch plan.');

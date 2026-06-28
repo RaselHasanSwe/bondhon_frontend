@@ -3,11 +3,13 @@
 import React, {useState, useEffect} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+import {useUserQuery} from '@/hooks/useUserQuery';
+import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {formatAge, formatHeight, resolvePhotoUrl} from '@/lib/utils';
 import {CompatibilityScore} from './CompatibilityScore';
 import {interestService, shortlistService} from '@/services/profileService';
 import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
+import {invalidateInterestQueries, invalidateShortlistQueries} from '@/lib/cacheInvalidation';
 import type {ProfileCard} from '@/types/profile';
 import {MapPinIcon, ReligionIcon, GraduationCapIcon, MailIcon, StarIcon, StarFilledIcon, UserIcon, CheckIcon} from '@/components/ui/icons';
 
@@ -23,13 +25,13 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
     const [shortlisted, setShortlisted] = useState(false);
 
     // Fetch interest status
-    const {data: interestStatusRes} = useQuery({
+    const {data: interestStatusRes} = useUserQuery({
         queryKey: ['interests-status-card', profile.id],
         queryFn: () => interestService.checkStatus(profile.id).then((r) => r.data.data),
     });
 
     // Fetch shortlist status
-    const shortlistStatusQuery = useQuery({
+    const shortlistStatusQuery = useUserQuery({
         queryKey: ['shortlist-status-card', profile.id],
         queryFn: async () => {
             try {
@@ -81,7 +83,7 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
         mutationFn: (id: number) => interestService.send(id),
         onSuccess: () => {
             setInterestStatus('pending');
-            queryClient.invalidateQueries({queryKey: ['interests-status-card']});
+            invalidateInterestQueries(queryClient);
             showSuccessToast('Interest sent successfully!');
         },
         onError: (error: any) => {
@@ -94,8 +96,7 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
          mutationFn: (id: number) => shortlistService.toggle(id),
          onSuccess: async () => {
              setShortlisted((s) => !s);
-             queryClient.invalidateQueries({queryKey: ['shortlist-status-card'], exact: false});
-             queryClient.invalidateQueries({queryKey: ['shortlist'], exact: false});
+             invalidateShortlistQueries(queryClient);
              await shortlistStatusQuery.refetch();
              showSuccessToast(shortlisted ? 'Removed from shortlist' : 'Added to shortlist');
          },

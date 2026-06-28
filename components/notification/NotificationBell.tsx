@@ -3,8 +3,10 @@
 import {useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {useRouter} from 'next/navigation';
-import {useNotificationStore} from '@/store/notificationStore';
+import {queryClient} from '@/lib/queryClient';
+import {invalidateNotificationQueries, invalidateInterestQueries, invalidateDashboardQueries, invalidateConversationQueries} from '@/lib/cacheInvalidation';
 import {notificationService} from '@/services/notificationService';
+import {useNotificationStore} from '@/store/notificationStore';
 import {useAuthStore} from '@/store/authStore';
 import type {AppNotification} from '@/types/notification';
 import type {BackendNotification} from '@/types/notification';
@@ -98,6 +100,17 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
                         return;
                     }
                     addNotification(notificationService.transformNotification(e));
+                    invalidateNotificationQueries(queryClient);
+                    if (e.type.startsWith('interest_')) {
+                        invalidateInterestQueries(queryClient);
+                        invalidateDashboardQueries(queryClient);
+                    }
+                    if (e.type === 'new_message') {
+                        invalidateConversationQueries(queryClient);
+                    }
+                    if (e.type === 'profile_viewed') {
+                        invalidateDashboardQueries(queryClient);
+                    }
                 });
         })();
     }, [user?.id, addNotification, clearAuth]);

@@ -1,12 +1,12 @@
 'use client';
 
-import {useQuery} from '@tanstack/react-query';
+import {useUserQuery} from '@/hooks/useUserQuery';
 import {chatService} from '@/services/chatService';
 import {ChatList} from '@/components/chat/ChatList';
 import Link from 'next/link';
 
 export default function ChatPage() {
-    const {data: conversations = [], isLoading} = useQuery({
+    const {data: conversations = [], isLoading} = useUserQuery({
         queryKey: ['conversations'],
         queryFn: () => chatService.getConversations(),
     });

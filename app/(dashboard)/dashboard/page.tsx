@@ -1,6 +1,6 @@
 'use client';
 
-import {useQuery} from '@tanstack/react-query';
+import {useUserQuery} from '@/hooks/useUserQuery';
 import {profileService, matchService, interestService, profileViewService} from '@/services/profileService';
 import {ProfileCompletionBar} from '@/components/profile/ProfileCompletionBar';
 import {MatchCard} from '@/components/match/MatchCard';
@@ -16,22 +16,22 @@ type IconProps = SVGProps<SVGSVGElement> & { size?: number; strokeWidth?: number
 export default function DashboardPage() {
     const user = useAuthStore((s) => s.user);
 
-    const {data: completionData} = useQuery({
+    const {data: completionData} = useUserQuery({
         queryKey: ['profile-completion'],
         queryFn: () => profileService.getCompletionStatus().then((r) => r.data.data),
     });
 
-    const {data: matchesData} = useQuery({
+    const {data: matchesData} = useUserQuery({
         queryKey: ['matches', 1],
         queryFn: () => matchService.getMatches(1).then((r) => r.data),
     });
 
-    const {data: interestsData} = useQuery({
+    const {data: interestsData} = useUserQuery({
         queryKey: ['interests-received', 1],
         queryFn: () => interestService.getReceived(1).then((r) => r.data),
     });
 
-    const {data: viewersData} = useQuery({
+    const {data: viewersData} = useUserQuery({
         queryKey: ['profile-views', 1],
         queryFn: () => profileViewService.getMyViewers(1).then((r) => r.data),
     });
