@@ -322,33 +322,33 @@ Apply this change globally to all email templates.
 
 ### General
 
-1. Implement scroll pagination for:
+1. Implement scroll pagination for: (Done)
 
    * Received Interests
    * Sent Interests
-2. If an interest request has been accepted, display a **Message** button.
+2. If an interest request has been accepted, display a **Message** button. (Done)
 
 ### New Contacts Tab
 
-Create a new tab:
+Create a new tab: (Done)
 
-**Contacts**
+**Contacts (Done)**
 
-Requirements:
+Requirements: (Done)
 
 * Show all accepted connections.
 * Display **Message** button for each connection.
 * Support search functionality.
 * Support scroll pagination.
 
-### All Tabs
+### All Tabs (Done)
 
 The following tabs should support:
 
 * Search
 * Scroll Pagination
 
-Tabs:
+Tabs: (Done)
 
 * Received
 * Sent
@@ -362,7 +362,7 @@ Tabs:
 
 1. Rename:
 
-   * **Matrimonial Profile** → **Profile**
+   * **Matrimonial Profile** → **Profile** (Done)
 2. Profile completion percentage is incorrectly calculated. Review and fix the calculation logic.
 3. Free account holders should not be able to view full profiles.
 

@@ -307,7 +307,7 @@ export default function ProfileViewPage() {
                                 <div className="h-px w-8 bg-[#C9A227]"/>
                                 <span className="text-[#C9A227] text-xs tracking-[0.25em] uppercase font-sans"
                                       style={{fontFamily: 'system-ui, sans-serif'}}>
-                                    {p.profile?.profile_created_for?.replace('_', ' ') ?? 'Matrimonial Profile'}
+                                    {p.profile?.profile_created_for?.replace('_', ' ') ?? ' Profile'}
                                 </span>
                             </div>
 
