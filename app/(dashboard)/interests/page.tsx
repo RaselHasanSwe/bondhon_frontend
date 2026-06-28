@@ -1,8 +1,10 @@
 'use client';
 
-import {useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {useMutation, useQueryClient} from '@tanstack/react-query';
+import {useRouter} from 'next/navigation';
 import {interestService} from '@/services/profileService';
+import {chatService} from '@/services/chatService';
 import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
 import {formatAge, resolvePhotoUrl} from '@/lib/utils';
 import {InfiniteScrollFooter} from '@/components/ui/InfiniteScrollFooter';
@@ -11,9 +13,13 @@ import {normalizeFlatPage} from '@/lib/pagination';
 import Image from 'next/image';
 import Link from 'next/link';
 import type {Interest} from '@/types/interest';
-import {UserIcon, InboxIcon, OutboxIcon, CheckIcon, XIcon} from '@/components/ui/icons';
+import type {ProfileCard} from '@/types/profile';
+import {
+    UserIcon, InboxIcon, OutboxIcon, CheckIcon, XIcon,
+    ChatIcon, ClockIcon, SearchIcon, CheckCircleIcon,
+} from '@/components/ui/icons';
 
-type Tab = 'received' | 'sent';
+type Tab = 'received' | 'sent' | 'contacts';
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
     pending: {label: 'Pending', className: 'bg-amber-50 text-amber-600 border-amber-200'},
@@ -23,16 +29,45 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
     expired: {label: 'Expired', className: 'bg-gray-50  text-gray-400  border-gray-200'},
 };
 
+const TAB_CONFIG: Record<Tab, { label: string; emptyTitle: string; emptyHint: string }> = {
+    received: {
+        label: 'Received',
+        emptyTitle: 'No received interests yet',
+        emptyHint: 'When someone sends you an interest, it will appear here',
+    },
+    sent: {
+        label: 'Sent',
+        emptyTitle: 'No sent interests yet',
+        emptyHint: 'Interests you send will appear here',
+    },
+    contacts: {
+        label: 'Contacts',
+        emptyTitle: 'No contacts yet',
+        emptyHint: 'Accepted interests will appear here and you can message each other',
+    },
+};
+
+function getInterestProfile(interest: Interest, tab: Tab): ProfileCard | null {
+    if (interest.connected_user) return interest.connected_user;
+    if (tab === 'received') return interest.sender;
+    if (tab === 'sent') return interest.receiver;
+    return interest.sender ?? interest.receiver;
+}
+
 function InterestCard({
-                          interest,
-                          tab,
-                          onAction,
-                      }: {
+    interest,
+    tab,
+    onAction,
+    onMessage,
+    isMessaging,
+}: {
     interest: Interest;
     tab: Tab;
     onAction?: (id: number, action: 'accept' | 'decline' | 'ignore') => void;
+    onMessage?: (interest: Interest, profile: ProfileCard) => void;
+    isMessaging?: boolean;
 }) {
-    const profile = tab === 'received' ? interest.sender : interest.receiver;
+    const profile = getInterestProfile(interest, tab);
     if (!profile) return null;
 
     const profileUrl = profile.profile?.profile_id
@@ -40,6 +75,7 @@ function InterestCard({
         : `#`;
 
     const status = STATUS_LABELS[interest.status] ?? STATUS_LABELS.pending;
+    const showStatus = tab !== 'contacts';
 
     return (
         <div className="bg-white rounded-2xl border border-[var(--border)] overflow-hidden hover:shadow-[var(--shadow-card-hover)] transition-shadow duration-200 p-4 flex items-center gap-4">
@@ -70,42 +106,79 @@ function InterestCard({
                         </p>
                         {profile.education && <p className="text-xs text-muted-foreground/70">{profile.education}</p>}
                     </div>
-                    <span className={`text-xs border rounded-full px-2.5 py-1 font-medium flex-shrink-0 ${status.className}`}>
-                        {status.label}
-                    </span>
+                    {showStatus && (
+                        <span className={`text-xs border rounded-full px-2.5 py-1 font-medium flex-shrink-0 ${status.className}`}>
+                            {status.label}
+                        </span>
+                    )}
                 </div>
 
-                {tab === 'received' && interest.status === 'pending' && onAction && (
-                    <div className="flex items-center gap-2 mt-3">
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                    {tab === 'received' && interest.status === 'pending' && onAction && (
+                        <>
+                            <button
+                                onClick={() => onAction(interest.id, 'accept')}
+                                className="btn-gold flex items-center gap-1"
+                                style={{height:'2rem', borderRadius:'0.5rem', padding:'0 0.875rem', fontSize:'0.75rem'}}
+                            >
+                                <CheckIcon size={12} strokeWidth={2.5}/> Accept
+                            </button>
+                            <button
+                                onClick={() => onAction(interest.id, 'decline')}
+                                className="px-4 py-1.5 border border-red-200 text-red-500 hover:bg-red-50 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
+                            >
+                                <XIcon size={12} strokeWidth={2.5}/> Decline
+                            </button>
+                            <button
+                                onClick={() => onAction(interest.id, 'ignore')}
+                                className="px-3 py-1.5 border border-[var(--border)] text-muted-foreground hover:bg-[var(--muted)] text-xs rounded-lg transition-colors"
+                            >
+                                Ignore
+                            </button>
+                        </>
+                    )}
+
+                    {interest.can_message && onMessage && (
                         <button
-                            onClick={() => onAction(interest.id, 'accept')}
-                            className="btn-gold flex items-center gap-1"
-                            style={{height:'2rem', borderRadius:'0.5rem', padding:'0 0.875rem', fontSize:'0.75rem'}}
+                            onClick={() => onMessage(interest, profile)}
+                            disabled={isMessaging}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--primary)]/30 text-[var(--primary)] hover:bg-[var(--accent)] transition-colors"
                         >
-                            <CheckIcon size={12} strokeWidth={2.5}/> Accept
+                            {isMessaging
+                                ? <><ClockIcon size={12} strokeWidth={1.8}/> Opening…</>
+                                : <><ChatIcon size={12} strokeWidth={1.8}/> Message</>
+                            }
                         </button>
-                        <button
-                            onClick={() => onAction(interest.id, 'decline')}
-                            className="px-4 py-1.5 border border-red-200 text-red-500 hover:bg-red-50 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
-                        >
-                            <XIcon size={12} strokeWidth={2.5}/> Decline
-                        </button>
-                        <button
-                            onClick={() => onAction(interest.id, 'ignore')}
-                            className="px-3 py-1.5 border border-[var(--border)] text-muted-foreground hover:bg-[var(--muted)] text-xs rounded-lg transition-colors"
-                        >
-                            Ignore
-                        </button>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );
 }
 
 export default function InterestsPage() {
-    const [tab, setTab] = useState<Tab>('received');
+    const router = useRouter();
     const queryClient = useQueryClient();
+    const [tab, setTab] = useState<Tab>('received');
+    const [searchInput, setSearchInput] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [messagingId, setMessagingId] = useState<number | null>(null);
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        setSearchInput('');
+        setDebouncedSearch('');
+    }, [tab]);
+
+    const handleSearchChange = useCallback((value: string) => {
+        setSearchInput(value);
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => setDebouncedSearch(value.trim()), 350);
+    }, []);
+
+    useEffect(() => () => {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+    }, []);
 
     const {
         items: interests,
@@ -115,10 +188,14 @@ export default function InterestsPage() {
         isFetchingNextPage,
         fetchNextPage,
     } = useInfiniteList<Interest>({
-        queryKey: ['interests', tab],
+        queryKey: ['interests', tab, debouncedSearch],
         queryFn: (page) => {
-            const service = tab === 'received' ? interestService.getReceived : interestService.getSent;
-            return service(page).then((r) => normalizeFlatPage(r.data.data, page));
+            const search = debouncedSearch || undefined;
+            const service =
+                tab === 'received' ? interestService.getReceived
+                : tab === 'sent' ? interestService.getSent
+                : interestService.getContacts;
+            return service(page, search).then((r) => normalizeFlatPage(r.data.data, page));
         },
     });
 
@@ -142,24 +219,73 @@ export default function InterestsPage() {
         },
     });
 
+    const handleMessage = async (interest: Interest, profile: ProfileCard) => {
+        setMessagingId(interest.id);
+        try {
+            if (interest.conversation_id) {
+                router.push(`/chat/${interest.conversation_id}`);
+                return;
+            }
+            const conv = await chatService.getOrCreateConversation(profile.id);
+            router.push(`/chat/${conv.id}`);
+        } catch (error: unknown) {
+            const err = error as { response?: { data?: { message?: string } }; message?: string };
+            showErrorToast(
+                err?.response?.data?.message
+                || err?.message
+                || 'Chat is only available after a mutual interest is accepted.',
+            );
+        } finally {
+            setMessagingId(null);
+        }
+    };
+
+    const tabEmptyIcon = tab === 'received'
+        ? InboxIcon
+        : tab === 'sent'
+            ? OutboxIcon
+            : CheckCircleIcon;
+    const EmptyIcon = tabEmptyIcon;
+
     return (
         <div className="max-w-3xl mx-auto pb-20 md:pb-6">
             <h1 className="page-title mb-6 animate-fade-in-up">Interests</h1>
 
-            <div className="tab-pill-container flex gap-1 mb-6">
-                {(['received', 'sent'] as Tab[]).map((t) => (
+            <div className="tab-pill-container flex gap-1 mb-4">
+                {(['received', 'sent', 'contacts'] as Tab[]).map((t) => (
                     <button
                         key={t}
                         onClick={() => setTab(t)}
                         className={`tab-pill flex-1 flex items-center justify-center gap-1.5 capitalize ${tab === t ? 'active' : ''}`}
                     >
-                        {t === 'received' ? <InboxIcon size={14} strokeWidth={2}/> : <OutboxIcon size={14} strokeWidth={2}/>}
-                        {t}
-                        {t === 'received' && total > 0 && tab === 'received' && (
+                        {t === 'received' ? <InboxIcon size={14} strokeWidth={2}/>
+                            : t === 'sent' ? <OutboxIcon size={14} strokeWidth={2}/>
+                            : <CheckCircleIcon size={14} strokeWidth={2}/>}
+                        {TAB_CONFIG[t].label}
+                        {total > 0 && tab === t && (
                             <span className="ml-1.5 bg-[var(--primary)] text-white text-xs rounded-full px-1.5 py-0.5 leading-none">{total}</span>
                         )}
                     </button>
                 ))}
+            </div>
+
+            <div className="relative mb-5">
+                <SearchIcon size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" strokeWidth={2}/>
+                <input
+                    type="text"
+                    value={searchInput}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    placeholder={`Search ${TAB_CONFIG[tab].label.toLowerCase()} by name, BON-ID, city, religion, profession…`}
+                    className="w-full h-10 pl-10 pr-10 border border-[var(--border)] bg-[var(--input)] rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-[var(--primary)] transition-all"
+                />
+                {searchInput && (
+                    <button
+                        onClick={() => handleSearchChange('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                        <XIcon size={14} strokeWidth={2}/>
+                    </button>
+                )}
             </div>
 
             {isLoading && (
@@ -172,13 +298,16 @@ export default function InterestsPage() {
 
             {!isLoading && interests.length === 0 && (
                 <div className="card-premium p-16 text-center animate-fade-in-up">
-                    {tab === 'received'
-                        ? <InboxIcon size={48} className="mx-auto text-[var(--gold-200)] mb-4" strokeWidth={1.2}/>
-                        : <OutboxIcon size={48} className="mx-auto text-[var(--gold-200)] mb-4" strokeWidth={1.2}/>
-                    }
-                    <p className="text-lg font-semibold text-foreground" style={{fontFamily:'var(--font-heading)'}}>No {tab} interests yet</p>
+                    <EmptyIcon size={48} className="mx-auto text-[var(--gold-200)] mb-4" strokeWidth={1.2}/>
+                    <p className="text-lg font-semibold text-foreground" style={{fontFamily:'var(--font-heading)'}}>
+                        {debouncedSearch
+                            ? `No ${TAB_CONFIG[tab].label.toLowerCase()} match your search`
+                            : TAB_CONFIG[tab].emptyTitle}
+                    </p>
                     <p className="text-sm text-muted-foreground mt-2">
-                        {tab === 'received' ? 'When someone sends you an interest, it will appear here' : 'Interests you send will appear here'}
+                        {debouncedSearch
+                            ? 'Try a different keyword'
+                            : TAB_CONFIG[tab].emptyHint}
                     </p>
                 </div>
             )}
@@ -190,6 +319,8 @@ export default function InterestsPage() {
                         interest={interest}
                         tab={tab}
                         onAction={(id, action) => actionMutation.mutate({id, action})}
+                        onMessage={handleMessage}
+                        isMessaging={messagingId === interest.id}
                     />
                 ))}
             </div>
@@ -200,7 +331,7 @@ export default function InterestsPage() {
                     isFetchingNextPage={isFetchingNextPage}
                     onLoadMore={() => fetchNextPage()}
                     showEndMessage
-                    endMessage="No more interests to show"
+                    endMessage="No more to show"
                 />
             )}
         </div>

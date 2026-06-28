@@ -75,11 +75,14 @@ export const interestService = {
     send: (receiverId: number) =>
         api.post('/interests', {receiver_id: receiverId}),
 
-    getReceived: (page = 1) =>
-        api.get('/interests/received', {params: {page}}),
+    getReceived: (page = 1, search?: string) =>
+        api.get('/interests/received', {params: {page, ...(search ? {search} : {})}}),
 
-    getSent: (page = 1) =>
-        api.get('/interests/sent', {params: {page}}),
+    getSent: (page = 1, search?: string) =>
+        api.get('/interests/sent', {params: {page, ...(search ? {search} : {})}}),
+
+    getContacts: (page = 1, search?: string) =>
+        api.get('/interests/contacts', {params: {page, ...(search ? {search} : {})}}),
 
     checkStatus: (userId: number) =>
         api.get<ApiResponse<{status: 'none' | 'pending' | 'accepted'; is_sender?: boolean; created_at?: string; expires_at?: string}>>(`/interests/status/${userId}`),
