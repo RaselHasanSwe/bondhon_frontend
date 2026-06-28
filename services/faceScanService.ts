@@ -27,14 +27,14 @@ export interface FaceScanSessionResponse {
   captures: Array<{
     id: number;
     capture_key: string;
-    image_url: string;
+    image_path: string;
     metadata: Record<string, unknown> | null;
     captured_at: string | null;
   }>;
   latest_capture: {
     id: number;
     capture_key: string;
-    image_url: string;
+    image_path: string;
     metadata: Record<string, unknown> | null;
     captured_at: string | null;
   } | null;

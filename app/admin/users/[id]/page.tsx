@@ -6,6 +6,7 @@ import {useParams} from 'next/navigation';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {adminService} from '@/services/adminService';
 import type {AdminUserDetail} from '@/types/admin';
+import { cfImageUrl } from '@/lib/utils';
 
 function Badge({children, className}: {children: React.ReactNode; className: string}) {
   return <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${className}`}>{children}</span>;
@@ -111,7 +112,7 @@ export default function AdminUserDetailPage() {
               <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {face_scan.captures.map((capture) => (
                   <div key={capture.id} className="rounded-2xl border border-gray-100 overflow-hidden">
-                    <img src={capture.image_url} alt={capture.capture_key} className="w-full aspect-3/4 object-cover" />
+                    <img src={cfImageUrl(capture.image_path) ?? ''} alt={capture.capture_key} className="w-full aspect-3/4 object-cover" />
                     <div className="p-3 text-sm">
                       <div className="flex items-center justify-between gap-2 mb-1">
                         <span className="font-medium capitalize">{capture.capture_key.replace('-', ' ')}</span>

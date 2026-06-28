@@ -4,6 +4,7 @@ import {useEffect, useRef, useState, useCallback} from 'react';
 import Swal from 'sweetalert2';
 import {useCallStore} from '@/store/callStore';
 import {callService} from '@/services/callService';
+import {cfImageUrl} from '@/lib/utils';
 
 /**
  * IncomingCallModal — WhatsApp-style ring screen.
@@ -175,7 +176,7 @@ export function IncomingCallModal() {
                         <div className="absolute -inset-4 rounded-full bg-[#C9A227]/5 animate-ping" style={{animationDelay: '0.7s'}}/>
                         {caller.avatar ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={caller.avatar} alt={caller.name}
+                            <img src={cfImageUrl(caller.avatar) ?? ''} alt={caller.name}
                                  className="relative z-10 w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-white/20"/>
                         ) : (
                             <div className="relative z-10 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-linear-to-br from-[#C9A227] to-[#D4AF37] flex items-center justify-center border-2 border-white/20">

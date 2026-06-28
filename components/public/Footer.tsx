@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import type { SiteSettings } from '@/types/settings';
+import { cfImageUrl } from '@/lib/utils';
 
 interface FooterProps {
   settings: SiteSettings;
@@ -37,7 +38,7 @@ export default function Footer({ settings }: FooterProps) {
               {settings.site_logo ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={settings.site_logo}
+                  src={cfImageUrl(settings.site_logo) ?? ''}
                   alt={settings.site_name}
                   className="h-9 w-auto object-contain rounded-lg"
                 />

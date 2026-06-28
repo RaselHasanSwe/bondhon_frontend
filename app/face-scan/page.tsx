@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useSettings } from '@/lib/useSettings';
 import { getPostAuthRedirect, needsEmailVerification, isFaceScanEnabled, isFaceScanComplete } from '@/lib/authRedirect';
 import { faceScanService, type FaceScanSessionResponse } from '@/services/faceScanService';
+import { cfImageUrl } from '@/lib/utils';
 import {
     FaceLandmarker,
     FilesetResolver,
@@ -1180,7 +1181,7 @@ export default function FaceScanPage() {
                                 <div className="grid grid-cols-2 gap-2">
                                     {session.captures.slice(-4).reverse().map(capture => (
                                         <div key={capture.id} className="rounded-xl overflow-hidden bg-white border border-stone-200">
-                                            <img src={capture.image_url} alt={capture.capture_key} className="w-full aspect-3/4 object-cover" />
+                                            <img src={cfImageUrl(capture.image_path) ?? ''} alt={capture.capture_key} className="w-full aspect-3/4 object-cover" />
                                             <div className="px-2 py-1.5 text-[10px] text-stone-500 flex justify-between gap-1">
                                                 <span className="capitalize font-medium">{capture.capture_key}</span>
                                                 <span>{capture.captured_at ? new Date(capture.captured_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>
