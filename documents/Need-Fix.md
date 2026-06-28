@@ -363,12 +363,12 @@ Tabs: (Done)
 1. Rename:
 
    * **Matrimonial Profile** → **Profile** (Done)
-2. Profile completion percentage is incorrectly calculated. Review and fix the calculation logic.
-3. Free account holders should not be able to view full profiles.
+2. Profile completion percentage is incorrectly calculated. Review and fix the calculation logic. (this is the profile i visit that profile percentage)
+3. Free account holders should not be able to view full profiles. (Done )
 
    * Display subscription upgrade prompt.
    * Show **Upgrade Plan** button.
-4. All images should be loaded from Cloudflare.
+4. All images should be loaded from Cloudflare. (Done)
 5. Remove thumbnail strip from the main profile area and show only the primary profile image initially.
 6. Create a dedicated photo gallery section:
 

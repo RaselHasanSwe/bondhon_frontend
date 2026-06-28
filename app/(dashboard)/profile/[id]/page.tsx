@@ -5,7 +5,6 @@ import {useUserQuery} from '@/hooks/useUserQuery';
 import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {useParams, useRouter} from 'next/navigation';
 import {
-    profileService,
     interestService,
     shortlistService,
     blockService,
@@ -19,7 +18,10 @@ import {
     invalidateConversationQueries,
 } from '@/lib/cacheInvalidation';
 import {CompatibilityScore} from '@/components/match/CompatibilityScore';
-import {formatAge, formatHeight, resolveProfilePhotoUrl} from '@/lib/utils';
+import {formatAge, formatHeight} from '@/lib/utils';
+import {getApprovedPhotos, resolvePrimaryPhotoUrl} from '@/lib/profilePhotos';
+import {usePublicProfile} from '@/hooks/usePublicProfile';
+import {ProfileAccessGate} from '@/components/profile/ProfileAccessGate';
 import {Dialog, DialogContent, DialogTitle} from '@/components/ui/dialog';
 import {Button} from '@/components/ui/button';
 import {Textarea} from '@/components/ui/textarea';
@@ -60,28 +62,20 @@ export default function ProfileViewPage() {
     const [interestStatus, setInterestStatus] = useState<'none' | 'pending' | 'accepted'>('none');
     const [shortlisted, setShortlisted] = useState(false);
     const [reportOpen, setReportOpen] = useState(false);
+    const [blockOpen, setBlockOpen] = useState(false);
     const [reportReason, setReportReason] = useState('fake_profile');
     const [reportDesc, setReportDesc] = useState('');
-    const [activePhotoIdx, setActivePhotoIdx] = useState(0);
 
-    const {data: profileRes, isLoading, isError, error} = useUserQuery({
-        queryKey: ['profile', params.id],
-        queryFn: () => profileService.getProfileById(params.id).then((r) => r.data),
-        enabled: !!params.id,
-        retry: false,
-    });
+    const {
+        profile: profileData,
+        isLoading,
+        isError,
+        isFreePlanAccessError,
+        isSubscriptionLimitError,
+        subscriptionLimitMessage,
+    } = usePublicProfile(params.id);
 
-    const subscriptionErrorFeature =
-        (error as { response?: { data?: { errors?: { feature?: string } } } })?.response?.data?.errors?.feature;
-    const isSubscriptionLimitError =
-        (error as { response?: { status?: number } })?.response?.status === 403
-        && subscriptionErrorFeature === 'profile_views_per_day';
-    const isFreePlanAccessError =
-        (error as { response?: { status?: number } })?.response?.status === 403
-        && subscriptionErrorFeature === 'full_profile_access';
-    const subscriptionLimitMessage =
-        (error as { response?: { data?: { message?: string } } })?.response?.data?.message
-        || 'You have reached your daily profile view limit. Upgrade your plan to view more profiles.';
+    const profileRes = profileData ? { data: profileData } : undefined;
 
     // Determine if this is own profile early
     const isOwnProfile = currentUser?.id === profileRes?.data?.id;
@@ -89,14 +83,10 @@ export default function ProfileViewPage() {
     const {data: scoreRes} = useUserQuery({
         queryKey: ['compatibility-score', profileRes?.data?.id],
         queryFn: () =>
-            profileRes?.data?.id
-                ? profileService.getProfileById(params.id).then(() =>
-                    import('@/services/profileService').then(({matchService}) =>
-                        matchService.getCompatibilityScore(profileRes.data.id).then((r) => r.data.data)
-                    )
-                )
-                : null,
-        enabled: !!profileRes?.data?.id,
+            import('@/services/profileService').then(({matchService}) =>
+                matchService.getCompatibilityScore(profileRes!.data!.id).then((r) => r.data.data)
+            ),
+        enabled: !!profileRes?.data?.id && !isOwnProfile,
     });
 
     // Fetch interest status between current user and this profile
@@ -198,7 +188,13 @@ export default function ProfileViewPage() {
 
     const blockMutation = useMutation({
         mutationFn: (id: number) => blockService.block(id),
-        onSuccess: () => router.push('/matches'),
+        onSuccess: () => {
+            setBlockOpen(false);
+            router.push('/matches');
+        },
+        onError: (error: unknown) => {
+            showErrorToast(getErrorMessage(error));
+        },
     });
 
     const [messageError, setMessageError] = useState<string | null>(null);
@@ -226,36 +222,17 @@ export default function ProfileViewPage() {
         },
     });
 
-    if (isLoading) {
+    if (isLoading || isFreePlanAccessError || isSubscriptionLimitError) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#FDFAF4]">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-16 h-16 rounded-full border-4 border-[#C9A227]/30 border-t-[#C9A227] animate-spin"/>
-                    <p className="text-[#C9A227] font-serif text-sm tracking-widest uppercase">Loading Profile…</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (isError && isFreePlanAccessError) {
-        return (
-            <div className="min-h-[60vh] flex items-center justify-center px-4 bg-[#FDFAF4]">
-                <ProfileUpgradePrompt
-                    title="Upgrade to View Full Profile"
-                    message="Free account holders cannot view full profiles. Upgrade your plan to unlock complete profile details."
-                />
-            </div>
-        );
-    }
-
-    if (isError && isSubscriptionLimitError) {
-        return (
-            <div className="min-h-[60vh] flex items-center justify-center px-4 bg-[#FDFAF4]">
-                <ProfileUpgradePrompt
-                    title="Daily Profile View Limit Reached"
-                    message={subscriptionLimitMessage}
-                />
-            </div>
+            <ProfileAccessGate
+                isLoading={isLoading}
+                isFreePlanAccessError={isFreePlanAccessError}
+                isSubscriptionLimitError={isSubscriptionLimitError}
+                subscriptionLimitMessage={subscriptionLimitMessage}
+                isError={false}
+            >
+                {null}
+            </ProfileAccessGate>
         );
     }
 
@@ -274,9 +251,10 @@ export default function ProfileViewPage() {
     }
 
     const p: FullProfile = profileRes.data;
-    const photos = p.photos?.filter((ph) => ph.is_approved) ?? [];
-    const activePhoto = photos[activePhotoIdx];
+    const approvedPhotos = getApprovedPhotos(p.photos);
+    const heroPhotoUrl = resolvePrimaryPhotoUrl(p.primary_photo, p.photos);
     const profileViewUsage = p.access?.profile_views_per_day;
+    const galleryHref = `/profile/${params.id}/gallery`;
 
     return (
         <div className="bg-[#FDFAF4] min-h-screen pb-24 md:pb-10"
@@ -301,9 +279,9 @@ export default function ProfileViewPage() {
                                 <div className="absolute -inset-[3px] rounded-2xl"
                                      style={{background: 'linear-gradient(135deg, #C9A227 0%, #f0d060 30%, #C9A227 60%, #8a6b10 100%)'}}/>
                                 <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl bg-gray-900">
-                                    {activePhoto ? (
+                                    {heroPhotoUrl ? (
                                         <img
-                                            src={resolveProfilePhotoUrl(activePhoto) ?? ''}
+                                            src={heroPhotoUrl}
                                             alt={`${p.name}'s photo`}
                                             className="w-full h-full object-cover"
                                         />
@@ -324,17 +302,20 @@ export default function ProfileViewPage() {
                                 </div>
                             </div>
 
-                            {/* Photo thumbnails */}
-                            {photos.length > 1 && (
-                                <div className="flex gap-2 mt-4 overflow-x-auto pb-1">
-                                    {photos.map((ph, i) => (
-                                        <button key={ph.id} onClick={() => setActivePhotoIdx(i)}
-                                                className={`shrink-0 w-14 h-14 rounded-lg overflow-hidden transition-all duration-200 ${i === activePhotoIdx ? 'ring-offset-2 ring-offset-transparent' : 'opacity-50 hover:opacity-80'}`}>
-                                            <img src={resolveProfilePhotoUrl(ph) ?? ''}
-                                                 alt="thumbnail" className="w-full h-full object-cover"/>
-                                        </button>
-                                    ))}
-                                </div>
+                            {approvedPhotos.length > 0 && (
+                                <Link
+                                    href={galleryHref}
+                                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#C9A227]/35 bg-[#C9A227]/10 px-4 py-2.5 text-xs font-semibold text-[#d4af37] hover:bg-[#C9A227]/20 transition-colors"
+                                    style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 300 }}
+                                >
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect x="3" y="3" width="7" height="7" />
+                                        <rect x="14" y="3" width="7" height="7" />
+                                        <rect x="3" y="14" width="7" height="7" />
+                                        <rect x="14" y="14" width="7" height="7" />
+                                    </svg>
+                                    View Image Gallery ({approvedPhotos.length})
+                                </Link>
                             )}
                         </div>
 
@@ -457,7 +438,7 @@ export default function ProfileViewPage() {
                                                      style={{fontFamily: 'system-ui, sans-serif'}}>
                                                  Report
                                              </button>
-                                             <button onClick={() => {if (confirm('Block this user? They will not be able to see your profile.')) blockMutation.mutate(p.id);}}
+                                             <button onClick={() => setBlockOpen(true)}
                                                      className="text-white/40 hover:text-red-400 text-xs px-2 py-1.5 rounded-full border border-white/10 hover:border-red-400/30 transition-colors whitespace-nowrap"
                                                      style={{fontFamily: 'system-ui, sans-serif'}}>
                                                  Block
@@ -722,6 +703,58 @@ export default function ProfileViewPage() {
             </div>
 
             {/* ══════════════════════════════════
+                BLOCK MODAL
+            ══════════════════════════════════ */}
+            <Dialog open={blockOpen} onOpenChange={setBlockOpen}>
+                <DialogContent className="sm:max-w-md rounded-3xl border-0 p-0 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100"
+                         style={{background: 'linear-gradient(135deg, #2d1f08 0%, #1a1207 100%)'}}>
+                        <DialogTitle className="text-white text-lg"
+                                     style={{fontFamily: "'Playfair Display', Georgia, serif"}}>
+                            Block User
+                        </DialogTitle>
+                    </div>
+                    <div className="p-6 bg-[#FDFAF4]">
+                        <div className="flex flex-col items-center text-center">
+                            <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-4 ring-4 ring-red-100/80">
+                                <svg className="w-8 h-8 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                                </svg>
+                            </div>
+                            <p className="text-gray-800 font-medium text-base"
+                               style={{fontFamily: "'Playfair Display', Georgia, serif"}}>
+                                Block {p.name}?
+                            </p>
+                            <p className="text-gray-500 text-sm mt-2 max-w-xs leading-relaxed"
+                               style={{fontFamily: 'system-ui, sans-serif'}}>
+                                They will no longer be able to view your profile or contact you. You won&apos;t see them in search or matches either.
+                            </p>
+                        </div>
+                        <div className="flex gap-2 justify-end pt-6">
+                            <Button
+                                variant="outline"
+                                onClick={() => setBlockOpen(false)}
+                                disabled={blockMutation.isPending}
+                                className="rounded-full border-gray-200 text-gray-600 text-sm"
+                                style={{fontFamily: 'system-ui, sans-serif'}}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={() => blockMutation.mutate(p.id)}
+                                disabled={blockMutation.isPending}
+                                className="bg-red-500 hover:bg-red-600 text-white rounded-full text-sm shadow-md min-w-[7rem]"
+                                style={{fontFamily: 'system-ui, sans-serif'}}
+                            >
+                                {blockMutation.isPending ? 'Blocking…' : 'Block User'}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* ══════════════════════════════════
                 REPORT MODAL
             ══════════════════════════════════ */}
             <Dialog open={reportOpen} onOpenChange={setReportOpen}>
@@ -863,32 +896,6 @@ function ProfileViewsUsageBanner({usage}: {usage: ProfileAccess['profile_views_p
                     Profile Views per Day from your subscription
                 </p>
             </div>
-        </div>
-    );
-}
-
-function ProfileUpgradePrompt({title, message}: {title: string; message: string}) {
-    return (
-        <div className="rounded-3xl overflow-hidden shadow-md border border-[#e8d59a]/60 bg-white text-center px-6 py-10 md:px-10">
-            <div className="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4">
-                <CrownIcon size={40} strokeWidth={1.5} className="text-amber-500" />
-            </div>
-            <h3 className="text-xl font-semibold text-[#1F2937]"
-                style={{fontFamily: "'Playfair Display', Georgia, serif"}}>
-                {title}
-            </h3>
-            <p className="text-gray-500 mt-2 max-w-md mx-auto text-sm leading-relaxed"
-               style={{fontFamily: 'system-ui, sans-serif'}}>
-                {message}
-            </p>
-            <Link
-                href="/subscription"
-                className="btn-gold mt-6 inline-flex items-center justify-center text-sm"
-                style={{height: '2.75rem', borderRadius: '0.75rem', padding: '0 1.75rem'}}
-            >
-                <CrownIcon size={16} strokeWidth={2} className="mr-2" />
-                Upgrade Plan
-            </Link>
         </div>
     );
 }

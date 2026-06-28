@@ -192,6 +192,7 @@ export interface FullProfile {
     horoscope_detail: HoroscopeDetail | null;
     partner_preference: PartnerPreference | null;
     photos: ProfilePhoto[];
+    primary_photo?: string | null;
     face_scan_status?: 'pending' | 'submitted' | 'approved' | 'rejected' | null;
     access?: ProfileAccess;
 }
