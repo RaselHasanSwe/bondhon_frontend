@@ -1,9 +1,10 @@
 // app/(dashboard)/profile-views/page.tsx
 'use client';
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { profileViewService } from '@/services/profileService';
+import { InfiniteScrollFooter } from '@/components/ui/InfiniteScrollFooter';
+import { useInfiniteList } from '@/hooks/useInfiniteList';
+import { normalizeMetaPage } from '@/lib/pagination';
 import { useAuthStore } from '@/store/authStore';
 import Link from 'next/link';
 import {
@@ -37,33 +38,27 @@ function ViewerSkeleton() {
 
 export default function ProfileViewsPage() {
     const { user } = useAuthStore();
-    const [page, setPage] = useState(1);
 
-    const { data, isLoading, error, isError } = useQuery({
-        queryKey: ['profile-views', page],
-        queryFn: () => profileViewService.getMyViewers(page).then((r) => r.data),
+    const {
+        items: viewers,
+        total: totalViewers,
+        isLoading,
+        error,
+        isError,
+        hasNextPage,
+        isFetchingNextPage,
+        fetchNextPage,
+    } = useInfiniteList<ProfileView>({
+        queryKey: ['profile-views'],
+        queryFn: (page) =>
+            profileViewService.getMyViewers(page).then((r) => normalizeMetaPage(r.data.data, page)),
         retry: false,
     });
 
-    const viewers = data?.data?.data ?? [];
-    const meta = data?.data?.meta;
-    const totalViewers = meta?.total ?? 0;
-    const currentPage = meta?.current_page ?? 1;
-    const lastPage = meta?.last_page ?? 1;
-
-    // Check if error is due to subscription
-    const isSubscriptionError = (error as any)?.response?.status === 403;
-    const errorMessage = (error as any)?.response?.data?.message ||
-        (error as any)?.message ||
+    const isSubscriptionError = (error as { response?: { status?: number } })?.response?.status === 403;
+    const errorMessage = (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+        (error as { message?: string })?.message ||
         'Failed to load profile viewers';
-
-    // Handle pagination
-    const goToPage = (newPage: number) => {
-        if (newPage >= 1 && newPage <= lastPage) {
-            setPage(newPage);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    };
 
     // Get subscription plan display
     const getPlanBadge = (plan: string) => {
@@ -288,40 +283,13 @@ export default function ProfileViewsPage() {
                         ))}
                     </div>
 
-                    {/* Pagination */}
-                    {lastPage > 1 && (
-                        <div className="flex items-center justify-between gap-4 pt-4 animate-fade-in-up">
-                            <button
-                                onClick={() => goToPage(currentPage - 1)}
-                                disabled={currentPage === 1}
-                                className={cn(
-                                    'px-4 py-2 rounded-xl text-sm font-medium border transition-colors',
-                                    currentPage === 1
-                                        ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                                        : 'border-gray-200 hover:border-[var(--primary)] hover:text-[var(--primary)]'
-                                )}
-                            >
-                                Previous
-                            </button>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-muted-foreground">
-                                    Page {currentPage} of {lastPage}
-                                </span>
-                            </div>
-                            <button
-                                onClick={() => goToPage(currentPage + 1)}
-                                disabled={currentPage === lastPage}
-                                className={cn(
-                                    'px-4 py-2 rounded-xl text-sm font-medium border transition-colors',
-                                    currentPage === lastPage
-                                        ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                                        : 'border-gray-200 hover:border-[var(--primary)] hover:text-[var(--primary)]'
-                                )}
-                            >
-                                Next
-                            </button>
-                        </div>
-                    )}
+                    <InfiniteScrollFooter
+                        hasNextPage={!!hasNextPage}
+                        isFetchingNextPage={isFetchingNextPage}
+                        onLoadMore={() => fetchNextPage()}
+                        showEndMessage={viewers.length > 0}
+                        endMessage="No more profile viewers"
+                    />
                 </>
             )}
         </div>

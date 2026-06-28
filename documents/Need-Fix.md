@@ -312,9 +312,9 @@ Apply this change globally to all email templates.
    * **Apply Filters** → **Apply** (Done)
 2. Apply **Verified** badge/filter for all verified (face approved) profiles. (Done)
 3. Display profile images from Cloudflare and ensure image sizing matches card dimensions. (Done)
-4. When a user clicks **Send Interest**, send an email notification to the recipient.
-5. Implement infinite scroll / scroll pagination.
-6. Exclude Admin users from search results.
+4. When a user clicks **Send Interest**, send an email notification to the recipient. (Done)
+5. Implement infinite scroll / scroll pagination. (Done, not check yet)
+6. Exclude Admin users from search results. (Done)
 
 ---
 

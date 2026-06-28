@@ -1,24 +1,26 @@
 'use client';
 
-import {useState} from 'react';
-import {useQuery} from '@tanstack/react-query';
 import {matchService} from '@/services/profileService';
 import {MatchCard} from '@/components/match/MatchCard';
-import type {MatchScore} from '@/types/match';
-import {HeartIcon, ArrowLeftIcon, ArrowRightIcon} from '@/components/ui/icons';
+import {InfiniteScrollFooter} from '@/components/ui/InfiniteScrollFooter';
+import {useInfiniteList} from '@/hooks/useInfiniteList';
+import {normalizeFlatPage} from '@/lib/pagination';
+import {HeartIcon} from '@/components/ui/icons';
 
 export default function MatchesPage() {
-    const [page, setPage] = useState(1);
-
-    const {data, isLoading, isError} = useQuery({
-        queryKey: ['matches', page],
-        queryFn: () => matchService.getMatches(page).then((r) => r.data),
+    const {
+        items: matches,
+        total,
+        isLoading,
+        isError,
+        hasNextPage,
+        isFetchingNextPage,
+        fetchNextPage,
+    } = useInfiniteList({
+        queryKey: ['matches'],
+        queryFn: (page) =>
+            matchService.getMatches(page).then((r) => normalizeFlatPage(r.data.data, page)),
     });
-
-    const paginatedData = data?.data as { data?: MatchScore[]; total?: number; last_page?: number } | undefined;
-    const matches = paginatedData?.data ?? [];
-    const lastPage = paginatedData?.last_page ?? 1;
-    const total = paginatedData?.total ?? 0;
 
     return (
         <div className="max-w-6xl mx-auto pb-20 md:pb-6">
@@ -61,23 +63,15 @@ export default function MatchesPage() {
                         ))}
                     </div>
 
-                    {/* Pagination */}
-                    {lastPage > 1 && (
-                        <div className="flex items-center justify-center gap-3 mt-8">
-                            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
-                                    className="btn-page">
-                                <ArrowLeftIcon size={14} strokeWidth={2}/> Previous
-                            </button>
-                            <span className="text-sm text-muted-foreground">Page {page} of {lastPage}</span>
-                            <button onClick={() => setPage((p) => Math.min(lastPage, p + 1))} disabled={page === lastPage}
-                                    className="btn-page">
-                                Next <ArrowRightIcon size={14} strokeWidth={2}/>
-                            </button>
-                        </div>
-                    )}
+                    <InfiniteScrollFooter
+                        hasNextPage={!!hasNextPage}
+                        isFetchingNextPage={isFetchingNextPage}
+                        onLoadMore={() => fetchNextPage()}
+                        showEndMessage={matches.length > 0}
+                        endMessage="You've seen all matches"
+                    />
                 </>
             )}
         </div>
     );
 }
-

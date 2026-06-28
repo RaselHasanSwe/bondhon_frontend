@@ -1,27 +1,33 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '@/services/adminService';
 import type { AdminPhoto } from '@/types/admin';
 import { resolveProfilePhotoUrl } from '@/lib/utils';
+import { InfiniteScrollFooter } from '@/components/ui/InfiniteScrollFooter';
+import { useInfiniteList } from '@/hooks/useInfiniteList';
+import { normalizeFlatPage } from '@/lib/pagination';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 
 export default function AdminPhotosPage() {
     const queryClient = useQueryClient();
-    const [page, setPage] = useState(1);
     const [rejectId, setRejectId] = useState<number | null>(null);
     const [rejectReason, setRejectReason] = useState('');
 
-    const { data: res, isLoading } = useQuery({
-        queryKey: ['admin-photos', page],
-        queryFn: () => adminService.getPendingPhotos(page).then(r => r.data),
+    const {
+        items: photos,
+        total,
+        isLoading,
+        hasNextPage,
+        isFetchingNextPage,
+        fetchNextPage,
+    } = useInfiniteList<AdminPhoto>({
+        queryKey: ['admin-photos'],
+        queryFn: (page) =>
+            adminService.getPendingPhotos(page).then((r) => normalizeFlatPage(r.data.data, page)),
     });
-
-    type PhotosData = { data: AdminPhoto[]; total: number; current_page: number; last_page: number };
-    const photosData: PhotosData | null = res?.data
-        ? { data: (res.data as { data: AdminPhoto[] }).data ?? [], total: (res.data as { total: number }).total ?? 0, current_page: (res.data as { current_page: number }).current_page ?? 1, last_page: (res.data as { last_page: number }).last_page ?? 1 }
-        : null;
 
     const approveMutation = useMutation({
         mutationFn: (id: number) => adminService.approvePhoto(id),
@@ -44,7 +50,7 @@ export default function AdminPhotosPage() {
                 <h1 className="text-2xl font-bold text-gray-900">Photo Moderation</h1>
                 <p className="text-sm text-gray-500 mt-0.5">
                     Review and approve or reject pending profile photos
-                    {photosData && ` — ${photosData.total} pending`}
+                    {total > 0 && ` — ${total} pending`}
                 </p>
             </div>
 
@@ -60,7 +66,7 @@ export default function AdminPhotosPage() {
                         </div>
                     ))}
                 </div>
-            ) : (photosData?.data.length ?? 0) === 0 ? (
+            ) : photos.length === 0 ? (
                 <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
                     <p className="text-4xl mb-3">✅</p>
                     <p className="text-gray-600 font-semibold">All caught up!</p>
@@ -69,9 +75,8 @@ export default function AdminPhotosPage() {
             ) : (
                 <>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {photosData?.data.map(photo => (
+                        {photos.map(photo => (
                             <div key={photo.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                                {/* Photo */}
                                 <div className="aspect-square overflow-hidden bg-gray-50">
                                     <img
                                         src={resolveProfilePhotoUrl(photo) ?? ''}
@@ -80,7 +85,6 @@ export default function AdminPhotosPage() {
                                     />
                                 </div>
 
-                                {/* Info */}
                                 <div className="p-3">
                                     <p className="text-sm font-medium text-gray-900 truncate">{photo.user?.name}</p>
                                     {photo.user?.profile?.profile_id && (
@@ -91,7 +95,6 @@ export default function AdminPhotosPage() {
                                         {photo.is_primary && <span className="ml-1 text-amber-600">★ Primary</span>}
                                     </p>
 
-                                    {/* Actions */}
                                     <div className="flex gap-2 mt-2">
                                         <button
                                             onClick={() => approveMutation.mutate(photo.id)}
@@ -112,20 +115,16 @@ export default function AdminPhotosPage() {
                         ))}
                     </div>
 
-                    {/* Pagination */}
-                    {photosData && photosData.last_page > 1 && (
-                        <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-500">Page {photosData.current_page} of {photosData.last_page}</span>
-                            <div className="flex gap-2">
-                                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>← Prev</Button>
-                                <Button variant="outline" size="sm" disabled={page >= photosData.last_page} onClick={() => setPage(p => p + 1)}>Next →</Button>
-                            </div>
-                        </div>
-                    )}
+                    <InfiniteScrollFooter
+                        hasNextPage={!!hasNextPage}
+                        isFetchingNextPage={isFetchingNextPage}
+                        onLoadMore={() => fetchNextPage()}
+                        showEndMessage={photos.length > 0}
+                        endMessage="No more photos to review"
+                    />
                 </>
             )}
 
-            {/* Reject modal */}
             {rejectId !== null && (
                 <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
@@ -154,4 +153,3 @@ export default function AdminPhotosPage() {
         </div>
     );
 }
-

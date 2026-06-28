@@ -1,12 +1,14 @@
 'use client';
 
-import {useState} from 'react';
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {shortlistService} from '@/services/profileService';
 import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
 import {MatchCard} from '@/components/match/MatchCard';
+import {InfiniteScrollFooter} from '@/components/ui/InfiniteScrollFooter';
+import {useInfiniteList} from '@/hooks/useInfiniteList';
+import {normalizeFlatPage} from '@/lib/pagination';
 import type {ProfileCard} from '@/types/profile';
-import {StarFilledIcon, StarIcon, XIcon, ArrowLeftIcon, ArrowRightIcon} from '@/components/ui/icons';
+import {StarFilledIcon, StarIcon, XIcon} from '@/components/ui/icons';
 
 interface ShortlistItem {
     id: number;
@@ -15,12 +17,20 @@ interface ShortlistItem {
 }
 
 export default function ShortlistPage() {
-    const [page, setPage] = useState(1);
     const queryClient = useQueryClient();
 
-    const {data, isLoading, isError} = useQuery({
-        queryKey: ['shortlist', page],
-        queryFn: () => shortlistService.getAll(page).then((r) => r.data),
+    const {
+        items,
+        total,
+        isLoading,
+        isError,
+        hasNextPage,
+        isFetchingNextPage,
+        fetchNextPage,
+    } = useInfiniteList<ShortlistItem>({
+        queryKey: ['shortlist'],
+        queryFn: (page) =>
+            shortlistService.getAll(page).then((r) => normalizeFlatPage(r.data.data, page)),
     });
 
     const removeMutation = useMutation({
@@ -29,16 +39,10 @@ export default function ShortlistPage() {
             queryClient.invalidateQueries({queryKey: ['shortlist']});
             showSuccessToast('Removed from shortlist');
         },
-        onError: (error: any) => {
-            const message = getErrorMessage(error);
-            showErrorToast(message);
+        onError: (error: unknown) => {
+            showErrorToast(getErrorMessage(error));
         },
     });
-
-    const paginatedData = data?.data as { data?: ShortlistItem[]; total?: number; last_page?: number } | undefined;
-    const items: ShortlistItem[] = paginatedData?.data ?? [];
-    const lastPage = paginatedData?.last_page ?? 1;
-    const total = paginatedData?.total ?? 0;
 
     return (
         <div className="max-w-6xl mx-auto pb-20 md:pb-6">
@@ -90,20 +94,15 @@ export default function ShortlistPage() {
                         ))}
                     </div>
 
-                    {lastPage > 1 && (
-                        <div className="flex items-center justify-center gap-3 mt-8">
-                            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="btn-page">
-                                <ArrowLeftIcon size={14} strokeWidth={2}/> Previous
-                            </button>
-                            <span className="text-sm text-muted-foreground">Page {page} of {lastPage}</span>
-                            <button onClick={() => setPage((p) => Math.min(lastPage, p + 1))} disabled={page === lastPage} className="btn-page">
-                                Next <ArrowRightIcon size={14} strokeWidth={2}/>
-                            </button>
-                        </div>
-                    )}
+                    <InfiniteScrollFooter
+                        hasNextPage={!!hasNextPage}
+                        isFetchingNextPage={isFetchingNextPage}
+                        onLoadMore={() => fetchNextPage()}
+                        showEndMessage={items.length > 0}
+                        endMessage="You've seen all shortlisted profiles"
+                    />
                 </>
             )}
         </div>
     );
 }
-

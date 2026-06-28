@@ -1,17 +1,17 @@
 'use client';
 
 import {useState} from 'react';
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {interestService} from '@/services/profileService';
 import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
 import {formatAge, resolvePhotoUrl} from '@/lib/utils';
+import {InfiniteScrollFooter} from '@/components/ui/InfiniteScrollFooter';
+import {useInfiniteList} from '@/hooks/useInfiniteList';
+import {normalizeFlatPage} from '@/lib/pagination';
 import Image from 'next/image';
 import Link from 'next/link';
 import type {Interest} from '@/types/interest';
-import {
-    UserIcon, InboxIcon, OutboxIcon, CheckIcon, XIcon,
-    ArrowLeftIcon, ArrowRightIcon,
-} from '@/components/ui/icons';
+import {UserIcon, InboxIcon, OutboxIcon, CheckIcon, XIcon} from '@/components/ui/icons';
 
 type Tab = 'received' | 'sent';
 
@@ -75,7 +75,6 @@ function InterestCard({
                     </span>
                 </div>
 
-                {/* Actions for received pending interests */}
                 {tab === 'received' && interest.status === 'pending' && onAction && (
                     <div className="flex items-center gap-2 mt-3">
                         <button
@@ -106,65 +105,52 @@ function InterestCard({
 
 export default function InterestsPage() {
     const [tab, setTab] = useState<Tab>('received');
-    const [page, setPage] = useState(1);
     const queryClient = useQueryClient();
 
-    const {data: receivedData, isLoading: receivedLoading} = useQuery({
-        queryKey: ['interests-received', page],
-        queryFn: () => interestService.getReceived(page).then((r) => r.data),
-        enabled: tab === 'received',
+    const {
+        items: interests,
+        total,
+        isLoading,
+        hasNextPage,
+        isFetchingNextPage,
+        fetchNextPage,
+    } = useInfiniteList<Interest>({
+        queryKey: ['interests', tab],
+        queryFn: (page) => {
+            const service = tab === 'received' ? interestService.getReceived : interestService.getSent;
+            return service(page).then((r) => normalizeFlatPage(r.data.data, page));
+        },
     });
 
-    const {data: sentData, isLoading: sentLoading} = useQuery({
-        queryKey: ['interests-sent', page],
-        queryFn: () => interestService.getSent(page).then((r) => r.data),
-        enabled: tab === 'sent',
+    const actionMutation = useMutation({
+        mutationFn: ({id, action}: { id: number; action: 'accept' | 'decline' | 'ignore' }) => {
+            if (action === 'accept') return interestService.accept(id);
+            if (action === 'decline') return interestService.decline(id);
+            return interestService.ignore(id);
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({queryKey: ['interests']});
+            const actionLabels = {
+                accept: 'Interest accepted!',
+                decline: 'Interest declined.',
+                ignore: 'Interest ignored.',
+            };
+            showSuccessToast(actionLabels[variables.action]);
+        },
+        onError: (error: unknown) => {
+            showErrorToast(getErrorMessage(error));
+        },
     });
-
-     const actionMutation = useMutation({
-         mutationFn: ({id, action}: { id: number; action: 'accept' | 'decline' | 'ignore' }) => {
-             if (action === 'accept') return interestService.accept(id);
-             if (action === 'decline') return interestService.decline(id);
-             return interestService.ignore(id);
-         },
-         onSuccess: (_, variables) => {
-             queryClient.invalidateQueries({queryKey: ['interests-received']});
-             const actionLabels = {
-                 accept: 'Interest accepted!',
-                 decline: 'Interest declined.',
-                 ignore: 'Interest ignored.'
-             };
-             showSuccessToast(actionLabels[variables.action]);
-         },
-         onError: (error: any) => {
-             const message = getErrorMessage(error);
-             showErrorToast(message);
-         }
-     });
-
-    const currentData = tab === 'received' ? receivedData : sentData;
-    const isLoading = tab === 'received' ? receivedLoading : sentLoading;
-
-    const paginated = currentData?.data as { data?: Interest[]; total?: number; last_page?: number } | undefined;
-    const interests: Interest[] = paginated?.data ?? [];
-    const lastPage = paginated?.last_page ?? 1;
-    const total = paginated?.total ?? 0;
-
-    const handleTabChange = (newTab: Tab) => {
-        setTab(newTab);
-        setPage(1);
-    };
 
     return (
         <div className="max-w-3xl mx-auto pb-20 md:pb-6">
             <h1 className="page-title mb-6 animate-fade-in-up">Interests</h1>
 
-            {/* Tabs */}
             <div className="tab-pill-container flex gap-1 mb-6">
                 {(['received', 'sent'] as Tab[]).map((t) => (
                     <button
                         key={t}
-                        onClick={() => handleTabChange(t)}
+                        onClick={() => setTab(t)}
                         className={`tab-pill flex-1 flex items-center justify-center gap-1.5 capitalize ${tab === t ? 'active' : ''}`}
                     >
                         {t === 'received' ? <InboxIcon size={14} strokeWidth={2}/> : <OutboxIcon size={14} strokeWidth={2}/>}
@@ -208,18 +194,15 @@ export default function InterestsPage() {
                 ))}
             </div>
 
-            {lastPage > 1 && (
-                <div className="flex items-center justify-center gap-3 mt-6">
-                    <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="btn-page">
-                        <ArrowLeftIcon size={14} strokeWidth={2}/> Previous
-                    </button>
-                    <span className="text-sm text-muted-foreground">Page {page} of {lastPage}</span>
-                    <button onClick={() => setPage((p) => Math.min(lastPage, p + 1))} disabled={page === lastPage} className="btn-page">
-                        Next <ArrowRightIcon size={14} strokeWidth={2}/>
-                    </button>
-                </div>
+            {!isLoading && interests.length > 0 && (
+                <InfiniteScrollFooter
+                    hasNextPage={!!hasNextPage}
+                    isFetchingNextPage={isFetchingNextPage}
+                    onLoadMore={() => fetchNextPage()}
+                    showEndMessage
+                    endMessage="No more interests to show"
+                />
             )}
         </div>
     );
 }
-

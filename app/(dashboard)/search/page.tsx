@@ -1,19 +1,19 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { matchService } from '@/services/profileService';
 import { MatchCard } from '@/components/match/MatchCard';
+import { InfiniteScrollFooter } from '@/components/ui/InfiniteScrollFooter';
+import { useInfiniteList } from '@/hooks/useInfiniteList';
+import { normalizeFlatPage } from '@/lib/pagination';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SearchableSelect } from '@/components/ui/SearchableSelect';
 import type { SearchFilters } from '@/types/match';
-import type { ProfileCard } from '@/types/profile';
 import { useOptions, useChildOptions } from '@/hooks/useSelectOptions';
 import { useAuthStore } from '@/store/authStore';
 import {
     SearchIcon, FilterIcon, XIcon,
-    ArrowLeftIcon, ArrowRightIcon,
 } from '@/components/ui/icons';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -305,7 +305,6 @@ export default function SearchPage() {
     const authUser = useAuthStore(s => s.user);
     const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
     const [appliedFilters, setAppliedFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
-    const [page, setPage] = useState(1);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [globalQuery, setGlobalQuery] = useState('');
     const [errorType, setErrorType] = useState<'permission' | 'search' | null>(null);
@@ -317,7 +316,6 @@ export default function SearchPage() {
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
             setAppliedFilters(prev => ({ ...prev, query: val || undefined }));
-            setPage(1);
         }, 420);
     }, []);
 
@@ -332,9 +330,19 @@ export default function SearchPage() {
         initGenderRef.current = true;
     }, [authUser?.gender]);
 
-    const { data, isLoading, isError, error } = useQuery({
-        queryKey: ['search', appliedFilters, page],
-        queryFn: () => matchService.search({ ...appliedFilters, page }).then(r => r.data),
+    const {
+        items: results,
+        total,
+        isLoading,
+        isError,
+        error,
+        hasNextPage,
+        isFetchingNextPage,
+        fetchNextPage,
+    } = useInfiniteList({
+        queryKey: ['search', appliedFilters],
+        queryFn: (page) =>
+            matchService.search({ ...appliedFilters, page }).then((r) => normalizeFlatPage(r.data.data, page)),
         retry: false,
     });
 
@@ -349,11 +357,6 @@ export default function SearchPage() {
         }
     }, [isError, error]);
 
-    const paginatedData = data?.data as { data?: ProfileCard[]; total?: number; last_page?: number } | undefined;
-    const results: ProfileCard[] = paginatedData?.data ?? [];
-    const lastPage = paginatedData?.last_page ?? 1;
-    const total = paginatedData?.total ?? 0;
-
     const updateFilter = useCallback(<K extends keyof SearchFilters>(key: K, value: SearchFilters[K]) => {
         setFilters(prev => ({ ...prev, [key]: value }));
     }, []);
@@ -361,24 +364,20 @@ export default function SearchPage() {
     const removeFilter = useCallback((key: keyof SearchFilters) => {
         setFilters(prev => { const n = { ...prev }; delete n[key]; return n; });
         setAppliedFilters(prev => { const n = { ...prev }; delete n[key]; return n; });
-        setPage(1);
     }, []);
 
     const handleApplyFilters = () => {
         setAppliedFilters({ ...filters, query: globalQuery || undefined });
-        setPage(1);
         setSidebarOpen(false);
     };
 
     const handleClearFilters = () => {
         setFilters(DEFAULT_FILTERS);
         setAppliedFilters({ query: globalQuery || undefined });
-        setPage(1);
     };
 
     const handleSortChange = (sort: string) => {
         setAppliedFilters(prev => ({ ...prev, sort: sort as SearchFilters['sort'] }));
-        setPage(1);
     };
 
     const activeCount = countActiveFilters(appliedFilters);
@@ -516,37 +515,13 @@ export default function SearchPage() {
                                 {results.map(profile => <MatchCard key={profile.id} profile={profile} showScore={false} />)}
                             </div>
 
-                            {lastPage > 1 && (
-                                <div className="flex items-center justify-center gap-2 mt-8 flex-wrap">
-                                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                                        className="btn-page disabled:opacity-40 disabled:cursor-not-allowed">
-                                        <ArrowLeftIcon size={14} strokeWidth={2} /> Prev
-                                    </button>
-
-                                    {Array.from({ length: lastPage }, (_, i) => i + 1)
-                                        .filter(n => n === 1 || n === lastPage || Math.abs(n - page) <= 2)
-                                        .reduce<(number | '…')[]>((acc, n, i, arr) => {
-                                            if (i > 0 && n - (arr[i - 1] as number) > 1) acc.push('…');
-                                            acc.push(n); return acc;
-                                        }, [])
-                                        .map((item, idx) =>
-                                            item === '…'
-                                                ? <span key={`e${idx}`} className="text-muted-foreground text-sm px-1">…</span>
-                                                : <button key={item} onClick={() => setPage(item as number)}
-                                                    className={`w-9 h-9 rounded-xl text-sm font-medium transition-all border ${
-                                                        page === item
-                                                            ? 'border-[var(--primary)] bg-[var(--primary)] text-white'
-                                                            : 'border-[var(--border)] text-muted-foreground hover:border-[var(--primary)]/50 hover:text-foreground'
-                                                    }`}>{item}</button>
-                                        )
-                                    }
-
-                                    <button onClick={() => setPage(p => Math.min(lastPage, p + 1))} disabled={page === lastPage}
-                                        className="btn-page disabled:opacity-40 disabled:cursor-not-allowed">
-                                        Next <ArrowRightIcon size={14} strokeWidth={2} />
-                                    </button>
-                                </div>
-                            )}
+                            <InfiniteScrollFooter
+                                hasNextPage={!!hasNextPage}
+                                isFetchingNextPage={isFetchingNextPage}
+                                onLoadMore={() => fetchNextPage()}
+                                showEndMessage={results.length > 0}
+                                endMessage="No more profiles to show"
+                            />
                         </>
                     )}
                 </div>

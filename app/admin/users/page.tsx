@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '@/services/adminService';
 import type { AdminUser } from '@/types/admin';
-import type { PaginatedResponse } from '@/types/user';
+import { InfiniteScrollFooter } from '@/components/ui/InfiniteScrollFooter';
+import { useInfiniteList } from '@/hooks/useInfiniteList';
+import { normalizeFlatPage } from '@/lib/pagination';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -21,17 +23,19 @@ export default function AdminUsersPage() {
     const queryClient = useQueryClient();
     const [search, setSearch] = useState('');
     const [searchInput, setSearchInput] = useState('');
-    const [page, setPage] = useState(1);
 
-    const { data: res, isLoading } = useQuery({
-        queryKey: ['admin-users', search, page],
-        queryFn: () => adminService.getUsers({ search: search || undefined, page }).then(r => r.data),
+    const {
+        items: users,
+        total,
+        isLoading,
+        hasNextPage,
+        isFetchingNextPage,
+        fetchNextPage,
+    } = useInfiniteList<AdminUser>({
+        queryKey: ['admin-users', search],
+        queryFn: (page) =>
+            adminService.getUsers({ search: search || undefined, page }).then((r) => normalizeFlatPage(r.data.data, page)),
     });
-
-    const usersPage: PaginatedResponse<AdminUser> | null =
-        (res?.data as { data?: AdminUser[]; total?: number; current_page?: number; last_page?: number } | null)
-        ? { data: (res?.data as { data: AdminUser[] }).data ?? [], total: (res?.data as { total: number }).total ?? 0, current_page: (res?.data as { current_page: number }).current_page ?? 1, last_page: (res?.data as { last_page: number }).last_page ?? 1, per_page: 20 }
-        : null;
 
     const banMutation = useMutation({
         mutationFn: ({ id, is_banned }: { id: number; is_banned: boolean }) =>
@@ -47,14 +51,13 @@ export default function AdminUsersPage() {
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         setSearch(searchInput);
-        setPage(1);
     };
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-                <p className="text-sm text-gray-500 mt-0.5">Manage all platform users</p>
+                <p className="text-sm text-gray-500 mt-0.5">Manage all platform users{total > 0 ? ` · ${total} total` : ''}</p>
             </div>
 
             {/* Search */}
@@ -67,7 +70,7 @@ export default function AdminUsersPage() {
                 />
                 <Button type="submit" variant="outline" className="shrink-0">Search</Button>
                 {search && (
-                    <Button type="button" variant="ghost" onClick={() => { setSearch(''); setSearchInput(''); setPage(1); }} className="shrink-0">
+                    <Button type="button" variant="ghost" onClick={() => { setSearch(''); setSearchInput(''); }} className="shrink-0">
                         Clear
                     </Button>
                 )}
@@ -94,7 +97,7 @@ export default function AdminUsersPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
-                                {(usersPage?.data ?? []).map(user => (
+                                {users.map(user => (
                                     <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
                                         <td className="px-4 py-3">
                                             <div className="font-medium text-gray-900">{user.name}</div>
@@ -184,7 +187,7 @@ export default function AdminUsersPage() {
                                         </td>
                                     </tr>
                                 ))}
-                                {(usersPage?.data ?? []).length === 0 && (
+                                {users.length === 0 && (
                                     <tr>
                                         <td colSpan={9} className="px-4 py-10 text-center text-gray-400">
                                             No users found.
@@ -196,29 +199,15 @@ export default function AdminUsersPage() {
                     </div>
                 )}
 
-                {/* Pagination */}
-                {usersPage && usersPage.last_page > 1 && (
-                    <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between text-sm">
-                        <span className="text-gray-500">
-                            Page {usersPage.current_page} of {usersPage.last_page} ({usersPage.total} total)
-                        </span>
-                        <div className="flex gap-2">
-                            <Button
-                                variant="outline" size="sm"
-                                disabled={page <= 1}
-                                onClick={() => setPage(p => Math.max(1, p - 1))}
-                            >
-                                ← Prev
-                            </Button>
-                            <Button
-                                variant="outline" size="sm"
-                                disabled={page >= usersPage.last_page}
-                                onClick={() => setPage(p => p + 1)}
-                            >
-                                Next →
-                            </Button>
-                        </div>
-                    </div>
+                {!isLoading && users.length > 0 && (
+                    <InfiniteScrollFooter
+                        hasNextPage={!!hasNextPage}
+                        isFetchingNextPage={isFetchingNextPage}
+                        onLoadMore={() => fetchNextPage()}
+                        showEndMessage
+                        endMessage="No more users"
+                        className="border-t border-gray-100"
+                    />
                 )}
             </div>
         </div>
