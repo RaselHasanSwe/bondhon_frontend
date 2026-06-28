@@ -27,8 +27,10 @@ import {useAuthStore} from '@/store/authStore';
 import type {FullProfile} from '@/types/profile';
 import {
     ReligionIcon, GraduationCapIcon, MailIcon, ChatIcon,
-    StarIcon, StarFilledIcon, CheckIcon, ClockIcon, UserIcon,
+    StarIcon, StarFilledIcon, CheckIcon, ClockIcon, UserIcon, CrownIcon,
 } from '@/components/ui/icons';
+import Link from 'next/link';
+import type {ProfileAccess} from '@/types/profile';
 
 const REPORT_REASONS = [
     {value: 'fake_profile', label: 'Fake Profile'},
@@ -62,11 +64,24 @@ export default function ProfileViewPage() {
     const [reportDesc, setReportDesc] = useState('');
     const [activePhotoIdx, setActivePhotoIdx] = useState(0);
 
-    const {data: profileRes, isLoading, isError} = useUserQuery({
+    const {data: profileRes, isLoading, isError, error} = useUserQuery({
         queryKey: ['profile', params.id],
         queryFn: () => profileService.getProfileById(params.id).then((r) => r.data),
         enabled: !!params.id,
+        retry: false,
     });
+
+    const subscriptionErrorFeature =
+        (error as { response?: { data?: { errors?: { feature?: string } } } })?.response?.data?.errors?.feature;
+    const isSubscriptionLimitError =
+        (error as { response?: { status?: number } })?.response?.status === 403
+        && subscriptionErrorFeature === 'profile_views_per_day';
+    const isFreePlanAccessError =
+        (error as { response?: { status?: number } })?.response?.status === 403
+        && subscriptionErrorFeature === 'full_profile_access';
+    const subscriptionLimitMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+        || 'You have reached your daily profile view limit. Upgrade your plan to view more profiles.';
 
     // Determine if this is own profile early
     const isOwnProfile = currentUser?.id === profileRes?.data?.id;
@@ -222,6 +237,28 @@ export default function ProfileViewPage() {
         );
     }
 
+    if (isError && isFreePlanAccessError) {
+        return (
+            <div className="min-h-[60vh] flex items-center justify-center px-4 bg-[#FDFAF4]">
+                <ProfileUpgradePrompt
+                    title="Upgrade to View Full Profile"
+                    message="Free account holders cannot view full profiles. Upgrade your plan to unlock complete profile details."
+                />
+            </div>
+        );
+    }
+
+    if (isError && isSubscriptionLimitError) {
+        return (
+            <div className="min-h-[60vh] flex items-center justify-center px-4 bg-[#FDFAF4]">
+                <ProfileUpgradePrompt
+                    title="Daily Profile View Limit Reached"
+                    message={subscriptionLimitMessage}
+                />
+            </div>
+        );
+    }
+
     if (isError || !profileRes?.data) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center">
@@ -239,6 +276,7 @@ export default function ProfileViewPage() {
     const p: FullProfile = profileRes.data;
     const photos = p.photos?.filter((ph) => ph.is_approved) ?? [];
     const activePhoto = photos[activePhotoIdx];
+    const profileViewUsage = p.access?.profile_views_per_day;
 
     return (
         <div className="bg-[#FDFAF4] min-h-screen pb-24 md:pb-10"
@@ -452,6 +490,10 @@ export default function ProfileViewPage() {
             ══════════════════════════════════ */}
             <div className="max-w-5xl mx-auto px-4 md:px-8 pt-6 space-y-6">
 
+                {!isOwnProfile && profileViewUsage && (
+                    <ProfileViewsUsageBanner usage={profileViewUsage} />
+                )}
+
                 {/* About & Preferences — full width feature card */}
                 {(p.profile?.about_me || p.profile?.what_looking_for) && (
                     <div className="relative rounded-3xl overflow-hidden shadow-md"
@@ -481,7 +523,7 @@ export default function ProfileViewPage() {
                             {p.profile.profile_completion_percentage != null && (
                                 <div className="mt-5">
                                     <div className="flex items-center justify-between mb-1">
-                                        <span className="text-xs text-gray-500" style={{fontFamily: 'system-ui, sans-serif'}}>Profile Completion</span>
+                                        <span className="text-xs text-gray-500" style={{fontFamily: 'system-ui, sans-serif'}}>{p.name}'s profile is {p.profile.profile_completion_percentage}% complete</span>
                                         <span className="text-xs font-bold text-[#C9A227]" style={{fontFamily: 'system-ui, sans-serif'}}>{p.profile.profile_completion_percentage}%</span>
                                     </div>
                                     <div className="h-1.5 bg-[#C9A227]/15 rounded-full overflow-hidden">
@@ -800,5 +842,53 @@ function GoldPill({label}: {label: string}) {
               }}>
             {label}
         </span>
+    );
+}
+
+function ProfileViewsUsageBanner({usage}: {usage: ProfileAccess['profile_views_per_day']}) {
+    const label = usage.unlimited
+        ? `Profile Views Today: ${usage.used} (Unlimited)`
+        : `Profile Views Today: ${usage.used} / ${usage.limit}`;
+
+    return (
+        <div className="rounded-2xl border border-[#e8d59a]/60 bg-white/80 backdrop-blur-sm px-5 py-4 flex items-center gap-3 shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-[#C9A227]/10 flex items-center justify-center shrink-0">
+                <CrownIcon size={18} strokeWidth={2} className="text-[#C9A227]" />
+            </div>
+            <div>
+                <p className="text-sm font-semibold text-[#1F2937]" style={{fontFamily: 'system-ui, sans-serif'}}>
+                    {label}
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5" style={{fontFamily: 'system-ui, sans-serif'}}>
+                    Profile Views per Day from your subscription
+                </p>
+            </div>
+        </div>
+    );
+}
+
+function ProfileUpgradePrompt({title, message}: {title: string; message: string}) {
+    return (
+        <div className="rounded-3xl overflow-hidden shadow-md border border-[#e8d59a]/60 bg-white text-center px-6 py-10 md:px-10">
+            <div className="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4">
+                <CrownIcon size={40} strokeWidth={1.5} className="text-amber-500" />
+            </div>
+            <h3 className="text-xl font-semibold text-[#1F2937]"
+                style={{fontFamily: "'Playfair Display', Georgia, serif"}}>
+                {title}
+            </h3>
+            <p className="text-gray-500 mt-2 max-w-md mx-auto text-sm leading-relaxed"
+               style={{fontFamily: 'system-ui, sans-serif'}}>
+                {message}
+            </p>
+            <Link
+                href="/subscription"
+                className="btn-gold mt-6 inline-flex items-center justify-center text-sm"
+                style={{height: '2.75rem', borderRadius: '0.75rem', padding: '0 1.75rem'}}
+            >
+                <CrownIcon size={16} strokeWidth={2} className="mr-2" />
+                Upgrade Plan
+            </Link>
+        </div>
     );
 }

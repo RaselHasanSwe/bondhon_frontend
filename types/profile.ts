@@ -168,6 +168,18 @@ export interface ProfileCard {
     face_scan_status?: 'pending' | 'submitted' | 'approved' | 'rejected' | null;
 }
 
+export interface ProfileViewUsage {
+    limit: number;
+    used: number;
+    unlimited: boolean;
+    remaining: number | null;
+}
+
+export interface ProfileAccess {
+    full_profile: boolean;
+    profile_views_per_day: ProfileViewUsage;
+}
+
 export interface FullProfile {
     id: number;
     name: string;
@@ -181,6 +193,7 @@ export interface FullProfile {
     partner_preference: PartnerPreference | null;
     photos: ProfilePhoto[];
     face_scan_status?: 'pending' | 'submitted' | 'approved' | 'rejected' | null;
+    access?: ProfileAccess;
 }
 
 export interface ProfileView {
