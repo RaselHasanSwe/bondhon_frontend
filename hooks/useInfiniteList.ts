@@ -10,6 +10,8 @@ interface UseInfiniteListOptions<T> {
     queryFn: (page: number) => Promise<NormalizedPage<T>>;
     enabled?: boolean;
     retry?: boolean | number;
+    staleTime?: number;
+    refetchOnMount?: boolean | 'always';
 }
 
 export function useInfiniteList<T>({
@@ -17,6 +19,8 @@ export function useInfiniteList<T>({
     queryFn,
     enabled = true,
     retry = true,
+    staleTime,
+    refetchOnMount,
 }: UseInfiniteListOptions<T>) {
     const userId = useAuthStore((s) => s.user?.id);
 
@@ -27,6 +31,8 @@ export function useInfiniteList<T>({
         getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.page + 1 : undefined),
         enabled: enabled && !!userId,
         retry,
+        staleTime,
+        refetchOnMount,
     });
 
     const items = query.data?.pages.flatMap((page) => page.items) ?? [];

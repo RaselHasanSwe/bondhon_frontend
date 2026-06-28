@@ -9,6 +9,7 @@ import {formatAge, formatHeight, resolvePhotoUrl} from '@/lib/utils';
 import {CompatibilityScore} from './CompatibilityScore';
 import {interestService, shortlistService} from '@/services/profileService';
 import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
+import {handleSendInterestError} from '@/lib/interest';
 import {invalidateInterestQueries, invalidateShortlistQueries} from '@/lib/cacheInvalidation';
 import type {ProfileCard} from '@/types/profile';
 import {MapPinIcon, ReligionIcon, GraduationCapIcon, MailIcon, StarIcon, StarFilledIcon, UserIcon, CheckIcon} from '@/components/ui/icons';
@@ -21,13 +22,18 @@ interface MatchCardProps {
 
 export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
     const queryClient = useQueryClient();
-    const [interestStatus, setInterestStatus] = useState<'none' | 'pending' | 'accepted'>('none');
+    const [interestStatus, setInterestStatus] = useState<'none' | 'pending' | 'accepted' | 'declined' | 'ignored'>('none');
+    const [isInterestSender, setIsInterestSender] = useState(true);
+    const [canSendInterest, setCanSendInterest] = useState(true);
     const [shortlisted, setShortlisted] = useState(false);
 
     // Fetch interest status
     const {data: interestStatusRes} = useUserQuery({
         queryKey: ['interests-status-card', profile.id],
         queryFn: () => interestService.checkStatus(profile.id).then((r) => r.data.data),
+        staleTime: 0,
+        refetchOnMount: 'always',
+        refetchOnWindowFocus: true,
     });
 
     // Fetch shortlist status
@@ -68,7 +74,9 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
     // Update interest status
     useEffect(() => {
         if (interestStatusRes) {
-            setInterestStatus(interestStatusRes.status as 'none' | 'pending' | 'accepted');
+            setInterestStatus(interestStatusRes.status as 'none' | 'pending' | 'accepted' | 'declined' | 'ignored');
+            setIsInterestSender(interestStatusRes.is_sender ?? true);
+            setCanSendInterest(interestStatusRes.can_send_interest ?? interestStatusRes.status === 'none');
         }
     }, [interestStatusRes]);
 
@@ -83,12 +91,13 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
         mutationFn: (id: number) => interestService.send(id),
         onSuccess: () => {
             setInterestStatus('pending');
+            setIsInterestSender(true);
+            setCanSendInterest(false);
             invalidateInterestQueries(queryClient);
             showSuccessToast('Interest sent successfully!');
         },
-        onError: (error: any) => {
-            const message = getErrorMessage(error);
-            showErrorToast(message);
+        onError: (error: unknown) => {
+            handleSendInterestError(error, { queryClient });
         },
     });
 
@@ -112,7 +121,7 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
 
     const handleSendInterest = async (e: React.MouseEvent) => {
         e.preventDefault();
-        if (sendInterestMutation.isPending || interestStatus !== 'none') return;
+        if (sendInterestMutation.isPending || !canSendInterest) return;
         sendInterestMutation.mutate(profile.id);
     };
 
@@ -198,21 +207,31 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                 <div className="mt-auto pt-4 flex items-center gap-2">
                     <button
                         onClick={handleSendInterest}
-                        disabled={interestStatus !== 'none' || sendInterestMutation.isPending}
+                        disabled={!canSendInterest || sendInterestMutation.isPending}
                         className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                             interestStatus === 'accepted'
                                 ? 'bg-green-50 text-green-600 border border-green-200'
-                                : interestStatus === 'pending'
+                                : interestStatus === 'pending' && isInterestSender && !canSendInterest
                                     ? 'bg-amber-50 text-amber-600 border border-amber-200'
-                                    : 'btn-gold'
+                                    : interestStatus === 'declined'
+                                        ? 'bg-red-50 text-red-500 border border-red-200'
+                                        : interestStatus === 'ignored'
+                                            ? 'bg-gray-50 text-gray-500 border border-gray-200'
+                                            : 'btn-gold'
                         }`}
                         style={{height:'auto', padding:'0.5rem', borderRadius:'0.75rem'}}
                     >
                         {interestStatus === 'accepted'
                             ? <><CheckIcon size={12} strokeWidth={2.5}/> Approved</>
-                            : interestStatus === 'pending'
-                                ? <><CheckIcon size={12} strokeWidth={2.5}/> Interest Sent</>
-                                : <><MailIcon size={12} strokeWidth={2}/> Send Interest</>
+                            : interestStatus === 'pending' && isInterestSender && !canSendInterest
+                                ? <><CheckIcon size={12} strokeWidth={2.5}/> Interest Already Sent</>
+                                : interestStatus === 'declined'
+                                    ? <>Declined</>
+                                    : interestStatus === 'ignored'
+                                        ? <>Ignored</>
+                                        : canSendInterest
+                                            ? <><MailIcon size={12} strokeWidth={2}/> Send Interest</>
+                                            : <>Unavailable</>
                         }
                     </button>
                     <button

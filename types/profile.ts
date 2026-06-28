@@ -197,8 +197,26 @@ export interface FullProfile {
     access?: ProfileAccess;
 }
 
+export interface ShortlistItem {
+    id: number;
+    created_at: string;
+    connection_status: 'none' | 'pending' | 'accepted' | 'declined' | 'ignored';
+    interest_id: number | null;
+    is_interest_sender: boolean;
+    conversation_id: number | null;
+    send_count?: number;
+    can_send_interest?: boolean;
+    user: ProfileCard;
+}
+
 export interface ProfileView {
     viewer_id: number;
     viewed_at: string;
+    connection_status: 'none' | 'pending' | 'accepted' | 'declined' | 'ignored';
+    interest_id: number | null;
+    is_interest_sender: boolean;
+    conversation_id: number | null;
+    send_count?: number;
+    can_send_interest?: boolean;
     viewer: ProfileCard;
 }

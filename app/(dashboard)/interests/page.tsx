@@ -76,6 +76,9 @@ function InterestCard({
         : `#`;
 
     const status = STATUS_LABELS[interest.status] ?? STATUS_LABELS.pending;
+    const displayStatus = tab === 'sent' && interest.status === 'pending'
+        ? { label: 'Interest Already Sent', className: 'bg-amber-50 text-amber-600 border-amber-200' }
+        : status;
     const showStatus = tab !== 'contacts';
 
     return (
@@ -108,8 +111,8 @@ function InterestCard({
                         {profile.education && <p className="text-xs text-muted-foreground/70">{profile.education}</p>}
                     </div>
                     {showStatus && (
-                        <span className={`text-xs border rounded-full px-2.5 py-1 font-medium flex-shrink-0 ${status.className}`}>
-                            {status.label}
+                        <span className={`text-xs border rounded-full px-2.5 py-1 font-medium flex-shrink-0 ${displayStatus.className}`}>
+                            {displayStatus.label}
                         </span>
                     )}
                 </div>

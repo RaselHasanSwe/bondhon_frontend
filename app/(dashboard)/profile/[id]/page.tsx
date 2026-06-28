@@ -12,6 +12,7 @@ import {
 } from '@/services/profileService';
 import {chatService} from '@/services/chatService';
 import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
+import {handleSendInterestError} from '@/lib/interest';
 import {
     invalidateInterestQueries,
     invalidateShortlistQueries,
@@ -29,7 +30,7 @@ import {useAuthStore} from '@/store/authStore';
 import type {FullProfile} from '@/types/profile';
 import {
     ReligionIcon, GraduationCapIcon, MailIcon, ChatIcon,
-    StarIcon, StarFilledIcon, CheckIcon, ClockIcon, UserIcon, CrownIcon,
+    StarIcon, StarFilledIcon, CheckIcon, ClockIcon, UserIcon, CrownIcon, XIcon,
 } from '@/components/ui/icons';
 import Link from 'next/link';
 import type {ProfileAccess} from '@/types/profile';
@@ -59,7 +60,10 @@ export default function ProfileViewPage() {
     const currentUser = useAuthStore((s) => s.user);
     const queryClient = useQueryClient();
 
-    const [interestStatus, setInterestStatus] = useState<'none' | 'pending' | 'accepted'>('none');
+    const [interestStatus, setInterestStatus] = useState<'none' | 'pending' | 'accepted' | 'declined' | 'ignored'>('none');
+    const [isInterestSender, setIsInterestSender] = useState(true);
+    const [interestId, setInterestId] = useState<number | null>(null);
+    const [canSendInterest, setCanSendInterest] = useState(true);
     const [shortlisted, setShortlisted] = useState(false);
     const [reportOpen, setReportOpen] = useState(false);
     const [blockOpen, setBlockOpen] = useState(false);
@@ -97,6 +101,9 @@ export default function ProfileViewPage() {
                 ? interestService.checkStatus(profileRes.data.id).then((r) => r.data.data)
                 : null,
         enabled: !!profileRes?.data?.id && !isOwnProfile,
+        staleTime: 0,
+        refetchOnMount: 'always',
+        refetchOnWindowFocus: true,
     });
 
     // Fetch shortlist status for this profile
@@ -147,7 +154,10 @@ export default function ProfileViewPage() {
     // Update interest status based on fetched interest
     React.useEffect(() => {
         if (interestStatusRes) {
-            setInterestStatus(interestStatusRes.status as 'none' | 'pending' | 'accepted');
+            setInterestStatus(interestStatusRes.status as 'none' | 'pending' | 'accepted' | 'declined' | 'ignored');
+            setIsInterestSender(interestStatusRes.is_sender ?? true);
+            setInterestId(interestStatusRes.interest_id ?? null);
+            setCanSendInterest(interestStatusRes.can_send_interest ?? interestStatusRes.status === 'none');
         }
     }, [interestStatusRes]);
 
@@ -163,13 +173,37 @@ export default function ProfileViewPage() {
         mutationFn: (id: number) => interestService.send(id),
         onSuccess: () => {
             setInterestStatus('pending');
+            setIsInterestSender(true);
+            setCanSendInterest(false);
             invalidateInterestQueries(queryClient);
             showSuccessToast('Interest sent successfully!');
         },
-        onError: (error: any) => {
-            const message = getErrorMessage(error);
-            showErrorToast(message);
+        onError: (error: unknown) => {
+            handleSendInterestError(error, { queryClient });
         }
+    });
+
+    const interestActionMutation = useMutation({
+        mutationFn: ({ id, action }: { id: number; action: 'accept' | 'decline' | 'ignore' }) => {
+            if (action === 'accept') return interestService.accept(id);
+            if (action === 'decline') return interestService.decline(id);
+            return interestService.ignore(id);
+        },
+        onSuccess: (_, variables) => {
+            invalidateInterestQueries(queryClient);
+            if (variables.action === 'accept') {
+                setInterestStatus('accepted');
+                invalidateConversationQueries(queryClient);
+                showSuccessToast('Interest accepted!');
+                return;
+            }
+            setInterestStatus('none');
+            setIsInterestSender(false);
+            showSuccessToast(variables.action === 'decline' ? 'Interest declined.' : 'Interest ignored.');
+        },
+        onError: (error: unknown) => {
+            showErrorToast(getErrorMessage(error));
+        },
     });
 
      const shortlistMutation = useMutation({
@@ -385,37 +419,82 @@ export default function ProfileViewPage() {
 
                                  {!isOwnProfile ? (
                                      <>
-                                         {/* Send Interest */}
-                                          <button
-                                              onClick={() => sendInterestMutation.mutate(p.id)}
-                                              disabled={interestStatus !== 'none' || sendInterestMutation.isPending}
-                                              className={`group relative inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 overflow-hidden shadow-md shrink-0 whitespace-nowrap
-                                                  ${interestStatus === 'accepted'
-                                                  ? 'bg-green-600/20 border border-green-500/40 text-green-400 cursor-not-allowed'
-                                                  : interestStatus === 'pending'
-                                                      ? 'bg-amber-500/20 border border-amber-400/40 text-amber-300 cursor-not-allowed'
-                                                      : 'bg-[#C9A227] hover:bg-[#d4af37] text-white hover:shadow-[0_0_15px_rgba(201,162,39,0.4)]'
-                                              }`}
-                                              style={{fontFamily: 'system-ui, sans-serif'}}>
-                                              {interestStatus === 'accepted'
-                                                  ? <><CheckIcon size={12} strokeWidth={2.5}/> Interest Accepted</>
-                                                  : interestStatus === 'pending'
-                                                      ? <><CheckIcon size={12} strokeWidth={2.5}/> Interest Sent</>
-                                                      : <><MailIcon size={12} strokeWidth={1.8}/> Send Interest</>
-                                              }
-                                          </button>
+                                         {canSendInterest && interestStatus !== 'pending' && interestStatus !== 'accepted' && (
+                                             <button
+                                                 onClick={() => sendInterestMutation.mutate(p.id)}
+                                                 disabled={sendInterestMutation.isPending}
+                                                 className="group relative inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 overflow-hidden shadow-md shrink-0 whitespace-nowrap bg-[#C9A227] hover:bg-[#d4af37] text-white hover:shadow-[0_0_15px_rgba(201,162,39,0.4)]"
+                                                 style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                 {sendInterestMutation.isPending
+                                                     ? <><ClockIcon size={12} strokeWidth={1.8}/> Sending…</>
+                                                     : <><MailIcon size={12} strokeWidth={1.8}/> Send Interest</>
+                                                 }
+                                             </button>
+                                         )}
 
-                                         {/* Message */}
-                                         <button
-                                             onClick={() => {setMessageError(null); messageMutation.mutate(p.id);}}
-                                             disabled={messageMutation.isPending}
-                                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all duration-200 backdrop-blur-sm shadow-md shrink-0 whitespace-nowrap"
-                                             style={{fontFamily: 'system-ui, sans-serif'}}>
-                                             {messageMutation.isPending
-                                                 ? <><ClockIcon size={12} strokeWidth={1.8}/> Opening…</>
-                                                 : <><ChatIcon size={12} strokeWidth={1.8}/> Message</>
-                                             }
-                                         </button>
+                                         {interestStatus === 'pending' && !isInterestSender && interestId && (
+                                             <>
+                                                 <button
+                                                     onClick={() => interestActionMutation.mutate({ id: interestId, action: 'accept' })}
+                                                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#C9A227] text-white shadow-md shrink-0 whitespace-nowrap"
+                                                     style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                     <CheckIcon size={12} strokeWidth={2.5}/> Accept
+                                                 </button>
+                                                 <button
+                                                     onClick={() => interestActionMutation.mutate({ id: interestId, action: 'decline' })}
+                                                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 border border-red-400/40 text-red-300 shrink-0 whitespace-nowrap"
+                                                     style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                     <XIcon size={12} strokeWidth={2.5}/> Decline
+                                                 </button>
+                                                 <button
+                                                     onClick={() => interestActionMutation.mutate({ id: interestId, action: 'ignore' })}
+                                                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 border border-white/20 text-white/70 shrink-0 whitespace-nowrap"
+                                                     style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                     Ignore
+                                                 </button>
+                                             </>
+                                         )}
+
+                                         {interestStatus === 'pending' && isInterestSender && !canSendInterest && (
+                                             <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500/20 border border-amber-400/40 text-amber-300 shrink-0 whitespace-nowrap"
+                                                   style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                 <CheckIcon size={12} strokeWidth={2.5}/> Interest Already Sent
+                                             </span>
+                                         )}
+
+                                         {interestStatus === 'accepted' && (
+                                             <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-600/20 border border-green-500/40 text-green-400 shrink-0 whitespace-nowrap"
+                                                   style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                 <CheckIcon size={12} strokeWidth={2.5}/> Interest Accepted
+                                             </span>
+                                         )}
+
+                                         {interestStatus === 'declined' && (
+                                             <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-500/20 border border-red-400/40 text-red-300 shrink-0 whitespace-nowrap"
+                                                   style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                 Declined
+                                             </span>
+                                         )}
+
+                                         {interestStatus === 'ignored' && (
+                                             <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 border border-white/20 text-white/60 shrink-0 whitespace-nowrap"
+                                                   style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                 Ignored
+                                             </span>
+                                         )}
+
+                                         {interestStatus === 'accepted' && (
+                                             <button
+                                                 onClick={() => {setMessageError(null); messageMutation.mutate(p.id);}}
+                                                 disabled={messageMutation.isPending}
+                                                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all duration-200 backdrop-blur-sm shadow-md shrink-0 whitespace-nowrap"
+                                                 style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                 {messageMutation.isPending
+                                                     ? <><ClockIcon size={12} strokeWidth={1.8}/> Opening…</>
+                                                     : <><ChatIcon size={12} strokeWidth={1.8}/> Message</>
+                                                 }
+                                             </button>
+                                         )}
 
                                          {/* Shortlist */}
                                          <button

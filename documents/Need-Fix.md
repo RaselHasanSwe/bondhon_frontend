@@ -363,42 +363,42 @@ Tabs: (Done)
 1. Rename:
 
    * **Matrimonial Profile** → **Profile** (Done)
-2. Profile completion percentage is incorrectly calculated. Review and fix the calculation logic. (this is the profile i visit that profile percentage)
+2. Profile completion percentage is incorrectly calculated. Review and fix the calculation logic. (this is the profile i visit that profile percentage) (Done)
 3. Free account holders should not be able to view full profiles. (Done )
 
-   * Display subscription upgrade prompt.
-   * Show **Upgrade Plan** button.
+   * Display subscription upgrade prompt. (Done)
+   * Show **Upgrade Plan** button. (Done)
 4. All images should be loaded from Cloudflare. (Done)
-5. Remove thumbnail strip from the main profile area and show only the primary profile image initially.
-6. Create a dedicated photo gallery section:
+5. Remove thumbnail strip from the main profile area and show only the primary profile image initially. (Done)
+6. Create a dedicated photo gallery section: (Done)
 
-   * Show all uploaded images as thumbnails.
-   * Clicking a thumbnail should open a larger preview.
-   * Use Fancybox or similar image viewer.
+   * Show all uploaded images as thumbnails. (Done)
+   * Clicking a thumbnail should open a larger preview. (Done)
+   * Use Fancybox or similar image viewer. (Done)
 
 ---
 
 ## Profile Viewers
 
-1. Remove **Free** text and icon.
-2. Implement scroll pagination.
-3. Show actions based on relationship status:
+1. Remove **Free** text and icon. (Done)
+2. Implement scroll pagination. (Done)
+3. Show actions based on relationship status: (Done)
 
-   * No connection → Show **Interest** button.
-   * Accepted connection → Show **Message** button.
-4. When someone views a profile:
+   * No connection → Show **Interest** button. (Done)
+   * Accepted connection → Show **Message** button. (Done)
+4. When someone views a profile: (Done)
 
-   * Send notification to the profile owner.
-   * Send email notification to the profile owner.
-   * Do not send notifications for free account holders.
+   * Send notification to the profile owner. (Done)
+   * Send email notification to the profile owner. (Done)
+   * Do not send notifications for free account holders. (Done)
 
 ---
 
 ## Shortlist
 
-1. Shortlisted profile count is incorrect. Review and fix the count calculation.
-2. If a shortlisted profile already has an accepted interest connection, show **Message** button.
-3. Implement scroll pagination.
+1. Shortlisted profile count is incorrect. Review and fix the count calculation. (Done)
+2. If a shortlisted profile already has an accepted interest connection, show **Message** button. (Done)
+3. Implement scroll pagination. (Done)
 
 ---
 
