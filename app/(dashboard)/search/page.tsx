@@ -10,7 +10,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SearchableSelect } from '@/components/ui/SearchableSelect';
 import type { SearchFilters } from '@/types/match';
-import { useOptions, useChildOptions } from '@/hooks/useSelectOptions';
+import {
+    useOptionsBulk,
+    useChildOptions,
+    pickOptions,
+    SEARCH_FILTER_OPTION_GROUPS,
+} from '@/hooks/useSelectOptions';
 import { useAuthStore } from '@/store/authStore';
 import {
     SearchIcon, FilterIcon, XIcon,
@@ -53,22 +58,24 @@ interface FilterPanelProps {
 }
 
 function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) {
-    const { data: religionOpts = [] }       = useOptions('religion');
-    const { data: maritalOpts = [] }        = useOptions('marital_status');
-    const { data: educationOpts = [] }      = useOptions('education_level');
-    const { data: professionOpts = [] }     = useOptions('profession');
-    const { data: employedInOpts = [] }     = useOptions('employed_in');
-    const { data: dietOpts = [] }           = useOptions('diet');
-    const { data: smokingOpts = [] }        = useOptions('smoking');
-    const { data: drinkingOpts = [] }       = useOptions('drinking');
-    const { data: bodyTypeOpts = [] }       = useOptions('body_type');
-    const { data: complexionOpts = [] }     = useOptions('complexion');
-    const { data: bloodGroupOpts = [] }     = useOptions('blood_group');
-    const { data: motherTongueOpts = [] }   = useOptions('mother_tongue');
-    const { data: nationalityOpts = [] }    = useOptions('nationality');
-    const { data: countryOpts = [] }        = useOptions('country');
-    const { data: residingStatusOpts = [] } = useOptions('residing_status');
-    const { data: haveChildrenOpts = [] }   = useOptions('have_children');
+    const { data: bulkOptions } = useOptionsBulk(SEARCH_FILTER_OPTION_GROUPS);
+
+    const religionOpts = pickOptions(bulkOptions, 'religion');
+    const maritalOpts = pickOptions(bulkOptions, 'marital_status');
+    const educationOpts = pickOptions(bulkOptions, 'education_level');
+    const professionOpts = pickOptions(bulkOptions, 'profession');
+    const employedInOpts = pickOptions(bulkOptions, 'employed_in');
+    const dietOpts = pickOptions(bulkOptions, 'diet');
+    const smokingOpts = pickOptions(bulkOptions, 'smoking');
+    const drinkingOpts = pickOptions(bulkOptions, 'drinking');
+    const bodyTypeOpts = pickOptions(bulkOptions, 'body_type');
+    const complexionOpts = pickOptions(bulkOptions, 'complexion');
+    const bloodGroupOpts = pickOptions(bulkOptions, 'blood_group');
+    const motherTongueOpts = pickOptions(bulkOptions, 'mother_tongue');
+    const nationalityOpts = pickOptions(bulkOptions, 'nationality');
+    const countryOpts = pickOptions(bulkOptions, 'country');
+    const residingStatusOpts = pickOptions(bulkOptions, 'residing_status');
+    const haveChildrenOpts = pickOptions(bulkOptions, 'have_children');
 
     const selectedReligionId = religionOpts.find(o => o.value === filters.religion)?.id;
     const { data: casteOpts = [] } = useChildOptions('caste', selectedReligionId);
