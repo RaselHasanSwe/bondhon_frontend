@@ -60,8 +60,8 @@ const NAV_ITEMS: { href: string; label: string; Icon: ComponentType<NavIconProps
     {href: '/notifications', label: 'Notifications', Icon: BellIcon},
     {href: '/profile-views', label: 'Profile Viewers', Icon: EyeIcon},
     {href: '/profile/edit', label: 'My Profile', Icon: UserIcon},
-    {href: '/account-disable-request', label: 'Account Disable Request', Icon: AccountDisableIcon},
     {href: '/subscription', label: 'Upgrade Plan', Icon: CrownIcon},
+    {href: '/account-disable-request', label: 'Ac. Disable Request', Icon: AccountDisableIcon},
 ];
 
 export default function DashboardLayout({children}: { children: React.ReactNode }) {

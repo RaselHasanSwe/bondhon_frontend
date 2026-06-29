@@ -77,7 +77,7 @@ function InterestCard({
 
     const status = STATUS_LABELS[interest.status] ?? STATUS_LABELS.pending;
     const displayStatus = tab === 'sent' && interest.status === 'pending'
-        ? { label: 'Interest Already Sent', className: 'bg-amber-50 text-amber-600 border-amber-200' }
+        ? { label: 'Already Sent', className: 'bg-amber-50 text-amber-600 border-amber-200' }
         : status;
     const showStatus = tab !== 'contacts';
 

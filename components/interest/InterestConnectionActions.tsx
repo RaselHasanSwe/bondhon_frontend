@@ -95,7 +95,7 @@ export function InterestConnectionActions({
 
             {sentPending && (
                 <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-600 border border-amber-200">
-                    <CheckIcon size={12} strokeWidth={2.5} /> Interest Already Sent
+                    <CheckIcon size={12} strokeWidth={2.5} /> Already Sent
                 </span>
             )}
 

@@ -224,7 +224,7 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                         {interestStatus === 'accepted'
                             ? <><CheckIcon size={12} strokeWidth={2.5}/> Approved</>
                             : interestStatus === 'pending' && isInterestSender && !canSendInterest
-                                ? <><CheckIcon size={12} strokeWidth={2.5}/> Interest Already Sent</>
+                                ? <><CheckIcon size={12} strokeWidth={2.5}/> Already Sent</>
                                 : interestStatus === 'declined'
                                     ? <>Declined</>
                                     : interestStatus === 'ignored'

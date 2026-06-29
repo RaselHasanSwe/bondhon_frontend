@@ -458,7 +458,7 @@ export default function ProfileViewPage() {
                                          {interestStatus === 'pending' && isInterestSender && !canSendInterest && (
                                              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500/20 border border-amber-400/40 text-amber-300 shrink-0 whitespace-nowrap"
                                                    style={{fontFamily: 'system-ui, sans-serif'}}>
-                                                 <CheckIcon size={12} strokeWidth={2.5}/> Interest Already Sent
+                                                 <CheckIcon size={12} strokeWidth={2.5}/> Already Sent
                                              </span>
                                          )}
 
