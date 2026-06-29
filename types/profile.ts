@@ -184,6 +184,12 @@ export interface ProfileAccess {
     profile_views_per_day: ProfileViewUsage;
 }
 
+export interface CompatibilityScoreData {
+    score: number;
+    score_breakdown?: Record<string, unknown> | null;
+    calculated_at?: string | null;
+}
+
 export interface FullProfile {
     id: number;
     name: string;
@@ -199,6 +205,12 @@ export interface FullProfile {
     primary_photo?: string | null;
     face_scan_status?: 'pending' | 'submitted' | 'approved' | 'rejected' | null;
     access?: ProfileAccess;
+    connection_status?: 'none' | 'pending' | 'accepted' | 'declined' | 'ignored';
+    interest_id?: number | null;
+    is_interest_sender?: boolean;
+    can_send_interest?: boolean;
+    is_shortlisted?: boolean;
+    compatibility_score?: CompatibilityScoreData | null;
 }
 
 export interface ShortlistItem {

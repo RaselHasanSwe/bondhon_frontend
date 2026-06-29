@@ -1,7 +1,6 @@
 'use client';
 
 import React, {useState} from 'react';
-import {useUserQuery} from '@/hooks/useUserQuery';
 import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {useParams, useRouter} from 'next/navigation';
 import {
@@ -17,6 +16,7 @@ import {
     invalidateInterestQueries,
     invalidateShortlistQueries,
     invalidateConversationQueries,
+    invalidateProfileQueries,
 } from '@/lib/cacheInvalidation';
 import {CompatibilityScore} from '@/components/match/CompatibilityScore';
 import {formatAge, formatHeight} from '@/lib/utils';
@@ -84,90 +84,20 @@ export default function ProfileViewPage() {
     // Determine if this is own profile early
     const isOwnProfile = currentUser?.id === profileRes?.data?.id;
 
-    const {data: scoreRes} = useUserQuery({
-        queryKey: ['compatibility-score', profileRes?.data?.id],
-        queryFn: () =>
-            import('@/services/profileService').then(({matchService}) =>
-                matchService.getCompatibilityScore(profileRes!.data!.id).then((r) => r.data.data)
-            ),
-        enabled: !!profileRes?.data?.id && !isOwnProfile,
-    });
-
-    // Fetch interest status between current user and this profile
-    const {data: interestStatusRes} = useUserQuery({
-        queryKey: ['interests-status', profileRes?.data?.id],
-        queryFn: () =>
-            profileRes?.data?.id && !isOwnProfile
-                ? interestService.checkStatus(profileRes.data.id).then((r) => r.data.data)
-                : null,
-        enabled: !!profileRes?.data?.id && !isOwnProfile,
-        staleTime: 0,
-        refetchOnMount: 'always',
-        refetchOnWindowFocus: true,
-    });
-
-    // Fetch shortlist status for this profile
-    const shortlistStatusQuery = useUserQuery({
-        queryKey: ['shortlist-status', profileRes?.data?.id],
-        queryFn: async () => {
-            if (!profileRes?.data?.id || isOwnProfile) return false;
-
-            try {
-                // Check all pages of shortlisted profiles
-                let page = 1;
-                let hasMore = true;
-
-                while (hasMore) {
-                    const response = await shortlistService.getAll(page);
-                    const data = response.data?.data as any;
-                    const profiles = data?.data ?? [];
-
-                    // Check if profile is in this page
-                    // The API returns 'user' field (not 'shortlisted_user')
-                    const isShortlisted = profiles.some((s: any) => s.user?.id === profileRes.data.id);
-                    if (isShortlisted) {
-                        return true;
-                    }
-
-                    // Check if there are more pages
-                    const lastPage = data?.last_page ?? 1;
-                    const currentPage = data?.current_page ?? 1;
-                    hasMore = currentPage < lastPage;
-                    page++;
-
-                    // Safety limit to prevent infinite loops
-                    if (page > 100) hasMore = false;
-                }
-
-                return false;
-            } catch (error) {
-                console.error('Error checking shortlist status:', error);
-                return false;
-            }
-        },
-        enabled: !!profileRes?.data?.id && !isOwnProfile,
-        staleTime: 0, // Always consider this data stale to refetch when invalidated
-    });
-
-    const shortlistRes = shortlistStatusQuery.data;
-
-    // Update interest status based on fetched interest
+    // Sync viewer context from the single profile API response
     React.useEffect(() => {
-        if (interestStatusRes) {
-            setInterestStatus(interestStatusRes.status as 'none' | 'pending' | 'accepted' | 'declined' | 'ignored');
-            setIsInterestSender(interestStatusRes.is_sender ?? true);
-            setInterestId(interestStatusRes.interest_id ?? null);
-            setCanSendInterest(interestStatusRes.can_send_interest ?? interestStatusRes.status === 'none');
+        if (!profileData || isOwnProfile) {
+            return;
         }
-    }, [interestStatusRes]);
 
-    // Update shortlist status based on fetched data
-    React.useEffect(() => {
-        if (shortlistRes !== undefined) {
-            setShortlisted(shortlistRes);
-        }
-    }, [shortlistRes]);
-
+        setInterestStatus(profileData.connection_status ?? 'none');
+        setIsInterestSender(profileData.is_interest_sender ?? true);
+        setInterestId(profileData.interest_id ?? null);
+        setCanSendInterest(
+            profileData.can_send_interest ?? (profileData.connection_status === 'none' || profileData.connection_status === undefined)
+        );
+        setShortlisted(profileData.is_shortlisted ?? false);
+    }, [profileData, isOwnProfile]);
 
     const sendInterestMutation = useMutation({
         mutationFn: (id: number) => interestService.send(id),
@@ -176,6 +106,7 @@ export default function ProfileViewPage() {
             setIsInterestSender(true);
             setCanSendInterest(false);
             invalidateInterestQueries(queryClient);
+            invalidateProfileQueries(queryClient);
             showSuccessToast('Interest sent successfully!');
         },
         onError: (error: unknown) => {
@@ -191,6 +122,7 @@ export default function ProfileViewPage() {
         },
         onSuccess: (_, variables) => {
             invalidateInterestQueries(queryClient);
+            invalidateProfileQueries(queryClient);
             if (variables.action === 'accept') {
                 setInterestStatus('accepted');
                 invalidateConversationQueries(queryClient);
@@ -211,7 +143,7 @@ export default function ProfileViewPage() {
          onSuccess: async () => {
              setShortlisted((s) => !s);
              invalidateShortlistQueries(queryClient);
-             await shortlistStatusQuery.refetch();
+             invalidateProfileQueries(queryClient);
              showSuccessToast(shortlisted ? 'Removed from shortlist' : 'Added to shortlist');
          },
          onError: (error: any) => {
@@ -288,6 +220,7 @@ export default function ProfileViewPage() {
     const approvedPhotos = getApprovedPhotos(p.photos);
     const heroPhotoUrl = resolvePrimaryPhotoUrl(p.primary_photo, p.photos);
     const profileViewUsage = p.access?.profile_views_per_day;
+    const compatibilityScore = p.compatibility_score;
     const galleryHref = `/profile/${params.id}/gallery`;
 
     return (
@@ -411,9 +344,9 @@ export default function ProfileViewPage() {
 
                             {/* Compatibility score + actions row */}
                              <div className="mt-7 flex items-center gap-1.5 flex-nowrap overflow-x-auto pb-1">
-                                 {scoreRes && (
+                                 {compatibilityScore && (
                                      <div className="mr-1 shrink-0">
-                                         <CompatibilityScore score={scoreRes.score} size="lg"/>
+                                         <CompatibilityScore score={compatibilityScore.score} size="lg"/>
                                      </div>
                                  )}
 
