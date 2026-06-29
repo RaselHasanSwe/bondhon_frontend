@@ -22,21 +22,28 @@ interface MatchCardProps {
 
 export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
     const queryClient = useQueryClient();
-    const [interestStatus, setInterestStatus] = useState<'none' | 'pending' | 'accepted' | 'declined' | 'ignored'>('none');
-    const [isInterestSender, setIsInterestSender] = useState(true);
-    const [canSendInterest, setCanSendInterest] = useState(true);
-    const [shortlisted, setShortlisted] = useState(false);
+    const hasInterestFromProfile = profile.connection_status !== undefined;
+    const hasShortlistFromProfile = profile.is_shortlisted !== undefined;
+    const [interestStatus, setInterestStatus] = useState<'none' | 'pending' | 'accepted' | 'declined' | 'ignored'>(
+        profile.connection_status ?? 'none'
+    );
+    const [isInterestSender, setIsInterestSender] = useState(profile.is_interest_sender ?? true);
+    const [canSendInterest, setCanSendInterest] = useState(
+        profile.can_send_interest ?? (profile.connection_status === undefined || profile.connection_status === 'none')
+    );
+    const [shortlisted, setShortlisted] = useState(profile.is_shortlisted ?? false);
 
-    // Fetch interest status
+    // Fetch interest status only when the profile payload does not already include it
     const {data: interestStatusRes} = useUserQuery({
         queryKey: ['interests-status-card', profile.id],
         queryFn: () => interestService.checkStatus(profile.id).then((r) => r.data.data),
+        enabled: !hasInterestFromProfile,
         staleTime: 0,
         refetchOnMount: 'always',
         refetchOnWindowFocus: true,
     });
 
-    // Fetch shortlist status
+    // Fetch shortlist status only when the profile payload does not already include it
     const shortlistStatusQuery = useUserQuery({
         queryKey: ['shortlist-status-card', profile.id],
         queryFn: async () => {
@@ -68,24 +75,43 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                 return false;
             }
         },
+        enabled: !hasShortlistFromProfile,
         staleTime: 0,
     });
 
-    // Update interest status
+    // Update interest status from API fallback when not embedded in profile
     useEffect(() => {
+        if (hasInterestFromProfile) {
+            setInterestStatus(profile.connection_status ?? 'none');
+            setIsInterestSender(profile.is_interest_sender ?? true);
+            setCanSendInterest(
+                profile.can_send_interest ?? (profile.connection_status === 'none')
+            );
+            return;
+        }
         if (interestStatusRes) {
             setInterestStatus(interestStatusRes.status as 'none' | 'pending' | 'accepted' | 'declined' | 'ignored');
             setIsInterestSender(interestStatusRes.is_sender ?? true);
             setCanSendInterest(interestStatusRes.can_send_interest ?? interestStatusRes.status === 'none');
         }
-    }, [interestStatusRes]);
+    }, [
+        hasInterestFromProfile,
+        profile.connection_status,
+        profile.is_interest_sender,
+        profile.can_send_interest,
+        interestStatusRes,
+    ]);
 
-    // Update shortlist status
+    // Update shortlist status from API fallback when not embedded in profile
     useEffect(() => {
+        if (hasShortlistFromProfile) {
+            setShortlisted(profile.is_shortlisted ?? false);
+            return;
+        }
         if (shortlistStatusQuery.data !== undefined) {
             setShortlisted(shortlistStatusQuery.data);
         }
-    }, [shortlistStatusQuery.data]);
+    }, [hasShortlistFromProfile, profile.is_shortlisted, shortlistStatusQuery.data]);
 
     const sendInterestMutation = useMutation({
         mutationFn: (id: number) => interestService.send(id),
@@ -103,11 +129,12 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
 
      const shortlistMutation = useMutation({
          mutationFn: (id: number) => shortlistService.toggle(id),
-         onSuccess: async () => {
-             setShortlisted((s) => !s);
+         onSuccess: (response) => {
+             const next = response.data?.data?.shortlisted;
+             const isNowShortlisted = typeof next === 'boolean' ? next : !shortlisted;
+             setShortlisted(isNowShortlisted);
              invalidateShortlistQueries(queryClient);
-             await shortlistStatusQuery.refetch();
-             showSuccessToast(shortlisted ? 'Removed from shortlist' : 'Added to shortlist');
+             showSuccessToast(isNowShortlisted ? 'Added to shortlist' : 'Removed from shortlist');
          },
          onError: (error: any) => {
              const message = getErrorMessage(error);

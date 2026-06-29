@@ -3,13 +3,8 @@
 import {useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {useRouter} from 'next/navigation';
-import {queryClient} from '@/lib/queryClient';
-import {invalidateNotificationQueries, invalidateInterestQueries, invalidateDashboardQueries, invalidateConversationQueries} from '@/lib/cacheInvalidation';
-import {notificationService} from '@/services/notificationService';
 import {useNotificationStore} from '@/store/notificationStore';
-import {useAuthStore} from '@/store/authStore';
 import type {AppNotification} from '@/types/notification';
-import type {BackendNotification} from '@/types/notification';
 import {cn} from '@/lib/utils';
 import {
     BellIcon, MailIcon, CelebrationIcon, ClockIcon, EyeIcon,
@@ -58,9 +53,7 @@ const TYPE_ICONS: Record<AppNotification['type'], ComponentType<IconProps>> = {
 
 export function NotificationBell({placement = 'default'}: { placement?: 'default' | 'sidebar' }) {
     const router = useRouter();
-    const user = useAuthStore((s) => s.user);
-    const clearAuth = useAuthStore((s) => s.clearAuth);
-    const {notifications, unreadCount, fetchNotifications, markRead, markAllRead, addNotification} =
+    const {notifications, unreadCount, markRead, markAllRead} =
         useNotificationStore();
     const [open, setOpen] = useState(false);
     const [portalStyle, setPortalStyle] = useState<React.CSSProperties>({});
@@ -87,56 +80,6 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
             zIndex: 9999,
         });
     }, [open, placement]);
-
-    // Fetch on mount
-    useEffect(() => {
-        fetchNotifications();
-    }, [fetchNotifications]);
-
-    // Subscribe to real-time notifications via Laravel Echo
-    useEffect(() => {
-        if (!user?.id || typeof window === 'undefined') return;
-        (async () => {
-            const {getEcho} = await import('@/lib/echo');
-            const echo = await getEcho();
-            if (!echo) return;
-            echo.private(`user.${user.id}`)
-                .listen('.notification.created', (e: BackendNotification) => {
-                    if (e.type === 'face_scan_rejected') {
-                        clearAuth();
-                        window.location.href = '/login?face_scan_rejected=1';
-                        return;
-                    }
-                    if (e.type === 'account_disable_request_banned') {
-                        clearAuth();
-                        window.location.href = '/login?account_banned=1';
-                        return;
-                    }
-                    if (e.type === 'admin_account_disabled' || e.type === 'account_disable_request_disabled') {
-                        clearAuth();
-                        window.location.href = '/login?account_disabled=1';
-                        return;
-                    }
-                    if (e.type === 'admin_account_banned') {
-                        clearAuth();
-                        window.location.href = '/login?account_banned=1';
-                        return;
-                    }
-                    addNotification(notificationService.transformNotification(e));
-                    invalidateNotificationQueries(queryClient);
-                    if (e.type.startsWith('interest_')) {
-                        invalidateInterestQueries(queryClient);
-                        invalidateDashboardQueries(queryClient);
-                    }
-                    if (e.type === 'new_message') {
-                        invalidateConversationQueries(queryClient);
-                    }
-                    if (e.type === 'profile_viewed') {
-                        invalidateDashboardQueries(queryClient);
-                    }
-                });
-        })();
-    }, [user?.id, addNotification, clearAuth]);
 
     // Close dropdown on outside click — handles both wrapper and portal
     useEffect(() => {

@@ -108,10 +108,20 @@ function transformNotification(n: BackendNotification): AppNotification {
 }
 
 export const notificationService = {
-    /** Fetch all notifications (first page, for the bell) */
-    async getAll(): Promise<AppNotification[]> {
+    /** Fetch first page of notifications + unread count for the bell (single request). */
+    async getBellSnapshot(): Promise<{ notifications: AppNotification[]; unreadCount: number }> {
         const res = await api.get<ApiResponse<NotificationsResponse>>('/notifications');
-        return res.data.data.data.map(transformNotification);
+        const body = res.data.data;
+        return {
+            notifications: body.data.map(transformNotification),
+            unreadCount: body.unread_count,
+        };
+    },
+
+    /** @deprecated Use getBellSnapshot — kept for callers that only need the list */
+    async getAll(): Promise<AppNotification[]> {
+        const {notifications} = await this.getBellSnapshot();
+        return notifications;
     },
 
     /** Fetch a single notification by ID (auto-marks as read on the backend) */

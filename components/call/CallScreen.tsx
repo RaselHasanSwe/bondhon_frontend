@@ -154,11 +154,9 @@ export function CallScreen({currentUserId}: CallScreenProps) {
         let channel: any = null;
 
         (async () => {
-            const {getEcho} = await import('@/lib/echo');
-            const echo = await getEcho();
-            if (cancelled || !echo) return;
-
-            channel = echo.private(`user.${currentUserId}`);
+            const {getPrivateChannel} = await import('@/lib/echo');
+            channel = await getPrivateChannel(`user.${currentUserId}`);
+            if (cancelled || !channel) return;
 
             const manager = new WebRTCManager({
                 callId: activeCall.callId,
@@ -321,15 +319,12 @@ export function CallScreen({currentUserId}: CallScreenProps) {
             cancelled = true;
             destroyManager();
             (async () => {
-                const {getEcho} = await import('@/lib/echo');
-                const echo = await getEcho();
                 if (channel) {
                     channel.stopListening('.webrtc.signal');
                     channel.stopListening('.call.ended');
                     channel.stopListening('.call.declined');
                     channel.stopListening('.call.answered');
                 }
-                echo;
             })();
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps

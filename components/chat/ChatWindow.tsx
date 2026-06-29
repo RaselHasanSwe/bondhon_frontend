@@ -183,11 +183,9 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
         let channel: any = null;
 
         (async () => {
-            const {getEcho} = await import('@/lib/echo');
-            const echo = await getEcho();
-            if (cancelled || !echo) return;
-
-            channel = echo.private(`conversation.${conversationId}`);
+            const {getPrivateChannel} = await import('@/lib/echo');
+            channel = await getPrivateChannel(`conversation.${conversationId}`);
+            if (cancelled || !channel) return;
 
             // Incoming messages
             channel.listen('.message.sent', (e: Message) => {
@@ -224,13 +222,12 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
             if (typingTimer.current) clearTimeout(typingTimer.current);
             // Leave channel async
             (async () => {
-                const {getEcho} = await import('@/lib/echo');
-                const echo = await getEcho();
+                const {leavePrivateChannel} = await import('@/lib/echo');
                 if (channel) {
                     channel.stopListening('.message.sent');
                     channel.stopListening('.user.typing');
                 }
-                echo?.leave(`conversation.${conversationId}`);
+                leavePrivateChannel(`conversation.${conversationId}`);
             })();
         };
     }, [conversationId, currentUserId, scrollToBottom]);

@@ -166,6 +166,10 @@ export interface ProfileCard {
     diet: string | null;
     primary_photo: string | null;
     face_scan_status?: 'pending' | 'submitted' | 'approved' | 'rejected' | null;
+    is_shortlisted?: boolean;
+    connection_status?: 'none' | 'pending' | 'accepted' | 'declined' | 'ignored';
+    is_interest_sender?: boolean;
+    can_send_interest?: boolean;
 }
 
 export interface ProfileViewUsage {
