@@ -5,7 +5,7 @@ import { matchService } from '@/services/profileService';
 import { MatchCard } from '@/components/match/MatchCard';
 import { InfiniteScrollFooter } from '@/components/ui/InfiniteScrollFooter';
 import { useInfiniteList } from '@/hooks/useInfiniteList';
-import { normalizeFlatPage } from '@/lib/pagination';
+import { normalizeMetaPage } from '@/lib/pagination';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SearchableSelect } from '@/components/ui/SearchableSelect';
@@ -342,7 +342,7 @@ export default function SearchPage() {
     } = useInfiniteList({
         queryKey: ['search', appliedFilters],
         queryFn: (page) =>
-            matchService.search({ ...appliedFilters, page }).then((r) => normalizeFlatPage(r.data.data, page)),
+            matchService.search({ ...appliedFilters, page }).then((r) => normalizeMetaPage(r.data.data, page)),
         retry: false,
     });
 

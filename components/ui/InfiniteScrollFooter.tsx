@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 
 interface InfiniteScrollFooterProps {
     hasNextPage: boolean;
@@ -9,6 +9,8 @@ interface InfiniteScrollFooterProps {
     showEndMessage?: boolean;
     endMessage?: string;
     className?: string;
+    /** When the list scrolls inside a container, pass that element as the observer root. */
+    scrollRootRef?: RefObject<Element | null>;
 }
 
 export function InfiniteScrollFooter({
@@ -18,6 +20,7 @@ export function InfiniteScrollFooter({
     showEndMessage = false,
     endMessage = 'No more results',
     className = '',
+    scrollRootRef,
 }: InfiniteScrollFooterProps) {
     const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -31,12 +34,12 @@ export function InfiniteScrollFooter({
                     onLoadMore();
                 }
             },
-            { rootMargin: '240px' },
+            {root: scrollRootRef?.current ?? null, rootMargin: '240px'},
         );
 
         observer.observe(el);
         return () => observer.disconnect();
-    }, [hasNextPage, isFetchingNextPage, onLoadMore]);
+    }, [hasNextPage, isFetchingNextPage, onLoadMore, scrollRootRef]);
 
     if (!hasNextPage && !isFetchingNextPage && !showEndMessage) {
         return null;

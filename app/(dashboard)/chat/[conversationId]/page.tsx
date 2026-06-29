@@ -1,10 +1,9 @@
 "use client";
 
-import {use} from "react";
-import {useUserQuery} from "@/hooks/useUserQuery";
-import {chatService} from "@/services/chatService";
+import {use, useRef} from "react";
 import {ChatList} from "@/components/chat/ChatList";
 import {ChatWindow} from "@/components/chat/ChatWindow";
+import {useConversations} from "@/hooks/useConversations";
 import {useAuthStore} from "@/store/authStore";
 
 interface PageProps {
@@ -15,11 +14,15 @@ export default function ConversationPage({params}: PageProps) {
     const {conversationId} = use(params);
     const convId = Number(conversationId);
     const user = useAuthStore((s) => s.user);
+    const scrollRef = useRef<HTMLDivElement>(null);
 
-    const {data: conversations = [], isLoading} = useUserQuery({
-        queryKey: ["conversations"],
-        queryFn: () => chatService.getConversations(),
-    });
+    const {
+        items: conversations,
+        isLoading,
+        hasNextPage,
+        isFetchingNextPage,
+        fetchNextPage,
+    } = useConversations();
 
     const currentUserId = user?.id ?? 0;
 
@@ -40,11 +43,15 @@ export default function ConversationPage({params}: PageProps) {
                     <div className="px-3 lg:px-4 py-3.5 border-b border-gray-100">
                         <h2 className="text-sm font-semibold text-[#1F2937]">Messages 💬</h2>
                     </div>
-                    <div className="flex-1 overflow-y-auto">
+                    <div className="flex-1 min-h-0">
                         <ChatList
                             conversations={conversations}
                             activeId={convId}
                             isLoading={isLoading}
+                            hasNextPage={hasNextPage}
+                            isFetchingNextPage={isFetchingNextPage}
+                            onLoadMore={() => fetchNextPage()}
+                            scrollRootRef={scrollRef}
                         />
                     </div>
                 </div>

@@ -9,6 +9,7 @@ import {notificationService} from '@/services/notificationService';
 import type {AppNotification} from '@/types/notification';
 import {InfiniteScrollFooter} from '@/components/ui/InfiniteScrollFooter';
 import {useInfiniteList} from '@/hooks/useInfiniteList';
+import {normalizePaginationKeyPage} from '@/lib/pagination';
 import {cn} from '@/lib/utils';
 import {
     BellIcon, MailIcon, CelebrationIcon, ClockIcon, EyeIcon,
@@ -102,13 +103,10 @@ export default function NotificationsPage() {
         queryKey: ['notifications', tab],
         queryFn: async (page) => {
             const result = await notificationService.getPaginated(page, PER_PAGE, tab === 'unread');
-            return {
-                items: result.items,
-                page: result.pagination.current_page,
-                lastPage: result.pagination.last_page,
-                total: result.pagination.total,
-                hasMore: result.pagination.current_page < result.pagination.last_page,
-            };
+            return normalizePaginationKeyPage(
+                {data: result.items, pagination: result.pagination},
+                page,
+            );
         },
     });
 

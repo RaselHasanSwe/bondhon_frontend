@@ -1,15 +1,17 @@
 'use client';
 
-import {useUserQuery} from '@/hooks/useUserQuery';
-import {chatService} from '@/services/chatService';
 import {ChatList} from '@/components/chat/ChatList';
+import {useConversations} from '@/hooks/useConversations';
 import Link from 'next/link';
 
 export default function ChatPage() {
-    const {data: conversations = [], isLoading} = useUserQuery({
-        queryKey: ['conversations'],
-        queryFn: () => chatService.getConversations(),
-    });
+    const {
+        items: conversations,
+        isLoading,
+        hasNextPage,
+        isFetchingNextPage,
+        fetchNextPage,
+    } = useConversations();
 
     const totalUnread = conversations.reduce((sum, c) => sum + c.unread_count, 0);
 
@@ -41,7 +43,13 @@ export default function ChatPage() {
                     </p>
                 </div>
 
-                <ChatList conversations={conversations} isLoading={isLoading}/>
+                <ChatList
+                    conversations={conversations}
+                    isLoading={isLoading}
+                    hasNextPage={hasNextPage}
+                    isFetchingNextPage={isFetchingNextPage}
+                    onLoadMore={() => fetchNextPage()}
+                />
 
                 {/* Empty CTA */}
                 {!isLoading && conversations.length === 0 && (
@@ -58,4 +66,3 @@ export default function ChatPage() {
         </div>
     );
 }
-

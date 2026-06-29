@@ -10,7 +10,7 @@ import {invalidateInterestQueries, invalidateConversationQueries, invalidateDash
 import {formatAge, resolvePhotoUrl} from '@/lib/utils';
 import {InfiniteScrollFooter} from '@/components/ui/InfiniteScrollFooter';
 import {useInfiniteList} from '@/hooks/useInfiniteList';
-import {normalizeFlatPage} from '@/lib/pagination';
+import {normalizeMetaPage} from '@/lib/pagination';
 import Image from 'next/image';
 import Link from 'next/link';
 import type {Interest} from '@/types/interest';
@@ -199,7 +199,7 @@ export default function InterestsPage() {
                 tab === 'received' ? interestService.getReceived
                 : tab === 'sent' ? interestService.getSent
                 : interestService.getContacts;
-            return service(page, search).then((r) => normalizeFlatPage(r.data.data, page));
+            return service(page, search).then((r) => normalizeMetaPage(r.data.data, page));
         },
     });
 

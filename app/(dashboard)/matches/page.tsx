@@ -4,7 +4,7 @@ import {matchService} from '@/services/profileService';
 import {MatchCard} from '@/components/match/MatchCard';
 import {InfiniteScrollFooter} from '@/components/ui/InfiniteScrollFooter';
 import {useInfiniteList} from '@/hooks/useInfiniteList';
-import {normalizeFlatPage} from '@/lib/pagination';
+import {normalizeMetaPage} from '@/lib/pagination';
 import {HeartIcon} from '@/components/ui/icons';
 
 export default function MatchesPage() {
@@ -19,7 +19,7 @@ export default function MatchesPage() {
     } = useInfiniteList({
         queryKey: ['matches'],
         queryFn: (page) =>
-            matchService.getMatches(page).then((r) => normalizeFlatPage(r.data.data, page)),
+            matchService.getMatches(page).then((r) => normalizeMetaPage(r.data.data, page)),
     });
 
     return (
