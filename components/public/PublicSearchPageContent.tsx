@@ -779,22 +779,6 @@ export default function PublicSearchPageContent() {
                                 />
                             </>
                         )}
-
-                        {!isLoading && results.length > 0 && (
-                            <div className="mt-10 text-center bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
-                                <p className="text-sm text-muted-foreground mb-4">
-                                    Want to view full profiles, send interests, and message matches?
-                                </p>
-                                <div className="flex flex-wrap items-center justify-center gap-3">
-                                    <Link href="/register" className="btn-gold" style={{ height: '2.5rem', borderRadius: '0.75rem', padding: '0 1.5rem' }}>
-                                        Join Free
-                                    </Link>
-                                    <Link href="/login" className="btn-outline-gold" style={{ height: '2.5rem', borderRadius: '0.75rem', padding: '0 1.5rem' }}>
-                                        Sign In
-                                    </Link>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>

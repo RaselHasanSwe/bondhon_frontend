@@ -207,14 +207,26 @@ export function SearchableSelect({
     isDisabled = false,
     id,
 }: SearchableSelectProps) {
+    const [mounted, setMounted] = useState(false);
     const selected = value ? (options.find(o => o.value === value) ?? null) : null;
     const maxMenuHeight = useMenuMaxHeight();
+
+    useEffect(() => setMounted(true), []);
 
     const handleMenuOpen = useCallback(() => {
         requestAnimationFrame(() => {
             document.querySelector('.rs__menu')?.scrollIntoView({ block: 'nearest', behavior: 'instant' as ScrollBehavior });
         });
     }, []);
+
+    if (!mounted) {
+        return (
+            <div
+                className="h-8 rounded-lg border border-[var(--border)] bg-[var(--input)]"
+                aria-hidden
+            />
+        );
+    }
 
     return (
         <ReactSelect<SelectOption>
@@ -252,15 +264,27 @@ export function MultiSearchableSelect({
     isDisabled = false,
     id,
 }: MultiSelectProps) {
+    const [mounted, setMounted] = useState(false);
     const selected = (value ?? [])
         .map(v => options.find(o => o.value === v) ?? { value: v, label: v });
     const maxMenuHeight = useMenuMaxHeight();
+
+    useEffect(() => setMounted(true), []);
 
     const handleMenuOpen = useCallback(() => {
         requestAnimationFrame(() => {
             document.querySelector('.rs__menu')?.scrollIntoView({ block: 'nearest', behavior: 'instant' as ScrollBehavior });
         });
     }, []);
+
+    if (!mounted) {
+        return (
+            <div
+                className="min-h-8 rounded-lg border border-[var(--border)] bg-[var(--input)]"
+                aria-hidden
+            />
+        );
+    }
 
     return (
         <ReactSelect<SelectOption, true>
