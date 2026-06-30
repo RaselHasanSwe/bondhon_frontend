@@ -227,7 +227,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs font-medium text-[var(--sidebar-foreground)] truncate">{user.name}</p>
-                                <span className="text-xs">{user.email}</span>
+                                <span className="text-[11px] truncate">{user.email}</span>
                             </div>
                             <NotificationBell placement="sidebar"/>
                         </div>
