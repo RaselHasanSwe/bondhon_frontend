@@ -170,6 +170,9 @@ export interface ProfileCard {
     connection_status?: 'none' | 'pending' | 'accepted' | 'declined' | 'ignored';
     is_interest_sender?: boolean;
     can_send_interest?: boolean;
+    interest_id?: number | null;
+    conversation_id?: number | null;
+    compatibility_score?: CompatibilityScoreData | null;
 }
 
 export interface ProfileViewUsage {

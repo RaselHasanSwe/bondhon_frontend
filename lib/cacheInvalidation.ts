@@ -34,6 +34,7 @@ export function invalidateDashboardQueries(queryClient: QueryClient): void {
     invalidateUserQueries(
         queryClient,
         'profile-completion',
+        'dashboard',
         'matches',
         'interests-received',
         'profile-views',

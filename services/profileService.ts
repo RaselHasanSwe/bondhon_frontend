@@ -59,8 +59,13 @@ export const profileService = {
 };
 
 export const matchService = {
-    getMatches: (page = 1) =>
-        api.get<ApiResponse<PaginatedResponse<MatchScore>>>('/matches', {params: {page}}),
+    getMatches: (
+        page = 1,
+        params?: { search?: string; date_from?: string; date_to?: string },
+    ) =>
+        api.get<ApiResponse<PaginatedResponse<MatchScore>>>('/matches', {
+            params: { page, ...params },
+        }),
 
     search: (filters: SearchFilters) =>
         api.get<ApiResponse<PaginatedResponse<ProfileCard>>>('/matches/search', {params: filters}),

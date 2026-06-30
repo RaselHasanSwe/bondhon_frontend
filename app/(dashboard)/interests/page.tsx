@@ -3,32 +3,36 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {useRouter} from 'next/navigation';
-import {interestService} from '@/services/profileService';
+import {interestService, shortlistService} from '@/services/profileService';
 import {chatService} from '@/services/chatService';
 import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
-import {invalidateInterestQueries, invalidateConversationQueries, invalidateDashboardQueries} from '@/lib/cacheInvalidation';
-import {formatAge, resolvePhotoUrl} from '@/lib/utils';
+import {handleSendInterestError} from '@/lib/interest';
+import {
+    invalidateInterestQueries,
+    invalidateConversationQueries,
+    invalidateDashboardQueries,
+    invalidateShortlistQueries,
+} from '@/lib/cacheInvalidation';
+import {patchProfileShortlistInCaches} from '@/lib/profileListCache';
+import {formatAge, resolvePhotoUrl, timeAgo} from '@/lib/utils';
+import {resolveMatchScore} from '@/lib/matchScore';
 import {InfiniteScrollFooter} from '@/components/ui/InfiniteScrollFooter';
 import {useInfiniteList} from '@/hooks/useInfiniteList';
 import {normalizeMetaPage} from '@/lib/pagination';
+import {useAuthStore} from '@/store/authStore';
+import {CompatibilityScore} from '@/components/match/CompatibilityScore';
+import {InterestConnectionActions} from '@/components/interest/InterestConnectionActions';
+import {ShortlistToggleButton} from '@/components/profile/ShortlistToggleButton';
 import Image from 'next/image';
 import Link from 'next/link';
 import type {Interest} from '@/types/interest';
 import type {ProfileCard} from '@/types/profile';
 import {
-    UserIcon, InboxIcon, OutboxIcon, CheckIcon, XIcon,
-    ChatIcon, ClockIcon, SearchIcon, CheckCircleIcon,
+    UserIcon, InboxIcon, OutboxIcon, CheckIcon,
+    SearchIcon, CheckCircleIcon, MapPinIcon, XIcon,
 } from '@/components/ui/icons';
 
 type Tab = 'received' | 'sent' | 'contacts';
-
-const STATUS_LABELS: Record<string, { label: string; className: string }> = {
-    pending: {label: 'Pending', className: 'bg-amber-50 text-amber-600 border-amber-200'},
-    accepted: {label: 'Accepted', className: 'bg-green-50 text-green-600 border-green-200'},
-    declined: {label: 'Declined', className: 'bg-red-50   text-red-500   border-red-200'},
-    ignored: {label: 'Ignored', className: 'bg-gray-50  text-gray-400  border-gray-200'},
-    expired: {label: 'Expired', className: 'bg-gray-50  text-gray-400  border-gray-200'},
-};
 
 const TAB_CONFIG: Record<Tab, { label: string; emptyTitle: string; emptyHint: string }> = {
     received: {
@@ -55,105 +59,132 @@ function getInterestProfile(interest: Interest, tab: Tab): ProfileCard | null {
     return interest.sender ?? interest.receiver;
 }
 
+function getConnectionMeta(interest: Interest, tab: Tab) {
+    const isSender = tab === 'sent';
+    const status = interest.status === 'expired' ? 'ignored' : interest.status;
+
+    return {
+        connection_status: status as 'none' | 'pending' | 'accepted' | 'declined' | 'ignored',
+        interest_id: interest.id,
+        is_interest_sender: isSender,
+        conversation_id: interest.conversation_id ?? null,
+        can_send_interest: false,
+    };
+}
+
 function InterestCard({
     interest,
     tab,
     onAction,
     onMessage,
+    onToggleShortlist,
     isMessaging,
+    isTogglingShortlist,
 }: {
     interest: Interest;
     tab: Tab;
     onAction?: (id: number, action: 'accept' | 'decline' | 'ignore') => void;
     onMessage?: (interest: Interest, profile: ProfileCard) => void;
+    onToggleShortlist: (userId: number) => void;
     isMessaging?: boolean;
+    isTogglingShortlist?: boolean;
 }) {
     const profile = getInterestProfile(interest, tab);
     if (!profile) return null;
 
     const profileUrl = profile.profile?.profile_id
         ? `/profile/${profile.profile.profile_id}`
-        : `#`;
+        : '#';
 
-    const status = STATUS_LABELS[interest.status] ?? STATUS_LABELS.pending;
-    const displayStatus = tab === 'sent' && interest.status === 'pending'
-        ? { label: 'Already Sent', className: 'bg-amber-50 text-amber-600 border-amber-200' }
-        : status;
-    const showStatus = tab !== 'contacts';
+    const connectionMeta = getConnectionMeta(interest, tab);
+    const matchScore = resolveMatchScore(profile);
+    const isShortlisted = profile.is_shortlisted ?? false;
 
     return (
-        <div className="bg-white rounded-2xl border border-[var(--border)] overflow-hidden hover:shadow-[var(--shadow-card-hover)] transition-shadow duration-200 p-4 flex items-center gap-4">
-            <Link href={profileUrl} className="flex-shrink-0">
-                <div className="w-16 h-16 rounded-xl overflow-hidden bg-[var(--gold-50)]">
-                    {resolvePhotoUrl(profile.primary_photo) ? (
-                        <Image src={resolvePhotoUrl(profile.primary_photo)!} alt={profile.name} width={64} height={64}
-                               className="w-full h-full object-cover"/>
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                            <UserIcon size={28} className="text-[var(--gold-300)]" strokeWidth={1.5}/>
-                        </div>
-                    )}
-                </div>
-            </Link>
-
-            <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                    <div>
-                        <Link href={profileUrl}
-                              className="font-semibold text-foreground hover:text-[var(--primary)] transition-colors" style={{fontFamily:'var(--font-heading)'}}>
-                            {profile.name}
-                        </Link>
-                        <p className="text-sm text-muted-foreground mt-0.5">
-                            {formatAge(profile.profile?.dob)}
-                            {profile.profile?.city ? ` • ${profile.profile.city}` : ''}
-                            {profile.religion ? ` • ${profile.religion}` : ''}
-                        </p>
-                        {profile.education && <p className="text-xs text-muted-foreground/70">{profile.education}</p>}
+        <div className="card-premium p-3 sm:p-4 hover:shadow-md transition-all duration-200 hover:border-[var(--primary)]/20 group">
+            <div className="flex items-start gap-3 sm:gap-4">
+                <Link href={profileUrl} className="flex-shrink-0">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-[var(--gold-50)] border-2 border-transparent group-hover:border-[var(--primary)]/30 transition-colors">
+                        {resolvePhotoUrl(profile.primary_photo) ? (
+                            <Image
+                                src={resolvePhotoUrl(profile.primary_photo)!}
+                                alt={profile.name}
+                                width={64}
+                                height={64}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                                <UserIcon size={24} className="text-[var(--gold-300)]" strokeWidth={1.5}/>
+                            </div>
+                        )}
                     </div>
-                    {showStatus && (
-                        <span className={`text-xs border rounded-full px-2.5 py-1 font-medium flex-shrink-0 ${displayStatus.className}`}>
-                            {displayStatus.label}
-                        </span>
-                    )}
+                </Link>
+
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <Link
+                                    href={profileUrl}
+                                    className="font-semibold text-foreground truncate group-hover:text-[var(--primary)] transition-colors"
+                                    style={{fontFamily: 'var(--font-heading)'}}
+                                >
+                                    {profile.name}
+                                </Link>
+                                {profile.profile?.is_verified && (
+                                    <span className="flex-shrink-0 text-xs bg-green-50 text-green-600 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                        <CheckIcon size={12} strokeWidth={2.5}/>
+                                        Verified
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground mt-0.5">
+                                {formatAge(profile.profile?.dob)}
+                                {profile.profile?.city && (
+                                    <span className="flex items-center gap-0.5">
+                                        <MapPinIcon size={12} strokeWidth={1.8}/>
+                                        {profile.profile.city}
+                                    </span>
+                                )}
+                                {profile.religion && <span>{profile.religion}</span>}
+                                {profile.education && (
+                                    <span className="truncate max-w-[140px] sm:max-w-none">{profile.education}</span>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                            {matchScore != null && (
+                                <CompatibilityScore score={matchScore} size="sm"/>
+                            )}
+                            <span className="text-xs text-muted-foreground hidden sm:block whitespace-nowrap">
+                                {timeAgo(interest.created_at)}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-3 flex-wrap">
+                        <InterestConnectionActions
+                            {...connectionMeta}
+                            onSendInterest={() => {}}
+                            onInterestAction={onAction}
+                            onMessage={() => onMessage?.(interest, profile)}
+                            isMessaging={isMessaging}
+                        />
+
+                        <ShortlistToggleButton
+                            isShortlisted={isShortlisted}
+                            onToggle={() => onToggleShortlist(profile.id)}
+                            isLoading={isTogglingShortlist}
+                        />
+                    </div>
                 </div>
+            </div>
 
-                <div className="flex items-center gap-2 mt-3 flex-wrap">
-                    {tab === 'received' && interest.status === 'pending' && onAction && (
-                        <>
-                            <button
-                                onClick={() => onAction(interest.id, 'accept')}
-                                className="btn-gold flex items-center gap-1"
-                                style={{height:'2rem', borderRadius:'0.5rem', padding:'0 0.875rem', fontSize:'0.75rem'}}
-                            >
-                                <CheckIcon size={12} strokeWidth={2.5}/> Accept
-                            </button>
-                            <button
-                                onClick={() => onAction(interest.id, 'decline')}
-                                className="px-4 py-1.5 border border-red-200 text-red-500 hover:bg-red-50 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
-                            >
-                                <XIcon size={12} strokeWidth={2.5}/> Decline
-                            </button>
-                            <button
-                                onClick={() => onAction(interest.id, 'ignore')}
-                                className="px-3 py-1.5 border border-[var(--border)] text-muted-foreground hover:bg-[var(--muted)] text-xs rounded-lg transition-colors"
-                            >
-                                Ignore
-                            </button>
-                        </>
-                    )}
-
-                    {interest.can_message && onMessage && (
-                        <button
-                            onClick={() => onMessage(interest, profile)}
-                            disabled={isMessaging}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--primary)]/30 text-[var(--primary)] hover:bg-[var(--accent)] transition-colors"
-                        >
-                            {isMessaging
-                                ? <><ClockIcon size={12} strokeWidth={1.8}/> Opening…</>
-                                : <><ChatIcon size={12} strokeWidth={1.8}/> Message</>
-                            }
-                        </button>
-                    )}
+            <div className="sm:hidden mt-2 pt-2 border-t border-gray-50">
+                <div className="text-xs text-muted-foreground">
+                    {tab === 'contacts' ? 'Connected' : 'Interest'} {timeAgo(interest.created_at)}
                 </div>
             </div>
         </div>
@@ -163,10 +194,12 @@ function InterestCard({
 export default function InterestsPage() {
     const router = useRouter();
     const queryClient = useQueryClient();
+    const userId = useAuthStore((s) => s.user?.id);
     const [tab, setTab] = useState<Tab>('received');
     const [searchInput, setSearchInput] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [messagingId, setMessagingId] = useState<number | null>(null);
+    const [togglingShortlistId, setTogglingShortlistId] = useState<number | null>(null);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
@@ -227,6 +260,39 @@ export default function InterestsPage() {
         },
     });
 
+    const shortlistMutation = useMutation({
+        mutationFn: (candidateUserId: number) => shortlistService.toggle(candidateUserId),
+        onMutate: async (candidateUserId) => {
+            const profile = interests
+                .map((item) => getInterestProfile(item, tab))
+                .find((p) => p?.id === candidateUserId);
+            const currentShortlisted = profile?.is_shortlisted ?? false;
+            const nextShortlisted = !currentShortlisted;
+            patchProfileShortlistInCaches(queryClient, userId, candidateUserId, nextShortlisted);
+            return { nextShortlisted };
+        },
+        onSuccess: (response, candidateUserId) => {
+            const shortlisted = response.data?.data?.shortlisted;
+            if (typeof shortlisted === 'boolean') {
+                patchProfileShortlistInCaches(queryClient, userId, candidateUserId, shortlisted);
+            }
+            invalidateShortlistQueries(queryClient);
+            showSuccessToast(shortlisted ? 'Added to shortlist' : 'Removed from shortlist');
+        },
+        onError: (error: unknown, candidateUserId, context) => {
+            if (context) {
+                patchProfileShortlistInCaches(
+                    queryClient,
+                    userId,
+                    candidateUserId,
+                    !context.nextShortlisted,
+                );
+            }
+            showErrorToast(getErrorMessage(error));
+        },
+        onSettled: () => setTogglingShortlistId(null),
+    });
+
     const handleMessage = async (interest: Interest, profile: ProfileCard) => {
         setMessagingId(interest.id);
         try {
@@ -239,12 +305,7 @@ export default function InterestsPage() {
             invalidateConversationQueries(queryClient);
             router.push(`/chat/${conv.id}`);
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } }; message?: string };
-            showErrorToast(
-                err?.response?.data?.message
-                || err?.message
-                || 'Chat is only available after a mutual interest is accepted.',
-            );
+            showErrorToast(getErrorMessage(error));
         } finally {
             setMessagingId(null);
         }
@@ -258,7 +319,7 @@ export default function InterestsPage() {
     const EmptyIcon = tabEmptyIcon;
 
     return (
-        <div className="max-w-3xl mx-auto pb-20 md:pb-6">
+        <div className="max-w-4xl mx-auto pb-20 md:pb-6">
             <h1 className="page-title mb-6 animate-fade-in-up">Interests</h1>
 
             <div className="tab-pill-container flex gap-1 mb-4">
@@ -323,16 +384,24 @@ export default function InterestsPage() {
             )}
 
             <div className="space-y-3 stagger">
-                {interests.map((interest) => (
-                    <InterestCard
-                        key={interest.id}
-                        interest={interest}
-                        tab={tab}
-                        onAction={(id, action) => actionMutation.mutate({id, action})}
-                        onMessage={handleMessage}
-                        isMessaging={messagingId === interest.id}
-                    />
-                ))}
+                {interests.map((interest) => {
+                    const profile = getInterestProfile(interest, tab);
+                    return (
+                        <InterestCard
+                            key={interest.id}
+                            interest={interest}
+                            tab={tab}
+                            onAction={(id, action) => actionMutation.mutate({id, action})}
+                            onMessage={handleMessage}
+                            onToggleShortlist={(id) => {
+                                setTogglingShortlistId(id);
+                                shortlistMutation.mutate(id);
+                            }}
+                            isMessaging={messagingId === interest.id}
+                            isTogglingShortlist={togglingShortlistId === profile?.id}
+                        />
+                    );
+                })}
             </div>
 
             {!isLoading && interests.length > 0 && (

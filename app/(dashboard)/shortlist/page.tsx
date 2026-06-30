@@ -17,18 +17,14 @@ import {
     invalidateShortlistQueries,
 } from '@/lib/cacheInvalidation';
 import Link from 'next/link';
-import {
-    StarFilledIcon,
-    StarIcon,
-    UserIcon,
-    MapPinIcon,
-    CheckIcon,
-    ClockIcon,
-    SearchIcon,
-    XIcon,
-} from '@/components/ui/icons';
+import { StarFilledIcon, StarIcon, UserIcon, MapPinIcon, CheckIcon, SearchIcon, XIcon } from '@/components/ui/icons';
 import { formatAge, resolvePhotoUrl, timeAgo } from '@/lib/utils';
+import { resolveMatchScore } from '@/lib/matchScore';
+import { CompatibilityScore } from '@/components/match/CompatibilityScore';
 import { InterestConnectionActions } from '@/components/interest/InterestConnectionActions';
+import { ShortlistToggleButton } from '@/components/profile/ShortlistToggleButton';
+import { patchProfileShortlistInCaches } from '@/lib/profileListCache';
+import { useAuthStore } from '@/store/authStore';
 import type { ShortlistItem } from '@/types/profile';
 
 function ShortlistSkeleton() {
@@ -52,28 +48,29 @@ function ShortlistCard({
     onSendInterest,
     onInterestAction,
     onMessage,
-    onRemove,
+    onToggleShortlist,
     isSendingInterest,
     isMessaging,
-    isRemoving,
+    isTogglingShortlist,
 }: {
     item: ShortlistItem;
     onSendInterest: (userId: number) => void;
     onInterestAction: (id: number, action: 'accept' | 'decline' | 'ignore') => void;
     onMessage: (item: ShortlistItem) => void;
-    onRemove: (userId: number) => void;
+    onToggleShortlist: (userId: number) => void;
     isSendingInterest: boolean;
     isMessaging: boolean;
-    isRemoving: boolean;
+    isTogglingShortlist: boolean;
 }) {
     const profile = item.user;
     const profileUrl = profile.profile?.profile_id
         ? `/profile/${profile.profile.profile_id}`
         : '#';
+    const matchScore = resolveMatchScore(profile);
 
     return (
         <div className="card-premium p-4 hover:shadow-md transition-all duration-200 hover:border-[var(--primary)]/20 group">
-            <div className="flex items-center gap-4">
+            <div className="flex items-start gap-4">
                 <Link href={profileUrl} className="flex-shrink-0">
                     <div className="w-14 h-14 rounded-full bg-[var(--gold-50)] overflow-hidden border-2 border-transparent group-hover:border-[var(--primary)]/30 transition-colors">
                         {resolvePhotoUrl(profile.primary_photo) ? (
@@ -91,23 +88,25 @@ function ShortlistCard({
                 </Link>
 
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <Link
-                            href={profileUrl}
-                            className="font-semibold text-foreground truncate group-hover:text-[var(--primary)] transition-colors"
-                            style={{ fontFamily: 'var(--font-heading)' }}
-                        >
-                            {profile.name}
-                        </Link>
-                        {profile.profile?.is_verified && (
-                            <span className="flex-shrink-0 text-xs bg-green-50 text-green-600 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                                <CheckIcon size={12} strokeWidth={2.5} />
-                                Verified
-                            </span>
-                        )}
-                    </div>
+                    <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <Link
+                                    href={profileUrl}
+                                    className="font-semibold text-foreground truncate group-hover:text-[var(--primary)] transition-colors"
+                                    style={{ fontFamily: 'var(--font-heading)' }}
+                                >
+                                    {profile.name}
+                                </Link>
+                                {profile.profile?.is_verified && (
+                                    <span className="flex-shrink-0 text-xs bg-green-50 text-green-600 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                        <CheckIcon size={12} strokeWidth={2.5} />
+                                        Verified
+                                    </span>
+                                )}
+                            </div>
 
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground mt-0.5">
                         {profile.profile?.age !== null && profile.profile?.age !== undefined && (
                             <span>{formatAge(profile.profile.dob)}</span>
                         )}
@@ -129,6 +128,17 @@ function ShortlistCard({
                             </span>
                         )}
                     </div>
+                        </div>
+
+                        <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                            {matchScore != null && (
+                                <CompatibilityScore score={matchScore} size="sm" />
+                            )}
+                            <span className="text-xs text-muted-foreground hidden sm:block whitespace-nowrap">
+                                {timeAgo(item.created_at)}
+                            </span>
+                        </div>
+                    </div>
 
                     <div className="flex items-center gap-2 mt-3 flex-wrap">
                         <InterestConnectionActions
@@ -144,22 +154,11 @@ function ShortlistCard({
                             isMessaging={isMessaging}
                         />
 
-                        <button
-                            onClick={() => onRemove(profile.id)}
-                            disabled={isRemoving}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
-                        >
-                            {isRemoving
-                                ? <><ClockIcon size={12} strokeWidth={1.8} /> Removing…</>
-                                : <><StarFilledIcon size={12} strokeWidth={1.8} /> Remove</>
-                            }
-                        </button>
-                    </div>
-                </div>
-
-                <div className="flex-shrink-0 text-right hidden sm:block">
-                    <div className="text-xs text-muted-foreground">
-                        {timeAgo(item.created_at)}
+                        <ShortlistToggleButton
+                            isShortlisted
+                            onToggle={() => onToggleShortlist(profile.id)}
+                            isLoading={isTogglingShortlist}
+                        />
                     </div>
                 </div>
             </div>
@@ -176,11 +175,12 @@ function ShortlistCard({
 export default function ShortlistPage() {
     const router = useRouter();
     const queryClient = useQueryClient();
+    const userId = useAuthStore((s) => s.user?.id);
     const [searchInput, setSearchInput] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [sendingInterestId, setSendingInterestId] = useState<number | null>(null);
     const [messagingUserId, setMessagingUserId] = useState<number | null>(null);
-    const [removingUserId, setRemovingUserId] = useState<number | null>(null);
+    const [togglingShortlistId, setTogglingShortlistId] = useState<number | null>(null);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const handleSearchChange = useCallback((value: string) => {
@@ -211,18 +211,22 @@ export default function ShortlistPage() {
         refetchOnMount: 'always',
     });
 
-    const removeMutation = useMutation({
+    const shortlistMutation = useMutation({
         mutationFn: (userId: number) => shortlistService.toggle(userId),
+        onMutate: async (candidateUserId) => {
+            patchProfileShortlistInCaches(queryClient, userId, candidateUserId, false);
+            return { candidateUserId };
+        },
         onSuccess: () => {
             invalidateShortlistQueries(queryClient);
-            queryClient.invalidateQueries({ queryKey: ['shortlist'] });
             showSuccessToast('Removed from shortlist');
         },
-        onError: (error: unknown) => {
+        onError: (error: unknown, candidateUserId) => {
+            patchProfileShortlistInCaches(queryClient, userId, candidateUserId, true);
             showErrorToast(getErrorMessage(error));
         },
         onSettled: () => {
-            setRemovingUserId(null);
+            setTogglingShortlistId(null);
         },
     });
 
@@ -275,9 +279,9 @@ export default function ShortlistPage() {
         sendInterestMutation.mutate(userId);
     };
 
-    const handleRemove = (userId: number) => {
-        setRemovingUserId(userId);
-        removeMutation.mutate(userId);
+    const handleToggleShortlist = (userId: number) => {
+        setTogglingShortlistId(userId);
+        shortlistMutation.mutate(userId);
     };
 
     const handleMessage = async (item: ShortlistItem) => {
@@ -365,10 +369,10 @@ export default function ShortlistPage() {
                                 onSendInterest={handleSendInterest}
                                 onInterestAction={(id, action) => actionMutation.mutate({ id, action })}
                                 onMessage={handleMessage}
-                                onRemove={handleRemove}
+                                onToggleShortlist={handleToggleShortlist}
                                 isSendingInterest={sendingInterestId === item.user.id}
                                 isMessaging={messagingUserId === item.user.id}
-                                isRemoving={removingUserId === item.user.id}
+                                isTogglingShortlist={togglingShortlistId === item.user.id}
                             />
                         ))}
                     </div>

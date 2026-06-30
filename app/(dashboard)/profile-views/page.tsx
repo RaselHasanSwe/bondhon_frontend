@@ -28,7 +28,14 @@ import {
     XIcon,
 } from '@/components/ui/icons';
 import { formatAge, resolvePhotoUrl, timeAgo } from '@/lib/utils';
+import { resolveMatchScore } from '@/lib/matchScore';
+import { CompatibilityScore } from '@/components/match/CompatibilityScore';
 import { InterestConnectionActions } from '@/components/interest/InterestConnectionActions';
+import { ShortlistToggleButton } from '@/components/profile/ShortlistToggleButton';
+import { patchProfileShortlistInCaches } from '@/lib/profileListCache';
+import { invalidateShortlistQueries } from '@/lib/cacheInvalidation';
+import { shortlistService } from '@/services/profileService';
+import { useAuthStore } from '@/store/authStore';
 import type { ProfileView } from '@/types/profile';
 
 function ViewerSkeleton() {
@@ -52,23 +59,29 @@ function ViewerCard({
     onSendInterest,
     onInterestAction,
     onMessage,
+    onToggleShortlist,
     isSendingInterest,
     isMessaging,
+    isTogglingShortlist,
 }: {
     view: ProfileView;
     onSendInterest: (viewerId: number) => void;
     onInterestAction: (id: number, action: 'accept' | 'decline' | 'ignore') => void;
     onMessage: (view: ProfileView) => void;
+    onToggleShortlist: (userId: number) => void;
     isSendingInterest: boolean;
     isMessaging: boolean;
+    isTogglingShortlist: boolean;
 }) {
     const profileUrl = view.viewer.profile?.profile_id
         ? `/profile/${view.viewer.profile.profile_id}`
         : '#';
+    const matchScore = resolveMatchScore(view.viewer);
+    const isShortlisted = view.viewer.is_shortlisted ?? false;
 
     return (
         <div className="card-premium p-4 hover:shadow-md transition-all duration-200 hover:border-[var(--primary)]/20 group">
-            <div className="flex items-center gap-4">
+            <div className="flex items-start gap-4">
                 <Link href={profileUrl} className="flex-shrink-0">
                     <div className="w-14 h-14 rounded-full bg-[var(--gold-50)] overflow-hidden border-2 border-transparent group-hover:border-[var(--primary)]/30 transition-colors">
                         {resolvePhotoUrl(view.viewer.primary_photo) ? (
@@ -86,23 +99,25 @@ function ViewerCard({
                 </Link>
 
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <Link
-                            href={profileUrl}
-                            className="font-semibold text-foreground truncate group-hover:text-[var(--primary)] transition-colors"
-                            style={{ fontFamily: 'var(--font-heading)' }}
-                        >
-                            {view.viewer.name}
-                        </Link>
-                        {view.viewer.profile?.is_verified && (
-                            <span className="flex-shrink-0 text-xs bg-green-50 text-green-600 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                                <CheckIcon size={12} strokeWidth={2.5} />
-                                Verified
-                            </span>
-                        )}
-                    </div>
+                    <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <Link
+                                    href={profileUrl}
+                                    className="font-semibold text-foreground truncate group-hover:text-[var(--primary)] transition-colors"
+                                    style={{ fontFamily: 'var(--font-heading)' }}
+                                >
+                                    {view.viewer.name}
+                                </Link>
+                                {view.viewer.profile?.is_verified && (
+                                    <span className="flex-shrink-0 text-xs bg-green-50 text-green-600 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                        <CheckIcon size={12} strokeWidth={2.5} />
+                                        Verified
+                                    </span>
+                                )}
+                            </div>
 
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground mt-0.5">
                         {view.viewer.profile?.age !== null && view.viewer.profile?.age !== undefined && (
                             <span>{formatAge(view.viewer.profile.dob)}</span>
                         )}
@@ -124,6 +139,17 @@ function ViewerCard({
                             </span>
                         )}
                     </div>
+                        </div>
+
+                        <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                            {matchScore != null && (
+                                <CompatibilityScore score={matchScore} size="sm" />
+                            )}
+                            <span className="text-xs text-muted-foreground hidden sm:block whitespace-nowrap">
+                                {timeAgo(view.viewed_at)}
+                            </span>
+                        </div>
+                    </div>
 
                     <div className="flex items-center gap-2 mt-3 flex-wrap">
                         <InterestConnectionActions
@@ -138,12 +164,12 @@ function ViewerCard({
                             isSendingInterest={isSendingInterest}
                             isMessaging={isMessaging}
                         />
-                    </div>
-                </div>
 
-                <div className="flex-shrink-0 text-right hidden sm:block">
-                    <div className="text-xs text-muted-foreground">
-                        {timeAgo(view.viewed_at)}
+                        <ShortlistToggleButton
+                            isShortlisted={isShortlisted}
+                            onToggle={() => onToggleShortlist(view.viewer.id)}
+                            isLoading={isTogglingShortlist}
+                        />
                     </div>
                 </div>
             </div>
@@ -160,10 +186,12 @@ function ViewerCard({
 export default function ProfileViewsPage() {
     const router = useRouter();
     const queryClient = useQueryClient();
+    const userId = useAuthStore((s) => s.user?.id);
     const [searchInput, setSearchInput] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [sendingInterestId, setSendingInterestId] = useState<number | null>(null);
     const [messagingViewerId, setMessagingViewerId] = useState<number | null>(null);
+    const [togglingShortlistId, setTogglingShortlistId] = useState<number | null>(null);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const handleSearchChange = useCallback((value: string) => {
@@ -238,6 +266,37 @@ export default function ProfileViewsPage() {
         onError: (error: unknown) => {
             showErrorToast(getErrorMessage(error));
         },
+    });
+
+    const shortlistMutation = useMutation({
+        mutationFn: (candidateUserId: number) => shortlistService.toggle(candidateUserId),
+        onMutate: async (candidateUserId) => {
+            const view = viewers.find((v) => v.viewer.id === candidateUserId);
+            const currentShortlisted = view?.viewer.is_shortlisted ?? false;
+            const nextShortlisted = !currentShortlisted;
+            patchProfileShortlistInCaches(queryClient, userId, candidateUserId, nextShortlisted);
+            return { nextShortlisted };
+        },
+        onSuccess: (response, candidateUserId) => {
+            const shortlisted = response.data?.data?.shortlisted;
+            if (typeof shortlisted === 'boolean') {
+                patchProfileShortlistInCaches(queryClient, userId, candidateUserId, shortlisted);
+            }
+            invalidateShortlistQueries(queryClient);
+            showSuccessToast(shortlisted ? 'Added to shortlist' : 'Removed from shortlist');
+        },
+        onError: (error: unknown, candidateUserId, context) => {
+            if (context) {
+                patchProfileShortlistInCaches(
+                    queryClient,
+                    userId,
+                    candidateUserId,
+                    !context.nextShortlisted,
+                );
+            }
+            showErrorToast(getErrorMessage(error));
+        },
+        onSettled: () => setTogglingShortlistId(null),
     });
 
     const handleSendInterest = (viewerId: number) => {
@@ -400,8 +459,13 @@ export default function ProfileViewsPage() {
                                 onSendInterest={handleSendInterest}
                                 onInterestAction={(id, action) => actionMutation.mutate({ id, action })}
                                 onMessage={handleMessage}
+                                onToggleShortlist={(id) => {
+                                    setTogglingShortlistId(id);
+                                    shortlistMutation.mutate(id);
+                                }}
                                 isSendingInterest={sendingInterestId === view.viewer.id}
                                 isMessaging={messagingViewerId === view.viewer_id}
+                                isTogglingShortlist={togglingShortlistId === view.viewer.id}
                             />
                         ))}
                     </div>
