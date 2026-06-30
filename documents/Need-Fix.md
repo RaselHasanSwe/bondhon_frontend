@@ -435,7 +435,7 @@ Fields:
 
 # Home Page
 
-## Header
+## Header (Done)
 
 1. Display Site Name and Slogan.
 2. Keep only the following menu items:

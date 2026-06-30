@@ -14,6 +14,9 @@ import {notFound} from 'next/navigation';
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'Enorsia';
 
+/** Fallback max-age when on-demand revalidation is not triggered. */
+const CACHE_MAX_AGE = 86_400;
+
 interface ApiResponse<T> {
     success: boolean;
     data: T;
@@ -24,7 +27,7 @@ interface ApiResponse<T> {
 
 export async function getSettings(): Promise<SiteSettings> {
     const res = await fetch(`${BASE_URL}/api/v1/settings`, {
-        next: {revalidate: 60}, // ISR: revalidate every 60 seconds
+        next: {tags: ['site-settings'], revalidate: CACHE_MAX_AGE},
     });
 
     if (!res.ok) {
@@ -58,7 +61,7 @@ export async function getSettings(): Promise<SiteSettings> {
 
 export async function getPages(): Promise<PageListItem[]> {
     const res = await fetch(`${BASE_URL}/api/v1/pages`, {
-        next: {revalidate: 60},
+        next: {tags: ['cms-pages'], revalidate: CACHE_MAX_AGE},
     });
 
     if (!res.ok) return [];
@@ -70,7 +73,7 @@ export async function getPages(): Promise<PageListItem[]> {
 /** Published CMS pages flagged with show_in_menu in the admin panel. */
 export async function getMenuPages(): Promise<PageListItem[]> {
     const res = await fetch(`${BASE_URL}/api/v1/pages?menu=1`, {
-        next: {revalidate: 60},
+        next: {tags: ['cms-pages'], revalidate: CACHE_MAX_AGE},
     });
 
     if (!res.ok) return [];
@@ -81,7 +84,7 @@ export async function getMenuPages(): Promise<PageListItem[]> {
 
 export async function getPage(slug: string): Promise<PageDetail> {
     const res = await fetch(`${BASE_URL}/api/v1/pages/${slug}`, {
-        next: {revalidate: 60},
+        next: {tags: ['cms-pages', `cms-page:${slug}`], revalidate: CACHE_MAX_AGE},
     });
 
     if (!res.ok || res.status === 404) {
