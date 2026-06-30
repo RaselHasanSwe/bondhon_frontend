@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { publicSearchService, type PublicSearchFilters } from '@/services/publicSearchService';
 import { PublicProfileCard } from '@/components/match/PublicProfileCard';
+import { PublicProfileViewPromptModal } from '@/components/public/PublicProfileViewPromptModal';
+import { usePublicProfileCardAction } from '@/hooks/usePublicProfileCardAction';
 import { InfiniteScrollFooter } from '@/components/ui/InfiniteScrollFooter';
 import { usePublicInfiniteList } from '@/hooks/usePublicInfiniteList';
 import { normalizeMetaPage } from '@/lib/pagination';
@@ -579,9 +581,20 @@ export default function PublicSearchPageContent() {
     };
 
     const activeCount = countActiveFilters(appliedFilters);
+    const {
+        selectedProfile,
+        isModalOpen,
+        handleProfileClick,
+        setModalOpen,
+    } = usePublicProfileCardAction();
 
     return (
         <>
+            <PublicProfileViewPromptModal
+                profile={selectedProfile}
+                open={isModalOpen}
+                onOpenChange={setModalOpen}
+            />
             <div className="py-10" style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)' }}>
                 <div className="max-w-7xl mx-auto px-4 text-center">
                     <h1
@@ -766,7 +779,12 @@ export default function PublicSearchPageContent() {
                             <>
                                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 stagger">
                                     {results.map((profile) => (
-                                        <PublicProfileCard key={profile.id} profile={profile} />
+                                        <div key={profile.id} className="h-full">
+                                            <PublicProfileCard
+                                                profile={profile}
+                                                onClick={() => handleProfileClick(profile)}
+                                            />
+                                        </div>
                                     ))}
                                 </div>
 

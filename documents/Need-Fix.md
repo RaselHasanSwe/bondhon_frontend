@@ -455,7 +455,7 @@ Fields:
 
 ---
 
-## Footer
+## Footer (Done)
 
 1. Display actual site logo and slogan.
 2. Display all configured social media links.
