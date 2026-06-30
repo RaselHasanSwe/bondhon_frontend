@@ -267,7 +267,7 @@ export default function DashboardPage() {
     const planLabel = (user?.subscription_plan ?? 'free').replace(/_/g, ' ');
 
     const quickActions = [
-        { href: '/search', label: 'Search Profiles', Icon: SearchIcon },
+        { href: '/member/search', label: 'Search Profiles', Icon: SearchIcon },
         { href: '/interests', label: 'Interests', Icon: MailIcon },
         { href: '/shortlist', label: 'Shortlist', Icon: StarFilledIcon },
         { href: '/profile-views', label: 'Profile Viewers', Icon: EyeIcon },

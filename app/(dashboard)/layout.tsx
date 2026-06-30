@@ -53,7 +53,7 @@ function AccountDisableIcon({size = 24, strokeWidth = 1.8, ...props}: NavIconPro
 const NAV_ITEMS: { href: string; label: string; Icon: ComponentType<NavIconProps>; adminOnly?: boolean }[] = [
     {href: '/dashboard', label: 'Dashboard', Icon: HomeIcon},
     {href: '/matches', label: 'Matches', Icon: MatchesIcon},
-    {href: '/search', label: 'Search', Icon: SearchIcon},
+    {href: '/member/search', label: 'Search', Icon: SearchIcon},
     {href: '/interests', label: 'Interests', Icon: InterestIcon},
     {href: '/chat', label: 'Messages', Icon: ChatIcon},
     {href: '/shortlist', label: 'Shortlist', Icon: StarIcon},
