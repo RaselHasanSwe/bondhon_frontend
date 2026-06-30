@@ -8,6 +8,7 @@
 
 import type {SiteSettings} from '@/types/settings';
 import type {PageDetail, PageListItem} from '@/types/page';
+import type {SubscriptionPlan, PublicSubscriptionPlansPayload, FeatureDefinitions} from '@/types/subscription';
 import {notFound} from 'next/navigation';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
@@ -66,6 +67,18 @@ export async function getPages(): Promise<PageListItem[]> {
     return json.data ?? [];
 }
 
+/** Published CMS pages flagged with show_in_menu in the admin panel. */
+export async function getMenuPages(): Promise<PageListItem[]> {
+    const res = await fetch(`${BASE_URL}/api/v1/pages?menu=1`, {
+        next: {revalidate: 60},
+    });
+
+    if (!res.ok) return [];
+
+    const json: ApiResponse<PageListItem[]> = await res.json();
+    return json.data ?? [];
+}
+
 export async function getPage(slug: string): Promise<PageDetail> {
     const res = await fetch(`${BASE_URL}/api/v1/pages/${slug}`, {
         next: {revalidate: 60},
@@ -82,5 +95,29 @@ export async function getPage(slug: string): Promise<PageDetail> {
     }
 
     return json.data;
+}
+
+// ─── Subscription Plans ────────────────────────────────────────────────────
+
+export async function getSubscriptionPlans(): Promise<PublicSubscriptionPlansPayload> {
+    const res = await fetch(`${BASE_URL}/api/v1/subscription-plans`, {
+        next: {revalidate: 60},
+    });
+
+    if (!res.ok) {
+        return { plans: [], feature_definitions: {} };
+    }
+
+    const json: ApiResponse<PublicSubscriptionPlansPayload | SubscriptionPlan[]> = await res.json();
+    const data = json.data;
+
+    if (Array.isArray(data)) {
+        return { plans: data, feature_definitions: {} };
+    }
+
+    return {
+        plans: data?.plans ?? [],
+        feature_definitions: data?.feature_definitions ?? {},
+    };
 }
 

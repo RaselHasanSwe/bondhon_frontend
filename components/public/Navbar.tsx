@@ -12,24 +12,19 @@ import {
     LogOut,
     ArrowRight,
 } from 'lucide-react';
-import {cfImageUrl, cn} from '@/lib/utils';
-import {resolvePrimaryPhotoUrl} from '@/lib/profilePhotos';
-import {useAuthStore} from '@/store/authStore';
-import {profileService} from '@/services/profileService';
-import {authService} from '@/services/authService';
+import { cfImageUrl, cn } from '@/lib/utils';
+import { resolvePrimaryPhotoUrl } from '@/lib/profilePhotos';
+import { useAuthStore } from '@/store/authStore';
+import { profileService } from '@/services/profileService';
+import { authService } from '@/services/authService';
+import { isNavLinkActive, type NavLink } from '@/lib/publicNav';
 
 interface NavbarProps {
     siteName: string;
+    siteSlogan: string | null;
     logoUrl: string | null;
+    navLinks: NavLink[];
 }
-
-const navLinks = [
-    {href: '/', label: 'Home'},
-    {href: '/about', label: 'About'},
-    {href: '/success-stories', label: 'Success Stories'},
-    {href: '/faq', label: 'FAQ'},
-    {href: '/contact', label: 'Contact'},
-];
 
 function UserAvatar({
                         name,
@@ -232,7 +227,7 @@ function UserMenuTrigger({
     );
 }
 
-export default function Navbar({siteName, logoUrl}: NavbarProps) {
+export default function Navbar({siteName, siteSlogan, logoUrl, navLinks}: NavbarProps) {
     const pathname = usePathname();
     const [open, setOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -293,40 +288,34 @@ export default function Navbar({siteName, logoUrl}: NavbarProps) {
         >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between gap-3 h-14 sm:h-[4.25rem] min-h-14">
-                    {/* Logo */}
-                    <Link href="/" className="flex items-center gap-2.5 shrink-0 min-w-0 group">
-                        {logoUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                                style={{background: '#000000'}}
-                                src={cfImageUrl(logoUrl) ?? ''}
-                                alt={siteName}
-                                className="h-8 sm:h-10 w-auto max-w-[9rem] sm:max-w-none object-contain px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-opacity group-hover:opacity-90"
-                            />
-                        ) : (
-                            <div
-                                className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-sm transition-transform group-hover:scale-[1.02] shrink-0"
-                                style={{background: 'var(--gradient-gold-btn)'}}
+                    {/* Brand — site name + slogan */}
+                    <Link href="/" className="flex items-center gap-2.5 sm:gap-3 shrink-0 min-w-0 group max-w-[10rem] sm:max-w-[15rem] lg:max-w-[17rem]">
+                        <div className="min-w-0 leading-tight">
+                            <p
+                                className="text-sm sm:text-[0.9375rem] lg:text-base font-bold text-gray-900 truncate transition-colors group-hover:text-[#A07810]"
+                                style={{fontFamily: 'var(--font-heading, serif)'}}
                             >
-                                {siteName.charAt(0)}
-                            </div>
-                        )}
+                                {siteName}
+                            </p>
+                            {siteSlogan && (
+                                <p className="text-[10px] sm:text-[11px] text-gray-500 truncate mt-0.5 tracking-wide">
+                                    {siteSlogan}
+                                </p>
+                            )}
+                        </div>
                     </Link>
 
                     {/* Desktop Nav */}
-                    <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 flex-1 justify-center px-4">
+                    <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 flex-1 justify-center px-2 xl:px-4 min-w-0 overflow-x-auto scrollbar-none">
                         {navLinks.map((link) => {
-                            const active =
-                                link.href === '/'
-                                    ? pathname === '/'
-                                    : pathname === link.href || pathname.startsWith(`${link.href}/`);
+                            const active = isNavLinkActive(pathname, link.href);
 
                             return (
                                 <Link
-                                    key={link.href}
+                                    key={`${link.href}-${link.label}`}
                                     href={link.href}
                                     className={cn(
-                                        'relative px-2.5 xl:px-3.5 py-2 text-[0.8125rem] font-medium tracking-wide rounded-lg transition-all duration-200 whitespace-nowrap',
+                                        'relative px-2 xl:px-3 py-2 text-[0.75rem] xl:text-[0.8125rem] font-medium tracking-wide rounded-lg transition-all duration-200 whitespace-nowrap shrink-0',
                                         active
                                             ? 'text-[#A07810]'
                                             : 'text-gray-600 hover:text-gray-900 hover:bg-[#FDF8ED]/80',
@@ -412,14 +401,11 @@ export default function Navbar({siteName, logoUrl}: NavbarProps) {
                 >
                     <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-1">
                         {navLinks.map((link) => {
-                            const active =
-                                link.href === '/'
-                                    ? pathname === '/'
-                                    : pathname === link.href || pathname.startsWith(`${link.href}/`);
+                            const active = isNavLinkActive(pathname, link.href);
 
                             return (
                                 <Link
-                                    key={link.href}
+                                    key={`${link.href}-${link.label}`}
                                     href={link.href}
                                     className={cn(
                                         'flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-colors',

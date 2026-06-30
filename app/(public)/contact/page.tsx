@@ -5,28 +5,42 @@ import ContactForm from '@/components/public/ContactForm';
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings();
-  return {
-    title: `Contact Us — ${settings.site_name}`,
-    description: `Get in touch with ${settings.site_name} support team. We are here to help.`,
-    openGraph: {
+
+  try {
+    const page = await getPage('contact_info');
+    return {
+      title: page.meta_title ?? `Contact Us — ${settings.site_name}`,
+      description: page.meta_description ?? `Get in touch with ${settings.site_name} support team.`,
+      openGraph: {
+        title: page.meta_title ?? `Contact Us — ${settings.site_name}`,
+        description: page.meta_description ?? '',
+        type: 'website',
+      },
+    };
+  } catch {
+    return {
       title: `Contact Us — ${settings.site_name}`,
-      description: `Reach out to the ${settings.site_name} team.`,
-      type: 'website',
-    },
-  };
+      description: `Get in touch with ${settings.site_name} support team. We are here to help.`,
+      openGraph: {
+        title: `Contact Us — ${settings.site_name}`,
+        description: `Reach out to the ${settings.site_name} team.`,
+        type: 'website',
+      },
+    };
+  }
 }
 
 export default async function ContactPage() {
-  const [settings] = await Promise.all([getSettings()]);
+  const settings = await getSettings();
 
-  // Try to get custom contact info from the backend CMS page, fallback gracefully
-  let contactPageContent = '';
+  let contactPage: Awaited<ReturnType<typeof getPage>> | null = null;
   try {
-    const contactPage = await getPage('contact_info');
-    contactPageContent = contactPage.content ?? '';
+    contactPage = await getPage('contact_info');
   } catch {
     // Use settings defaults
   }
+
+  const contactPageContent = contactPage?.content ?? '';
 
   const contactItems = [
     {
@@ -78,9 +92,11 @@ export default async function ContactPage() {
             className="text-3xl md:text-4xl font-bold text-white"
             style={{ fontFamily: 'var(--font-heading, serif)' }}
           >
-            Contact Us
+            {contactPage?.title ?? 'Contact Us'}
           </h1>
-          <p className="text-gray-400 mt-3">We&apos;re here to help. Reach out anytime.</p>
+          <p className="text-gray-400 mt-3">
+            {contactPage?.meta_description ?? "We're here to help. Reach out anytime."}
+          </p>
         </div>
       </div>
 

@@ -451,7 +451,7 @@ export default async function HomePage() {
                 SUBSCRIPTION PLANS
             ══════════════════════════════════════════════════════════════════ */}
             <AnimateSection>
-                <section className="py-16 md:py-24" style={{ background:'#F8F9FB' }}>
+                <section id="plans" className="py-16 md:py-24 scroll-mt-20" style={{ background:'#F8F9FB' }}>
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="text-center mb-14">
                             <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color:'#C9A227' }}>Membership Plans</p>
