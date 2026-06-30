@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { SiteSettings } from '@/types/settings';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
-const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'My Bouma';
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'Enorsia';
 
 async function fetchSettings(): Promise<SiteSettings> {
   const res = await fetch(`${API_URL}/api/v1/settings`, {
@@ -22,6 +22,7 @@ async function fetchSettings(): Promise<SiteSettings> {
 
 const FALLBACK: SiteSettings = {
   site_name:        APP_NAME,
+  site_slogan:      'Find Your Perfect Match',
   site_logo:        null,
   site_favicon:     null,
   currency:         'BDT',
@@ -34,6 +35,8 @@ const FALLBACK: SiteSettings = {
   facebook_url:     null,
   twitter_url:      null,
   instagram_url:    null,
+  linkedin_url:     null,
+  email_otp_expiry_minutes: '15',
   meta_title:       null,
   meta_description: null,
   meta_keywords:    null,

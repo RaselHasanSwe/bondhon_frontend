@@ -7,7 +7,10 @@ export interface Interest {
     status: InterestStatus;
     expires_at: string;
     created_at: string;
+    can_message?: boolean;
+    conversation_id?: number | null;
     sender: ProfileCard | null;
     receiver: ProfileCard | null;
+    connected_user?: ProfileCard | null;
 }
 

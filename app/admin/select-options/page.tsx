@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '@/services/adminService';
 import type { SelectOption } from '@/types/admin';
+import { InfiniteScrollFooter } from '@/components/ui/InfiniteScrollFooter';
+import { useInfiniteList } from '@/hooks/useInfiniteList';
+import { normalizeFlatPage } from '@/lib/pagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -82,7 +85,6 @@ function OptionFormModal({
 export default function AdminSelectOptionsPage() {
     const queryClient = useQueryClient();
     const [groupFilter, setGroupFilter] = useState('');
-    const [page, setPage] = useState(1);
     const [showAddModal, setShowAddModal] = useState(false);
     const [editOption, setEditOption] = useState<SelectOption | null>(null);
 
@@ -92,15 +94,18 @@ export default function AdminSelectOptionsPage() {
     });
     const groups: string[] = groupsRes?.data ?? groupsRes ?? [];
 
-    const { data: res, isLoading } = useQuery({
-        queryKey: ['admin-select-options', groupFilter, page],
-        queryFn: () => adminService.getSelectOptions({ group_key: groupFilter || undefined, page }).then(r => r.data),
+    const {
+        items: options,
+        total,
+        isLoading,
+        hasNextPage,
+        isFetchingNextPage,
+        fetchNextPage,
+    } = useInfiniteList<SelectOption>({
+        queryKey: ['admin-select-options', groupFilter],
+        queryFn: (page) =>
+            adminService.getSelectOptions({ group_key: groupFilter || undefined, page }).then((r) => normalizeFlatPage(r.data.data, page)),
     });
-
-    type OptionsData = { data: SelectOption[]; total: number; current_page: number; last_page: number };
-    const optionsData: OptionsData | null = res?.data
-        ? { data: (res.data as { data: SelectOption[] }).data ?? [], total: (res.data as { total: number }).total ?? 0, current_page: (res.data as { current_page: number }).current_page ?? 1, last_page: (res.data as { last_page: number }).last_page ?? 1 }
-        : null;
 
     const createMutation = useMutation({
         mutationFn: (data: {
@@ -167,7 +172,7 @@ export default function AdminSelectOptionsPage() {
             {/* Group filter */}
             <div className="flex gap-2 flex-wrap">
                 <button
-                    onClick={() => { setGroupFilter(''); setPage(1); }}
+                    onClick={() => setGroupFilter('')}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${!groupFilter ? 'bg-amber-500 text-white border-amber-500' : 'border-gray-200 text-gray-600 hover:bg-gray-100'}`}
                 >
                     All Groups
@@ -175,7 +180,7 @@ export default function AdminSelectOptionsPage() {
                 {(Array.isArray(groups) ? groups : []).map(g => (
                     <button
                         key={g}
-                        onClick={() => { setGroupFilter(g); setPage(1); }}
+                        onClick={() => setGroupFilter(g)}
                         className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${groupFilter === g ? 'bg-amber-500 text-white border-amber-500' : 'border-gray-200 text-gray-600 hover:bg-gray-100'}`}
                     >
                         {g.replace(/_/g, ' ')}
@@ -203,7 +208,7 @@ export default function AdminSelectOptionsPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
-                                {(optionsData?.data ?? []).map(opt => (
+                                {options.map(opt => (
                                     <tr key={opt.id} className="hover:bg-gray-50/50 transition-colors">
                                         <td className="px-4 py-2.5">
                                             <span className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded text-xs font-mono">
@@ -249,7 +254,7 @@ export default function AdminSelectOptionsPage() {
                                         </td>
                                     </tr>
                                 ))}
-                                {(optionsData?.data ?? []).length === 0 && (
+                                {options.length === 0 && (
                                     <tr>
                                         <td colSpan={8} className="px-4 py-10 text-center text-gray-400">
                                             No options found.{' '}
@@ -262,15 +267,15 @@ export default function AdminSelectOptionsPage() {
                     </div>
                 )}
 
-                {/* Pagination */}
-                {optionsData && optionsData.last_page > 1 && (
-                    <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between text-sm">
-                        <span className="text-gray-500">Page {optionsData.current_page} of {optionsData.last_page} ({optionsData.total} total)</span>
-                        <div className="flex gap-2">
-                            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>← Prev</Button>
-                            <Button variant="outline" size="sm" disabled={page >= optionsData.last_page} onClick={() => setPage(p => p + 1)}>Next →</Button>
-                        </div>
-                    </div>
+                {!isLoading && options.length > 0 && (
+                    <InfiniteScrollFooter
+                        hasNextPage={!!hasNextPage}
+                        isFetchingNextPage={isFetchingNextPage}
+                        onLoadMore={() => fetchNextPage()}
+                        showEndMessage
+                        endMessage={`No more options${total > 0 ? ` · ${total} total` : ''}`}
+                        className="border-t border-gray-100"
+                    />
                 )}
             </div>
 

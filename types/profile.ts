@@ -134,6 +134,7 @@ export interface PartnerPreference {
 export interface ProfilePhoto {
     id: number;
     file_path: string;
+    url?: string | null;
     is_primary: boolean;
     is_approved: boolean;
     is_private: boolean;
@@ -164,6 +165,32 @@ export interface ProfileCard {
     profession: string | null;
     diet: string | null;
     primary_photo: string | null;
+    face_scan_status?: 'pending' | 'submitted' | 'approved' | 'rejected' | null;
+    is_shortlisted?: boolean;
+    connection_status?: 'none' | 'pending' | 'accepted' | 'declined' | 'ignored';
+    is_interest_sender?: boolean;
+    can_send_interest?: boolean;
+    interest_id?: number | null;
+    conversation_id?: number | null;
+    compatibility_score?: CompatibilityScoreData | null;
+}
+
+export interface ProfileViewUsage {
+    limit: number;
+    used: number;
+    unlimited: boolean;
+    remaining: number | null;
+}
+
+export interface ProfileAccess {
+    full_profile: boolean;
+    profile_views_per_day: ProfileViewUsage;
+}
+
+export interface CompatibilityScoreData {
+    score: number;
+    score_breakdown?: Record<string, unknown> | null;
+    calculated_at?: string | null;
 }
 
 export interface FullProfile {
@@ -178,10 +205,37 @@ export interface FullProfile {
     horoscope_detail: HoroscopeDetail | null;
     partner_preference: PartnerPreference | null;
     photos: ProfilePhoto[];
+    primary_photo?: string | null;
+    face_scan_status?: 'pending' | 'submitted' | 'approved' | 'rejected' | null;
+    access?: ProfileAccess;
+    connection_status?: 'none' | 'pending' | 'accepted' | 'declined' | 'ignored';
+    interest_id?: number | null;
+    is_interest_sender?: boolean;
+    can_send_interest?: boolean;
+    is_shortlisted?: boolean;
+    compatibility_score?: CompatibilityScoreData | null;
+}
+
+export interface ShortlistItem {
+    id: number;
+    created_at: string;
+    connection_status: 'none' | 'pending' | 'accepted' | 'declined' | 'ignored';
+    interest_id: number | null;
+    is_interest_sender: boolean;
+    conversation_id: number | null;
+    send_count?: number;
+    can_send_interest?: boolean;
+    user: ProfileCard;
 }
 
 export interface ProfileView {
     viewer_id: number;
     viewed_at: string;
+    connection_status: 'none' | 'pending' | 'accepted' | 'declined' | 'ignored';
+    interest_id: number | null;
+    is_interest_sender: boolean;
+    conversation_id: number | null;
+    send_count?: number;
+    can_send_interest?: boolean;
     viewer: ProfileCard;
 }

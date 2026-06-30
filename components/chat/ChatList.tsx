@@ -1,13 +1,20 @@
 'use client';
 
+import {useRef, type RefObject} from 'react';
 import Link from 'next/link';
 import {cn} from '@/lib/utils';
+import {InfiniteScrollFooter} from '@/components/ui/InfiniteScrollFooter';
 import type {Conversation} from '@/types/message';
 
 interface ChatListProps {
     conversations: Conversation[];
     activeId?: number;
     isLoading?: boolean;
+    hasNextPage?: boolean;
+    isFetchingNextPage?: boolean;
+    onLoadMore?: () => void;
+    /** Pass when the list scrolls inside a fixed-height panel (e.g. desktop chat sidebar). */
+    scrollRootRef?: RefObject<HTMLDivElement | null>;
 }
 
 function formatRelativeTime(iso: string): string {
@@ -22,7 +29,15 @@ function formatRelativeTime(iso: string): string {
     return new Date(iso).toLocaleDateString('en-BD', {month: 'short', day: 'numeric'});
 }
 
-export function ChatList({conversations, activeId, isLoading}: ChatListProps) {
+export function ChatList({
+    conversations,
+    activeId,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    onLoadMore,
+    scrollRootRef,
+}: ChatListProps) {
     if (isLoading) {
         return (
             <div className="space-y-2 p-3">
@@ -50,7 +65,7 @@ export function ChatList({conversations, activeId, isLoading}: ChatListProps) {
     }
 
     return (
-        <div className="overflow-y-auto">
+        <div ref={scrollRootRef} className={scrollRootRef ? 'h-full overflow-y-auto' : undefined}>
             {conversations.map((conv) => {
                 const {participant} = conv;
                 const isActive = conv.id === activeId;
@@ -123,6 +138,17 @@ export function ChatList({conversations, activeId, isLoading}: ChatListProps) {
                     </Link>
                 );
             })}
+
+            {onLoadMore && (
+                <InfiniteScrollFooter
+                    hasNextPage={!!hasNextPage}
+                    isFetchingNextPage={!!isFetchingNextPage}
+                    onLoadMore={onLoadMore}
+                    scrollRootRef={scrollRootRef}
+                    showEndMessage={conversations.length > 0}
+                    endMessage="No more conversations"
+                />
+            )}
         </div>
     );
 }

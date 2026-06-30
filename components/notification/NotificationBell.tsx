@@ -4,10 +4,7 @@ import {useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {useRouter} from 'next/navigation';
 import {useNotificationStore} from '@/store/notificationStore';
-import {notificationService} from '@/services/notificationService';
-import {useAuthStore} from '@/store/authStore';
 import type {AppNotification} from '@/types/notification';
-import type {BackendNotification} from '@/types/notification';
 import {cn} from '@/lib/utils';
 import {
     BellIcon, MailIcon, CelebrationIcon, ClockIcon, EyeIcon,
@@ -40,14 +37,23 @@ const TYPE_ICONS: Record<AppNotification['type'], ComponentType<IconProps>> = {
     subscription_expiry: AlertTriangleIcon,
     photo_approved: CheckCircleIcon,
     photo_rejected: XCircleIcon,
+    face_scan_approved: CheckCircleIcon,
+    face_scan_rejected: XCircleIcon,
+    account_disable_request_submitted: ClockIcon,
+    account_disable_request_disabled: XCircleIcon,
+    account_disable_request_banned: XCircleIcon,
+    account_disable_request_dismissed: MegaphoneIcon,
+    account_disable_request_reactivated: CheckCircleIcon,
+    admin_account_disabled: XCircleIcon,
+    admin_account_banned: XCircleIcon,
+    admin_account_reactivated: CheckCircleIcon,
     system: MegaphoneIcon,
     broadcast_message: MegaphoneIcon,
 };
 
 export function NotificationBell({placement = 'default'}: { placement?: 'default' | 'sidebar' }) {
     const router = useRouter();
-    const user = useAuthStore((s) => s.user);
-    const {notifications, unreadCount, fetchNotifications, markRead, markAllRead, addNotification} =
+    const {notifications, unreadCount, markRead, markAllRead} =
         useNotificationStore();
     const [open, setOpen] = useState(false);
     const [portalStyle, setPortalStyle] = useState<React.CSSProperties>({});
@@ -74,25 +80,6 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
             zIndex: 9999,
         });
     }, [open, placement]);
-
-    // Fetch on mount
-    useEffect(() => {
-        fetchNotifications();
-    }, [fetchNotifications]);
-
-    // Subscribe to real-time notifications via Laravel Echo
-    useEffect(() => {
-        if (!user?.id || typeof window === 'undefined') return;
-        (async () => {
-            const {getEcho} = await import('@/lib/echo');
-            const echo = await getEcho();
-            if (!echo) return;
-            echo.private(`user.${user.id}`)
-                .listen('.notification.created', (e: BackendNotification) => {
-                    addNotification(notificationService.transformNotification(e));
-                });
-        })();
-    }, [user?.id, addNotification]);
 
     // Close dropdown on outside click — handles both wrapper and portal
     useEffect(() => {
@@ -204,8 +191,8 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
                 {unreadCount > 0 && (
                     <span
                         className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
                 )}
             </button>
 
@@ -226,7 +213,7 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
             {/* Default placement → inline absolute dropdown (mobile top bar) */}
             {open && placement !== 'sidebar' && (
                 <div
-                    className="absolute right-0 top-11 w-72 sm:w-80 bg-white rounded-2xl border border-gray-100 shadow-xl z-50 overflow-hidden">
+                    className="absolute right-[-80px] top-11 w-72 sm:w-80 bg-white rounded-2xl border border-gray-100 shadow-xl z-50 overflow-hidden">
                     {dropdownContent}
                 </div>
             )}

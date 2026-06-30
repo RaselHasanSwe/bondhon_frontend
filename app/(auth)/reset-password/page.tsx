@@ -9,6 +9,8 @@ import Link from 'next/link';
 import {authService} from '@/services/authService';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
+import {getApiErrorMessage} from '@/lib/apiErrors';
+import {useSettings} from '@/lib/useSettings';
 
 const schema = z
     .object({
@@ -31,6 +33,7 @@ function ResetPasswordForm() {
 
     const [serverError, setServerError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const {
         register,
@@ -65,7 +68,9 @@ function ResetPasswordForm() {
                     <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
                         <svg className="w-6 h-6 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     </div>
-                    <p className="font-semibold text-base">Password reset successfully!</p>
+                    <p className="font-semibold text-base">
+                        {successMessage ?? 'Password reset successfully!'}
+                    </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                         You can now sign in with your new password.
                     </p>
@@ -84,21 +89,24 @@ function ResetPasswordForm() {
     const onSubmit = async (data: FormData) => {
         setServerError(null);
         try {
-            await authService.resetPassword({
+            const res = await authService.resetPassword({
                 token,
                 email,
                 password: data.password,
                 password_confirmation: data.password_confirmation,
             });
+            setSuccessMessage(res.data.message || null);
             setSuccess(true);
         } catch (err: unknown) {
             const axiosErr = err as {
-                response?: { data?: { message?: string; errors?: Record<string, string[]> } };
+                response?: { data?: { message?: string; errors?: Record<string, string | string[]> } };
             };
             setServerError(
-                axiosErr.response?.data?.errors?.token?.[0] ??
-                axiosErr.response?.data?.message ??
-                'Password reset failed. The link may be expired or invalid.'
+                getApiErrorMessage(
+                    axiosErr.response?.data,
+                    'Password reset failed. The link may be expired or invalid.',
+                    'token',
+                ),
             );
         }
     };
@@ -172,6 +180,8 @@ function ResetPasswordForm() {
 }
 
 export default function ResetPasswordPage() {
+    const {settings} = useSettings();
+
     return (
         <div className="bg-card rounded-2xl overflow-hidden animate-fade-in-up"
              style={{boxShadow: '0 4px 40px rgba(201,162,39,0.12), 0 1px 8px rgba(0,0,0,0.06)'}}>
@@ -187,7 +197,7 @@ export default function ResetPasswordPage() {
                         Set new password
                     </h2>
                     <p className="text-sm text-muted-foreground mt-1">
-                        Enter a strong password for your My Bouma account
+                        Enter a strong password for your {settings.site_name} account
                     </p>
                 </div>
 

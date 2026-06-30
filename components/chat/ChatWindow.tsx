@@ -10,6 +10,7 @@ import {callService} from '@/services/callService';
 import {CallButton} from '@/components/call/CallButton';
 import type {Conversation, Message, MessageType, MediaItem} from '@/types/message';
 import type {CallLog, CallParticipant} from '@/types/call';
+import {cfImageUrl} from '@/lib/utils';
 
 interface ChatWindowProps {
     conversationId: number;
@@ -182,11 +183,9 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
         let channel: any = null;
 
         (async () => {
-            const {getEcho} = await import('@/lib/echo');
-            const echo = await getEcho();
-            if (cancelled || !echo) return;
-
-            channel = echo.private(`conversation.${conversationId}`);
+            const {getPrivateChannel} = await import('@/lib/echo');
+            channel = await getPrivateChannel(`conversation.${conversationId}`);
+            if (cancelled || !channel) return;
 
             // Incoming messages
             channel.listen('.message.sent', (e: Message) => {
@@ -223,13 +222,12 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
             if (typingTimer.current) clearTimeout(typingTimer.current);
             // Leave channel async
             (async () => {
-                const {getEcho} = await import('@/lib/echo');
-                const echo = await getEcho();
+                const {leavePrivateChannel} = await import('@/lib/echo');
                 if (channel) {
                     channel.stopListening('.message.sent');
                     channel.stopListening('.user.typing');
                 }
-                echo?.leave(`conversation.${conversationId}`);
+                leavePrivateChannel(`conversation.${conversationId}`);
             })();
         };
     }, [conversationId, currentUserId, scrollToBottom]);
@@ -514,7 +512,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                 <div className="relative shrink-0">
                     {participant.avatar ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={participant.avatar} alt={participant.name}
+                        <img src={cfImageUrl(participant.avatar) ?? ''} alt={participant.name}
                              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover"/>
                     ) : (
                         <div

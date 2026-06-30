@@ -2,6 +2,24 @@
 export type FeatureValue = boolean | number | string;
 export type PlanFeatures = Record<string, FeatureValue>;
 
+export interface FeatureDefinition {
+    label: string;
+    type: 'bool' | 'qty' | 'enum';
+    period?: string | null;
+}
+
+export type FeatureDefinitions = Record<string, FeatureDefinition>;
+
+export interface PublicSubscriptionPlansPayload {
+    plans: SubscriptionPlan[];
+    feature_definitions: FeatureDefinitions;
+}
+
+export interface SubscriptionTypeRef {
+    id: number;
+    name: string;
+}
+
 export interface SubscriptionPlan {
     id: number;
     name: string;
@@ -17,6 +35,7 @@ export interface SubscriptionPlan {
     features: PlanFeatures | string[];
     is_active: boolean;
     sort_order: number;
+    subscription_type?: SubscriptionTypeRef | null;
     created_at: string;
     updated_at: string;
 }

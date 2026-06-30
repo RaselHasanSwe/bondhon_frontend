@@ -3,6 +3,7 @@ export interface PageListItem {
   title: string;
   slug: string;
   sort_order: number;
+  show_in_menu?: boolean;
 }
 
 export interface PageDetail extends PageListItem {

@@ -8,6 +8,35 @@
 
 export type PlanTier = 'free' | 'silver' | 'gold' | 'platinum';
 
+export interface SubscriptionTypeRef {
+    id: number;
+    name: string;
+}
+
+/** Resolve display tier from plan type relation, slug, or name. */
+export function resolvePlanTier(
+    plan?: { plan_type?: string | number; slug?: string; name?: string; subscription_type?: SubscriptionTypeRef | null } | null,
+): PlanTier | string {
+    const typeName = plan?.subscription_type?.name?.toLowerCase();
+    if (typeName) return typeName;
+
+    const slug = (plan?.slug ?? '').toLowerCase();
+    if (slug.includes('platinum')) return 'platinum';
+    if (slug.includes('gold')) return 'gold';
+    if (slug.includes('silver')) return 'silver';
+    if (slug.includes('free')) return 'free';
+
+    const legacy = String(plan?.plan_type ?? '').toLowerCase();
+    if (['free', 'silver', 'gold', 'platinum'].includes(legacy)) return legacy as PlanTier;
+
+    const name = (plan?.name ?? '').toLowerCase();
+    if (name.includes('platinum')) return 'platinum';
+    if (name.includes('gold')) return 'gold';
+    if (name.includes('silver')) return 'silver';
+
+    return 'free';
+}
+
 /** Human-friendly display label for a tier slug */
 export function planLabel(plan?: string | null): string {
     const p = (plan ?? 'free').toLowerCase();

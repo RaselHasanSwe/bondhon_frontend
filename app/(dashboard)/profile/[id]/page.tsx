@@ -1,10 +1,9 @@
 'use client';
 
 import React, {useState} from 'react';
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {useParams, useRouter} from 'next/navigation';
 import {
-    profileService,
     interestService,
     shortlistService,
     blockService,
@@ -12,8 +11,18 @@ import {
 } from '@/services/profileService';
 import {chatService} from '@/services/chatService';
 import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
+import {handleSendInterestError} from '@/lib/interest';
+import {
+    invalidateInterestQueries,
+    invalidateShortlistQueries,
+    invalidateConversationQueries,
+    invalidateProfileQueries,
+} from '@/lib/cacheInvalidation';
 import {CompatibilityScore} from '@/components/match/CompatibilityScore';
 import {formatAge, formatHeight} from '@/lib/utils';
+import {getApprovedPhotos, resolvePrimaryPhotoUrl} from '@/lib/profilePhotos';
+import {usePublicProfile} from '@/hooks/usePublicProfile';
+import {ProfileAccessGate} from '@/components/profile/ProfileAccessGate';
 import {Dialog, DialogContent, DialogTitle} from '@/components/ui/dialog';
 import {Button} from '@/components/ui/button';
 import {Textarea} from '@/components/ui/textarea';
@@ -21,8 +30,10 @@ import {useAuthStore} from '@/store/authStore';
 import type {FullProfile} from '@/types/profile';
 import {
     ReligionIcon, GraduationCapIcon, MailIcon, ChatIcon,
-    StarIcon, StarFilledIcon, CheckIcon, ClockIcon, UserIcon,
+    StarIcon, StarFilledIcon, CheckIcon, ClockIcon, UserIcon, CrownIcon, XIcon,
 } from '@/components/ui/icons';
+import Link from 'next/link';
+import type {ProfileAccess} from '@/types/profile';
 
 const REPORT_REASONS = [
     {value: 'fake_profile', label: 'Fake Profile'},
@@ -49,128 +60,90 @@ export default function ProfileViewPage() {
     const currentUser = useAuthStore((s) => s.user);
     const queryClient = useQueryClient();
 
-    const [interestStatus, setInterestStatus] = useState<'none' | 'pending' | 'accepted'>('none');
+    const [interestStatus, setInterestStatus] = useState<'none' | 'pending' | 'accepted' | 'declined' | 'ignored'>('none');
+    const [isInterestSender, setIsInterestSender] = useState(true);
+    const [interestId, setInterestId] = useState<number | null>(null);
+    const [canSendInterest, setCanSendInterest] = useState(true);
     const [shortlisted, setShortlisted] = useState(false);
     const [reportOpen, setReportOpen] = useState(false);
+    const [blockOpen, setBlockOpen] = useState(false);
     const [reportReason, setReportReason] = useState('fake_profile');
     const [reportDesc, setReportDesc] = useState('');
-    const [activePhotoIdx, setActivePhotoIdx] = useState(0);
 
-    const {data: profileRes, isLoading, isError} = useQuery({
-        queryKey: ['profile', params.id],
-        queryFn: () => profileService.getProfileById(params.id).then((r) => r.data),
-        enabled: !!params.id,
-    });
+    const {
+        profile: profileData,
+        isLoading,
+        isError,
+        isFreePlanAccessError,
+        isSubscriptionLimitError,
+        subscriptionLimitMessage,
+    } = usePublicProfile(params.id);
+
+    const profileRes = profileData ? { data: profileData } : undefined;
 
     // Determine if this is own profile early
     const isOwnProfile = currentUser?.id === profileRes?.data?.id;
 
-    const {data: scoreRes} = useQuery({
-        queryKey: ['compatibility-score', profileRes?.data?.id],
-        queryFn: () =>
-            profileRes?.data?.id
-                ? profileService.getProfileById(params.id).then(() =>
-                    import('@/services/profileService').then(({matchService}) =>
-                        matchService.getCompatibilityScore(profileRes.data.id).then((r) => r.data.data)
-                    )
-                )
-                : null,
-        enabled: !!profileRes?.data?.id,
-    });
-
-    // Fetch interest status between current user and this profile
-    const {data: interestStatusRes} = useQuery({
-        queryKey: ['interests-status', profileRes?.data?.id],
-        queryFn: () =>
-            profileRes?.data?.id && !isOwnProfile
-                ? interestService.checkStatus(profileRes.data.id).then((r) => r.data.data)
-                : null,
-        enabled: !!profileRes?.data?.id && !isOwnProfile,
-    });
-
-    // Fetch shortlist status for this profile
-    const shortlistStatusQuery = useQuery({
-        queryKey: ['shortlist-status', profileRes?.data?.id],
-        queryFn: async () => {
-            if (!profileRes?.data?.id || isOwnProfile) return false;
-
-            try {
-                // Check all pages of shortlisted profiles
-                let page = 1;
-                let hasMore = true;
-
-                while (hasMore) {
-                    const response = await shortlistService.getAll(page);
-                    const data = response.data?.data as any;
-                    const profiles = data?.data ?? [];
-
-                    // Check if profile is in this page
-                    // The API returns 'user' field (not 'shortlisted_user')
-                    const isShortlisted = profiles.some((s: any) => s.user?.id === profileRes.data.id);
-                    if (isShortlisted) {
-                        return true;
-                    }
-
-                    // Check if there are more pages
-                    const lastPage = data?.last_page ?? 1;
-                    const currentPage = data?.current_page ?? 1;
-                    hasMore = currentPage < lastPage;
-                    page++;
-
-                    // Safety limit to prevent infinite loops
-                    if (page > 100) hasMore = false;
-                }
-
-                return false;
-            } catch (error) {
-                console.error('Error checking shortlist status:', error);
-                return false;
-            }
-        },
-        enabled: !!profileRes?.data?.id && !isOwnProfile,
-        staleTime: 0, // Always consider this data stale to refetch when invalidated
-    });
-
-    const shortlistRes = shortlistStatusQuery.data;
-
-    // Update interest status based on fetched interest
+    // Sync viewer context from the single profile API response
     React.useEffect(() => {
-        if (interestStatusRes) {
-            setInterestStatus(interestStatusRes.status as 'none' | 'pending' | 'accepted');
+        if (!profileData || isOwnProfile) {
+            return;
         }
-    }, [interestStatusRes]);
 
-    // Update shortlist status based on fetched data
-    React.useEffect(() => {
-        if (shortlistRes !== undefined) {
-            setShortlisted(shortlistRes);
-        }
-    }, [shortlistRes]);
-
+        setInterestStatus(profileData.connection_status ?? 'none');
+        setIsInterestSender(profileData.is_interest_sender ?? true);
+        setInterestId(profileData.interest_id ?? null);
+        setCanSendInterest(
+            profileData.can_send_interest ?? (profileData.connection_status === 'none' || profileData.connection_status === undefined)
+        );
+        setShortlisted(profileData.is_shortlisted ?? false);
+    }, [profileData, isOwnProfile]);
 
     const sendInterestMutation = useMutation({
         mutationFn: (id: number) => interestService.send(id),
         onSuccess: () => {
             setInterestStatus('pending');
-            // Invalidate the interest status query to refresh
-            queryClient.invalidateQueries({queryKey: ['interests-status']});
+            setIsInterestSender(true);
+            setCanSendInterest(false);
+            invalidateInterestQueries(queryClient);
+            invalidateProfileQueries(queryClient);
             showSuccessToast('Interest sent successfully!');
         },
-        onError: (error: any) => {
-            const message = getErrorMessage(error);
-            showErrorToast(message);
+        onError: (error: unknown) => {
+            handleSendInterestError(error, { queryClient });
         }
+    });
+
+    const interestActionMutation = useMutation({
+        mutationFn: ({ id, action }: { id: number; action: 'accept' | 'decline' | 'ignore' }) => {
+            if (action === 'accept') return interestService.accept(id);
+            if (action === 'decline') return interestService.decline(id);
+            return interestService.ignore(id);
+        },
+        onSuccess: (_, variables) => {
+            invalidateInterestQueries(queryClient);
+            invalidateProfileQueries(queryClient);
+            if (variables.action === 'accept') {
+                setInterestStatus('accepted');
+                invalidateConversationQueries(queryClient);
+                showSuccessToast('Interest accepted!');
+                return;
+            }
+            setInterestStatus('none');
+            setIsInterestSender(false);
+            showSuccessToast(variables.action === 'decline' ? 'Interest declined.' : 'Interest ignored.');
+        },
+        onError: (error: unknown) => {
+            showErrorToast(getErrorMessage(error));
+        },
     });
 
      const shortlistMutation = useMutation({
          mutationFn: (id: number) => shortlistService.toggle(id),
          onSuccess: async () => {
              setShortlisted((s) => !s);
-             // Invalidate and refetch shortlist queries
-             queryClient.invalidateQueries({queryKey: ['shortlist-status'], exact: false});
-             queryClient.invalidateQueries({queryKey: ['shortlist'], exact: false});
-             // Force refetch immediately
-             await shortlistStatusQuery.refetch();
+             invalidateShortlistQueries(queryClient);
+             invalidateProfileQueries(queryClient);
              showSuccessToast(shortlisted ? 'Removed from shortlist' : 'Added to shortlist');
          },
          onError: (error: any) => {
@@ -181,14 +154,23 @@ export default function ProfileViewPage() {
 
     const blockMutation = useMutation({
         mutationFn: (id: number) => blockService.block(id),
-        onSuccess: () => router.push('/matches'),
+        onSuccess: () => {
+            setBlockOpen(false);
+            router.push('/matches');
+        },
+        onError: (error: unknown) => {
+            showErrorToast(getErrorMessage(error));
+        },
     });
 
     const [messageError, setMessageError] = useState<string | null>(null);
 
     const messageMutation = useMutation({
         mutationFn: (userId: number) => chatService.getOrCreateConversation(userId),
-        onSuccess: (conv) => router.push(`/chat/${conv.id}`),
+        onSuccess: (conv) => {
+            invalidateConversationQueries(queryClient);
+            router.push(`/chat/${conv.id}`);
+        },
         onError: (error: any) => {
             const errorMessage = error?.response?.data?.message
                 || error?.message
@@ -206,14 +188,17 @@ export default function ProfileViewPage() {
         },
     });
 
-    if (isLoading) {
+    if (isLoading || isFreePlanAccessError || isSubscriptionLimitError) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#FDFAF4]">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-16 h-16 rounded-full border-4 border-[#C9A227]/30 border-t-[#C9A227] animate-spin"/>
-                    <p className="text-[#C9A227] font-serif text-sm tracking-widest uppercase">Loading Profile…</p>
-                </div>
-            </div>
+            <ProfileAccessGate
+                isLoading={isLoading}
+                isFreePlanAccessError={isFreePlanAccessError}
+                isSubscriptionLimitError={isSubscriptionLimitError}
+                subscriptionLimitMessage={subscriptionLimitMessage}
+                isError={false}
+            >
+                {null}
+            </ProfileAccessGate>
         );
     }
 
@@ -232,8 +217,11 @@ export default function ProfileViewPage() {
     }
 
     const p: FullProfile = profileRes.data;
-    const photos = p.photos?.filter((ph) => ph.is_approved) ?? [];
-    const activePhoto = photos[activePhotoIdx];
+    const approvedPhotos = getApprovedPhotos(p.photos);
+    const heroPhotoUrl = resolvePrimaryPhotoUrl(p.primary_photo, p.photos);
+    const profileViewUsage = p.access?.profile_views_per_day;
+    const compatibilityScore = p.compatibility_score;
+    const galleryHref = `/profile/${params.id}/gallery`;
 
     return (
         <div className="bg-[#FDFAF4] min-h-screen pb-24 md:pb-10"
@@ -258,9 +246,9 @@ export default function ProfileViewPage() {
                                 <div className="absolute -inset-[3px] rounded-2xl"
                                      style={{background: 'linear-gradient(135deg, #C9A227 0%, #f0d060 30%, #C9A227 60%, #8a6b10 100%)'}}/>
                                 <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl bg-gray-900">
-                                    {activePhoto ? (
+                                    {heroPhotoUrl ? (
                                         <img
-                                            src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${activePhoto.file_path}`}
+                                            src={heroPhotoUrl}
                                             alt={`${p.name}'s photo`}
                                             className="w-full h-full object-cover"
                                         />
@@ -269,30 +257,32 @@ export default function ProfileViewPage() {
                                             <UserIcon size={80} className="text-gray-600" strokeWidth={1}/>
                                         </div>
                                     )}
+                                    {/* Verified badge — shown only when face scan is approved */}
+                                    {p.profile?.is_verified && (
+                                        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-green-600 font-medium flex items-center gap-1 shadow-sm z-10">
+                                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                            Verified
+                                        </div>
+                                    )}
                                     {/* Gradient overlay bottom */}
                                     <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/50 to-transparent"/>
                                 </div>
-
-                                {/* Verified badge */}
-                                {p.profile?.is_verified && (
-                                    <div className="absolute -top-2 -right-2 z-10 bg-[#C9A227] text-white text-[10px] font-bold rounded-full w-8 h-8 flex items-center justify-center shadow-lg"
-                                         title="Verified Profile">
-                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                    </div>
-                                )}
                             </div>
 
-                            {/* Photo thumbnails */}
-                            {photos.length > 1 && (
-                                <div className="flex gap-2 mt-4 overflow-x-auto pb-1">
-                                    {photos.map((ph, i) => (
-                                        <button key={ph.id} onClick={() => setActivePhotoIdx(i)}
-                                                className={`shrink-0 w-14 h-14 rounded-lg overflow-hidden transition-all duration-200 ${i === activePhotoIdx ? 'ring-offset-2 ring-offset-transparent' : 'opacity-50 hover:opacity-80'}`}>
-                                            <img src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${ph.file_path}`}
-                                                 alt="thumbnail" className="w-full h-full object-cover"/>
-                                        </button>
-                                    ))}
-                                </div>
+                            {approvedPhotos.length > 0 && (
+                                <Link
+                                    href={galleryHref}
+                                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#C9A227]/35 bg-[#C9A227]/10 px-4 py-2.5 text-xs font-semibold text-[#d4af37] hover:bg-[#C9A227]/20 transition-colors"
+                                    style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 300 }}
+                                >
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect x="3" y="3" width="7" height="7" />
+                                        <rect x="14" y="3" width="7" height="7" />
+                                        <rect x="3" y="14" width="7" height="7" />
+                                        <rect x="14" y="14" width="7" height="7" />
+                                    </svg>
+                                    View Image Gallery ({approvedPhotos.length})
+                                </Link>
                             )}
                         </div>
 
@@ -303,7 +293,7 @@ export default function ProfileViewPage() {
                                 <div className="h-px w-8 bg-[#C9A227]"/>
                                 <span className="text-[#C9A227] text-xs tracking-[0.25em] uppercase font-sans"
                                       style={{fontFamily: 'system-ui, sans-serif'}}>
-                                    {p.profile?.profile_created_for?.replace('_', ' ') ?? 'Matrimonial Profile'}
+                                    {p.profile?.profile_created_for?.replace('_', ' ') ?? ' Profile'}
                                 </span>
                             </div>
 
@@ -354,45 +344,90 @@ export default function ProfileViewPage() {
 
                             {/* Compatibility score + actions row */}
                              <div className="mt-7 flex items-center gap-1.5 flex-nowrap overflow-x-auto pb-1">
-                                 {scoreRes && (
+                                 {compatibilityScore && (
                                      <div className="mr-1 shrink-0">
-                                         <CompatibilityScore score={scoreRes.score} size="lg"/>
+                                         <CompatibilityScore score={compatibilityScore.score} size="lg"/>
                                      </div>
                                  )}
 
                                  {!isOwnProfile ? (
                                      <>
-                                         {/* Send Interest */}
-                                          <button
-                                              onClick={() => sendInterestMutation.mutate(p.id)}
-                                              disabled={interestStatus !== 'none' || sendInterestMutation.isPending}
-                                              className={`group relative inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 overflow-hidden shadow-md shrink-0 whitespace-nowrap
-                                                  ${interestStatus === 'accepted'
-                                                  ? 'bg-green-600/20 border border-green-500/40 text-green-400 cursor-not-allowed'
-                                                  : interestStatus === 'pending'
-                                                      ? 'bg-amber-500/20 border border-amber-400/40 text-amber-300 cursor-not-allowed'
-                                                      : 'bg-[#C9A227] hover:bg-[#d4af37] text-white hover:shadow-[0_0_15px_rgba(201,162,39,0.4)]'
-                                              }`}
-                                              style={{fontFamily: 'system-ui, sans-serif'}}>
-                                              {interestStatus === 'accepted'
-                                                  ? <><CheckIcon size={12} strokeWidth={2.5}/> Interest Accepted</>
-                                                  : interestStatus === 'pending'
-                                                      ? <><CheckIcon size={12} strokeWidth={2.5}/> Interest Sent</>
-                                                      : <><MailIcon size={12} strokeWidth={1.8}/> Send Interest</>
-                                              }
-                                          </button>
+                                         {canSendInterest && interestStatus !== 'pending' && interestStatus !== 'accepted' && (
+                                             <button
+                                                 onClick={() => sendInterestMutation.mutate(p.id)}
+                                                 disabled={sendInterestMutation.isPending}
+                                                 className="group relative inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 overflow-hidden shadow-md shrink-0 whitespace-nowrap bg-[#C9A227] hover:bg-[#d4af37] text-white hover:shadow-[0_0_15px_rgba(201,162,39,0.4)]"
+                                                 style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                 {sendInterestMutation.isPending
+                                                     ? <><ClockIcon size={12} strokeWidth={1.8}/> Sending…</>
+                                                     : <><MailIcon size={12} strokeWidth={1.8}/> Send Interest</>
+                                                 }
+                                             </button>
+                                         )}
 
-                                         {/* Message */}
-                                         <button
-                                             onClick={() => {setMessageError(null); messageMutation.mutate(p.id);}}
-                                             disabled={messageMutation.isPending}
-                                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all duration-200 backdrop-blur-sm shadow-md shrink-0 whitespace-nowrap"
-                                             style={{fontFamily: 'system-ui, sans-serif'}}>
-                                             {messageMutation.isPending
-                                                 ? <><ClockIcon size={12} strokeWidth={1.8}/> Opening…</>
-                                                 : <><ChatIcon size={12} strokeWidth={1.8}/> Message</>
-                                             }
-                                         </button>
+                                         {interestStatus === 'pending' && !isInterestSender && interestId && (
+                                             <>
+                                                 <button
+                                                     onClick={() => interestActionMutation.mutate({ id: interestId, action: 'accept' })}
+                                                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#C9A227] text-white shadow-md shrink-0 whitespace-nowrap"
+                                                     style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                     <CheckIcon size={12} strokeWidth={2.5}/> Accept
+                                                 </button>
+                                                 <button
+                                                     onClick={() => interestActionMutation.mutate({ id: interestId, action: 'decline' })}
+                                                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 border border-red-400/40 text-red-300 shrink-0 whitespace-nowrap"
+                                                     style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                     <XIcon size={12} strokeWidth={2.5}/> Decline
+                                                 </button>
+                                                 <button
+                                                     onClick={() => interestActionMutation.mutate({ id: interestId, action: 'ignore' })}
+                                                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 border border-white/20 text-white/70 shrink-0 whitespace-nowrap"
+                                                     style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                     Ignore
+                                                 </button>
+                                             </>
+                                         )}
+
+                                         {interestStatus === 'pending' && isInterestSender && !canSendInterest && (
+                                             <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500/20 border border-amber-400/40 text-amber-300 shrink-0 whitespace-nowrap"
+                                                   style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                 <CheckIcon size={12} strokeWidth={2.5}/> Already Sent
+                                             </span>
+                                         )}
+
+                                         {interestStatus === 'accepted' && (
+                                             <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-600/20 border border-green-500/40 text-green-400 shrink-0 whitespace-nowrap"
+                                                   style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                 <CheckIcon size={12} strokeWidth={2.5}/> Interest Accepted
+                                             </span>
+                                         )}
+
+                                         {interestStatus === 'declined' && (
+                                             <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-500/20 border border-red-400/40 text-red-300 shrink-0 whitespace-nowrap"
+                                                   style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                 Declined
+                                             </span>
+                                         )}
+
+                                         {interestStatus === 'ignored' && (
+                                             <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 border border-white/20 text-white/60 shrink-0 whitespace-nowrap"
+                                                   style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                 Ignored
+                                             </span>
+                                         )}
+
+                                         {interestStatus === 'accepted' && (
+                                             <button
+                                                 onClick={() => {setMessageError(null); messageMutation.mutate(p.id);}}
+                                                 disabled={messageMutation.isPending}
+                                                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all duration-200 backdrop-blur-sm shadow-md shrink-0 whitespace-nowrap"
+                                                 style={{fontFamily: 'system-ui, sans-serif'}}>
+                                                 {messageMutation.isPending
+                                                     ? <><ClockIcon size={12} strokeWidth={1.8}/> Opening…</>
+                                                     : <><ChatIcon size={12} strokeWidth={1.8}/> Message</>
+                                                 }
+                                             </button>
+                                         )}
 
                                          {/* Shortlist */}
                                          <button
@@ -415,7 +450,7 @@ export default function ProfileViewPage() {
                                                      style={{fontFamily: 'system-ui, sans-serif'}}>
                                                  Report
                                              </button>
-                                             <button onClick={() => {if (confirm('Block this user? They will not be able to see your profile.')) blockMutation.mutate(p.id);}}
+                                             <button onClick={() => setBlockOpen(true)}
                                                      className="text-white/40 hover:text-red-400 text-xs px-2 py-1.5 rounded-full border border-white/10 hover:border-red-400/30 transition-colors whitespace-nowrap"
                                                      style={{fontFamily: 'system-ui, sans-serif'}}>
                                                  Block
@@ -448,6 +483,10 @@ export default function ProfileViewPage() {
             ══════════════════════════════════ */}
             <div className="max-w-5xl mx-auto px-4 md:px-8 pt-6 space-y-6">
 
+                {!isOwnProfile && profileViewUsage && (
+                    <ProfileViewsUsageBanner usage={profileViewUsage} />
+                )}
+
                 {/* About & Preferences — full width feature card */}
                 {(p.profile?.about_me || p.profile?.what_looking_for) && (
                     <div className="relative rounded-3xl overflow-hidden shadow-md"
@@ -477,7 +516,7 @@ export default function ProfileViewPage() {
                             {p.profile.profile_completion_percentage != null && (
                                 <div className="mt-5">
                                     <div className="flex items-center justify-between mb-1">
-                                        <span className="text-xs text-gray-500" style={{fontFamily: 'system-ui, sans-serif'}}>Profile Completion</span>
+                                        <span className="text-xs text-gray-500" style={{fontFamily: 'system-ui, sans-serif'}}>{p.name}'s profile is {p.profile.profile_completion_percentage}% complete</span>
                                         <span className="text-xs font-bold text-[#C9A227]" style={{fontFamily: 'system-ui, sans-serif'}}>{p.profile.profile_completion_percentage}%</span>
                                     </div>
                                     <div className="h-1.5 bg-[#C9A227]/15 rounded-full overflow-hidden">
@@ -676,6 +715,58 @@ export default function ProfileViewPage() {
             </div>
 
             {/* ══════════════════════════════════
+                BLOCK MODAL
+            ══════════════════════════════════ */}
+            <Dialog open={blockOpen} onOpenChange={setBlockOpen}>
+                <DialogContent className="sm:max-w-md rounded-3xl border-0 p-0 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100"
+                         style={{background: 'linear-gradient(135deg, #2d1f08 0%, #1a1207 100%)'}}>
+                        <DialogTitle className="text-white text-lg"
+                                     style={{fontFamily: "'Playfair Display', Georgia, serif"}}>
+                            Block User
+                        </DialogTitle>
+                    </div>
+                    <div className="p-6 bg-[#FDFAF4]">
+                        <div className="flex flex-col items-center text-center">
+                            <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-4 ring-4 ring-red-100/80">
+                                <svg className="w-8 h-8 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                                </svg>
+                            </div>
+                            <p className="text-gray-800 font-medium text-base"
+                               style={{fontFamily: "'Playfair Display', Georgia, serif"}}>
+                                Block {p.name}?
+                            </p>
+                            <p className="text-gray-500 text-sm mt-2 max-w-xs leading-relaxed"
+                               style={{fontFamily: 'system-ui, sans-serif'}}>
+                                They will no longer be able to view your profile or contact you. You won&apos;t see them in search or matches either.
+                            </p>
+                        </div>
+                        <div className="flex gap-2 justify-end pt-6">
+                            <Button
+                                variant="outline"
+                                onClick={() => setBlockOpen(false)}
+                                disabled={blockMutation.isPending}
+                                className="rounded-full border-gray-200 text-gray-600 text-sm"
+                                style={{fontFamily: 'system-ui, sans-serif'}}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={() => blockMutation.mutate(p.id)}
+                                disabled={blockMutation.isPending}
+                                className="bg-red-500 hover:bg-red-600 text-white rounded-full text-sm shadow-md min-w-[7rem]"
+                                style={{fontFamily: 'system-ui, sans-serif'}}
+                            >
+                                {blockMutation.isPending ? 'Blocking…' : 'Block User'}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* ══════════════════════════════════
                 REPORT MODAL
             ══════════════════════════════════ */}
             <Dialog open={reportOpen} onOpenChange={setReportOpen}>
@@ -796,5 +887,27 @@ function GoldPill({label}: {label: string}) {
               }}>
             {label}
         </span>
+    );
+}
+
+function ProfileViewsUsageBanner({usage}: {usage: ProfileAccess['profile_views_per_day']}) {
+    const label = usage.unlimited
+        ? `Profile Views Today: ${usage.used} (Unlimited)`
+        : `Profile Views Today: ${usage.used} / ${usage.limit}`;
+
+    return (
+        <div className="rounded-2xl border border-[#e8d59a]/60 bg-white/80 backdrop-blur-sm px-5 py-4 flex items-center gap-3 shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-[#C9A227]/10 flex items-center justify-center shrink-0">
+                <CrownIcon size={18} strokeWidth={2} className="text-[#C9A227]" />
+            </div>
+            <div>
+                <p className="text-sm font-semibold text-[#1F2937]" style={{fontFamily: 'system-ui, sans-serif'}}>
+                    {label}
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5" style={{fontFamily: 'system-ui, sans-serif'}}>
+                    Profile Views per Day from your subscription
+                </p>
+            </div>
+        </div>
     );
 }

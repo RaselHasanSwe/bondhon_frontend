@@ -20,26 +20,33 @@ interface NotificationState {
     addNotification: (notification: AppNotification) => void;
 }
 
+let fetchNotificationsPromise: Promise<void> | null = null;
+
 export const useNotificationStore = create<NotificationState>()((set) => ({
     notifications: [],
     unreadCount: 0,
     isLoading: false,
 
     fetchNotifications: async () => {
-        set({isLoading: true});
-        try {
-            const [data, count] = await Promise.all([
-                notificationService.getAll(),
-                notificationService.getUnreadCount(),
-            ]);
-            set({
-                notifications: data,
-                unreadCount: count,
-                isLoading: false,
-            });
-        } catch {
-            set({isLoading: false});
-        }
+        if (fetchNotificationsPromise) return fetchNotificationsPromise;
+
+        fetchNotificationsPromise = (async () => {
+            set({isLoading: true});
+            try {
+                const {notifications, unreadCount} = await notificationService.getBellSnapshot();
+                set({
+                    notifications,
+                    unreadCount,
+                    isLoading: false,
+                });
+            } catch {
+                set({isLoading: false});
+            } finally {
+                fetchNotificationsPromise = null;
+            }
+        })();
+
+        return fetchNotificationsPromise;
     },
 
     markRead: async (id) => {

@@ -6,6 +6,7 @@ import {useCallStore} from '@/store/callStore';
 import {callService} from '@/services/callService';
 import {WebRTCManager} from '@/lib/webrtc';
 import type {WebRTCSignalPayload} from '@/types/call';
+import {cfImageUrl} from '@/lib/utils';
 
 function formatDuration(seconds: number): string {
     const h = Math.floor(seconds / 3600);
@@ -153,11 +154,9 @@ export function CallScreen({currentUserId}: CallScreenProps) {
         let channel: any = null;
 
         (async () => {
-            const {getEcho} = await import('@/lib/echo');
-            const echo = await getEcho();
-            if (cancelled || !echo) return;
-
-            channel = echo.private(`user.${currentUserId}`);
+            const {getPrivateChannel} = await import('@/lib/echo');
+            channel = await getPrivateChannel(`user.${currentUserId}`);
+            if (cancelled || !channel) return;
 
             const manager = new WebRTCManager({
                 callId: activeCall.callId,
@@ -320,15 +319,12 @@ export function CallScreen({currentUserId}: CallScreenProps) {
             cancelled = true;
             destroyManager();
             (async () => {
-                const {getEcho} = await import('@/lib/echo');
-                const echo = await getEcho();
                 if (channel) {
                     channel.stopListening('.webrtc.signal');
                     channel.stopListening('.call.ended');
                     channel.stopListening('.call.declined');
                     channel.stopListening('.call.answered');
                 }
-                echo;
             })();
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -391,7 +387,7 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                         )}
                         {remoteParticipant.avatar ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={remoteParticipant.avatar} alt={remoteParticipant.name}
+                            <img src={cfImageUrl(remoteParticipant.avatar) ?? ''} alt={remoteParticipant.name}
                                  className="relative z-10 w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full object-cover border-2 border-white/20"/>
                         ) : (
                             <div className="relative z-10 w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-linear-to-br from-[#C9A227] to-[#D4AF37] flex items-center justify-center">
@@ -468,7 +464,7 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-linear-to-b from-[#1a1a2e] to-[#0f0f1a]">
                         {remoteParticipant.avatar ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={remoteParticipant.avatar} alt={remoteParticipant.name}
+                            <img src={cfImageUrl(remoteParticipant.avatar) ?? ''} alt={remoteParticipant.name}
                                  className="w-20 h-20 sm:w-28 sm:h-28 rounded-full object-cover border-2 border-white/20 mb-4"/>
                         ) : (
                             <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-linear-to-br from-[#C9A227] to-[#D4AF37] flex items-center justify-center mb-4">
@@ -485,7 +481,7 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1a1a2e]/90">
                         {remoteParticipant.avatar ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={remoteParticipant.avatar} alt={remoteParticipant.name}
+                            <img src={cfImageUrl(remoteParticipant.avatar) ?? ''} alt={remoteParticipant.name}
                                  className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-2 border-white/20 mb-3"/>
                         ) : (
                             <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-linear-to-br from-[#C9A227] to-[#D4AF37] flex items-center justify-center mb-3">

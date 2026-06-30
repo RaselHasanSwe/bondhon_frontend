@@ -4,8 +4,9 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { useSettings } from '@/lib/useSettings';
-import { getPostAuthRedirect, needsEmailVerification } from '@/lib/authRedirect';
+import { getPostAuthRedirect, needsEmailVerification, isFaceScanEnabled, isFaceScanComplete } from '@/lib/authRedirect';
 import { faceScanService, type FaceScanSessionResponse } from '@/services/faceScanService';
+import { cfImageUrl } from '@/lib/utils';
 import {
     FaceLandmarker,
     FilesetResolver,
@@ -157,9 +158,17 @@ async function canvasToFile(canvas: HTMLCanvasElement, name: string): Promise<Fi
     return new File([blob], `${name}.jpg`, { type: 'image/jpeg' });
 }
 
-function requiredStepsFromSession(session: FaceScanSessionResponse | null): RequiredStep[] {
-    if (!session?.captures?.length) return [];
-    return REQUIRED_STEPS.filter(step => session.captures.some(c => c.capture_key === step));
+function trackStepUpload(prev: RequiredStep[], captureKey: string): RequiredStep[] {
+    const step = captureKey as RequiredStep;
+    if (!REQUIRED_STEPS.includes(step)) return prev;
+    return prev.includes(step) ? prev : [...prev, step];
+}
+
+function shouldResetScanProgress(session: FaceScanSessionResponse | null): boolean {
+    if (!session) return true;
+    if (!session.captures?.length) return true;
+    if (session.review_note) return true;
+    return false;
 }
 
 // ─── Overlay canvas ───────────────────────────────────────────────────────────
@@ -281,11 +290,11 @@ export default function FaceScanPage() {
     const [uploading,      setUploading]      = useState(false);
     const [captureCountdown, setCaptureCountdown] = useState<number | null>(null);
     const [flashActive,    setFlashActive]    = useState(false);
+    const [pageReady,      setPageReady]      = useState(false);
 
-    const faceScanEnabled = useMemo(() => {
-        const raw = settings.face_scan_enabled;
-        return raw === null ? true : ['1', 'true', 'yes', 'on'].includes(String(raw).toLowerCase());
-    }, [settings.face_scan_enabled]);
+    const faceScanEnabled = useMemo(() => isFaceScanEnabled(settings.face_scan_enabled), [settings.face_scan_enabled]);
+    const rejectionReason = session?.review_note ?? user?.face_scan_review_note ?? null;
+    const showRejectionBanner = !!rejectionReason;
 
     // ── Mount ────────────────────────────────────────────────────────────────
     useEffect(() => { setMounted(true); }, []);
@@ -298,18 +307,45 @@ export default function FaceScanPage() {
             router.replace('/verify-email');
             return;
         }
-        const s = user?.face_scan_status;
-        if (!faceScanEnabled || s === 'submitted' || s === 'approved') {
-            router.replace('/dashboard'); return;
+
+        if (!faceScanEnabled) {
+            router.replace('/dashboard');
+            return;
         }
+
+        if (isFaceScanComplete(user?.face_scan_status)) {
+            router.replace('/dashboard');
+            return;
+        }
+
+        let cancelled = false;
+
         void faceScanService.getStatus().then(res => {
+            if (cancelled) return;
             const srv = res.data.data.session;
             setSession(srv);
-            setCompletedSteps(requiredStepsFromSession(srv));
-            if (srv && (srv.status === 'submitted' || srv.status === 'approved')) {
-                router.replace('/dashboard');
+            setCompletedSteps(shouldResetScanProgress(srv) ? [] : REQUIRED_STEPS.filter(step =>
+                srv?.captures?.some(c => c.capture_key === step) ?? false,
+            ));
+
+            if (srv?.status) {
+                updateUser({
+                    face_scan_status: srv.status,
+                    face_scan_review_note: srv.review_note ?? undefined,
+                });
             }
-        }).catch(() => { });
+
+            if (srv && isFaceScanComplete(srv.status)) {
+                router.replace('/dashboard');
+                return;
+            }
+
+            setPageReady(true);
+        }).catch(() => {
+            if (!cancelled) setPageReady(true);
+        });
+
+        return () => { cancelled = true; };
     }, [mounted, isAuthenticated, router, faceScanEnabled, user?.face_scan_status]);
 
     // ── Off-screen capture canvas ─────────────────────────────────────────────
@@ -326,18 +362,53 @@ export default function FaceScanPage() {
         };
     }, []);
 
-    // ── Auto-redirect once all 6 required steps done ──────────────────────────
+    // ── Redirect when server confirms submission ─────────────────────────────
     useEffect(() => {
-        if (completedSteps.length >= REQUIRED_STEPS.length && started) {
-            const t = window.setTimeout(() => {
-                updateUser({ face_scan_status: 'submitted' });
-                stopCamera();
-                router.replace('/dashboard');
-            }, 1500);
-            return () => window.clearTimeout(t);
-        }
+        if (!session || !isFaceScanComplete(session.status)) return;
+
+        const t = window.setTimeout(() => {
+            updateUser({ face_scan_status: session.status });
+            stopCamera();
+            router.replace('/dashboard');
+        }, 1200);
+
+        return () => window.clearTimeout(t);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [completedSteps, started]);
+    }, [session?.status]);
+
+    // ── Auto-redirect once server confirms all captures submitted ────────────
+    useEffect(() => {
+        if (completedSteps.length < REQUIRED_STEPS.length || !started || uploading) return;
+
+        let cancelled = false;
+
+        const t = window.setTimeout(async () => {
+            if (session && isFaceScanComplete(session.status)) return;
+
+            try {
+                const res = await faceScanService.getStatus();
+                if (cancelled) return;
+                const srv = res.data.data.session;
+                if (srv) {
+                    setSession(srv);
+                    if (isFaceScanComplete(srv.status)) {
+                        updateUser({
+                            face_scan_status: srv.status,
+                            face_scan_review_note: srv.review_note,
+                        });
+                        stopCamera();
+                        router.replace('/dashboard');
+                    }
+                }
+            } catch { /* wait for next upload or user action */ }
+        }, 1500);
+
+        return () => {
+            cancelled = true;
+            window.clearTimeout(t);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [completedSteps.length, started, uploading]);
 
     // ── Main detection loop ───────────────────────────────────────────────────
     useEffect(() => {
@@ -684,9 +755,12 @@ export default function FaceScanPage() {
             });
             const srv = res.data.data.session;
             setSession(srv);
-            setCompletedSteps(requiredStepsFromSession(srv));
-            if (srv.status === 'submitted' || srv.status === 'approved' || srv.status === 'rejected') {
-                updateUser({ face_scan_status: srv.status });
+            setCompletedSteps(prev => trackStepUpload(prev, captureKey));
+            if (srv.status === 'submitted' || srv.status === 'approved') {
+                updateUser({
+                    face_scan_status: srv.status,
+                    face_scan_review_note: srv.review_note,
+                });
                 stopCamera();
                 router.replace('/dashboard');
             }
@@ -697,7 +771,16 @@ export default function FaceScanPage() {
         }
     };
 
-    if (!mounted) return null;
+    if (!mounted || !pageReady) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[linear-gradient(160deg,#f8f3e8_0%,#fffaf1_100%)]">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                    <p className="text-sm text-stone-600">Preparing face verification…</p>
+                </div>
+            </div>
+        );
+    }
 
     // ── Derived UI ────────────────────────────────────────────────────────────
 
@@ -712,7 +795,7 @@ export default function FaceScanPage() {
         if (faceStatus.position === 'too_close') return { text: 'Move further back', type: 'warn', arrow: '↓' };
         if (faceStatus.position === 'offcenter') return { text: 'Centre your face in the oval', type: 'warn', arrow: '⊕' };
 
-        if (allDone) return { text: '✅ All poses captured — redirecting to dashboard…', type: 'ok' };
+        if (allDone) return { text: '✅ All poses captured — finishing up…', type: 'ok' };
         if (!nextStep) return { text: 'Done!', type: 'ok' };
 
         // Pitch feedback
@@ -795,6 +878,19 @@ export default function FaceScanPage() {
                         <span className="text-sm text-amber-100/90">{settings.site_name}</span>
                     </div>
                 </div>
+
+                {showRejectionBanner && (
+                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-4">
+                        <div className="flex items-start gap-3">
+                            <span className="text-xl shrink-0">⚠️</span>
+                            <div>
+                                <p className="font-semibold text-red-800">Previous verification was rejected</p>
+                                <p className="text-sm text-red-700 mt-1 leading-relaxed"><b>Reason : </b> {rejectionReason}</p>
+                                <p className="text-xs mt-2">Please complete a new face scan below.</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <div className="grid lg:grid-cols-[1.25fr_0.75fr] gap-6 p-4 sm:p-6 lg:px-8">
 
@@ -1085,7 +1181,7 @@ export default function FaceScanPage() {
                                 <div className="grid grid-cols-2 gap-2">
                                     {session.captures.slice(-4).reverse().map(capture => (
                                         <div key={capture.id} className="rounded-xl overflow-hidden bg-white border border-stone-200">
-                                            <img src={capture.image_url} alt={capture.capture_key} className="w-full aspect-3/4 object-cover" />
+                                            <img src={cfImageUrl(capture.image_path) ?? ''} alt={capture.capture_key} className="w-full aspect-3/4 object-cover" />
                                             <div className="px-2 py-1.5 text-[10px] text-stone-500 flex justify-between gap-1">
                                                 <span className="capitalize font-medium">{capture.capture_key}</span>
                                                 <span>{capture.captured_at ? new Date(capture.captured_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>

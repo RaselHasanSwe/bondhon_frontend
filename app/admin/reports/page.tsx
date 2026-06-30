@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '@/services/adminService';
 import type { AdminReport } from '@/types/admin';
-import { Button } from '@/components/ui/button';
+import { InfiniteScrollFooter } from '@/components/ui/InfiniteScrollFooter';
+import { useInfiniteList } from '@/hooks/useInfiniteList';
+import { normalizeFlatPage } from '@/lib/pagination';
 
 const REASON_LABELS: Record<string, string> = {
     fake_profile: 'Fake Profile',
@@ -24,17 +26,19 @@ const STATUS_STYLES: Record<string, string> = {
 export default function AdminReportsPage() {
     const queryClient = useQueryClient();
     const [statusFilter, setStatusFilter] = useState<string>('');
-    const [page, setPage] = useState(1);
 
-    const { data: res, isLoading } = useQuery({
-        queryKey: ['admin-reports', statusFilter, page],
-        queryFn: () => adminService.getReports({ status: statusFilter || undefined, page }).then(r => r.data),
+    const {
+        items: reports,
+        total,
+        isLoading,
+        hasNextPage,
+        isFetchingNextPage,
+        fetchNextPage,
+    } = useInfiniteList<AdminReport>({
+        queryKey: ['admin-reports', statusFilter],
+        queryFn: (page) =>
+            adminService.getReports({ status: statusFilter || undefined, page }).then((r) => normalizeFlatPage(r.data.data, page)),
     });
-
-    type ReportsData = { data: AdminReport[]; total: number; current_page: number; last_page: number };
-    const reportsData: ReportsData | null = res?.data
-        ? { data: (res.data as { data: AdminReport[] }).data ?? [], total: (res.data as { total: number }).total ?? 0, current_page: (res.data as { current_page: number }).current_page ?? 1, last_page: (res.data as { last_page: number }).last_page ?? 1 }
-        : null;
 
     const actionMutation = useMutation({
         mutationFn: ({ id, status }: { id: number; status: string }) =>
@@ -46,15 +50,16 @@ export default function AdminReportsPage() {
         <div className="space-y-6 max-w-7xl mx-auto">
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
-                <p className="text-sm text-gray-500 mt-0.5">Review and take action on user reports</p>
+                <p className="text-sm text-gray-500 mt-0.5">
+                    Review and take action on user reports{total > 0 ? ` · ${total} total` : ''}
+                </p>
             </div>
 
-            {/* Filter tabs */}
             <div className="flex gap-2 flex-wrap">
                 {['', 'pending', 'reviewed', 'action_taken', 'dismissed'].map(s => (
                     <button
                         key={s || 'all'}
-                        onClick={() => { setStatusFilter(s); setPage(1); }}
+                        onClick={() => setStatusFilter(s)}
                         className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                             statusFilter === s
                                 ? 'bg-amber-500 text-white border-amber-500'
@@ -66,7 +71,6 @@ export default function AdminReportsPage() {
                 ))}
             </div>
 
-            {/* Table */}
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                 {isLoading ? (
                     <div className="p-8 text-center text-gray-400">Loading…</div>
@@ -85,7 +89,7 @@ export default function AdminReportsPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
-                                {(reportsData?.data ?? []).map(report => (
+                                {reports.map(report => (
                                     <tr key={report.id} className="hover:bg-gray-50/50 transition-colors">
                                         <td className="px-4 py-3">
                                             <div className="text-gray-900 font-medium">{report.reporter?.name ?? 'Unknown'}</div>
@@ -144,7 +148,7 @@ export default function AdminReportsPage() {
                                         </td>
                                     </tr>
                                 ))}
-                                {(reportsData?.data ?? []).length === 0 && (
+                                {reports.length === 0 && (
                                     <tr>
                                         <td colSpan={7} className="px-4 py-10 text-center text-gray-400">
                                             No reports found.
@@ -156,18 +160,17 @@ export default function AdminReportsPage() {
                     </div>
                 )}
 
-                {/* Pagination */}
-                {reportsData && reportsData.last_page > 1 && (
-                    <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between text-sm">
-                        <span className="text-gray-500">Page {reportsData.current_page} of {reportsData.last_page} ({reportsData.total} total)</span>
-                        <div className="flex gap-2">
-                            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>← Prev</Button>
-                            <Button variant="outline" size="sm" disabled={page >= reportsData.last_page} onClick={() => setPage(p => p + 1)}>Next →</Button>
-                        </div>
-                    </div>
+                {!isLoading && reports.length > 0 && (
+                    <InfiniteScrollFooter
+                        hasNextPage={!!hasNextPage}
+                        isFetchingNextPage={isFetchingNextPage}
+                        onLoadMore={() => fetchNextPage()}
+                        showEndMessage
+                        endMessage="No more reports"
+                        className="border-t border-gray-100"
+                    />
                 )}
             </div>
         </div>
     );
 }
-

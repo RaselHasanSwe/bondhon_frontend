@@ -3,15 +3,17 @@
 import {useState, useEffect, useRef, Suspense, useMemo} from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import {useQuery, useQueries, useMutation, useQueryClient} from '@tanstack/react-query';
+import {useUserQuery} from '@/hooks/useUserQuery';
+import {useMutation, useQueryClient} from '@tanstack/react-query';
+import {invalidateProfileQueries, invalidateDashboardQueries} from '@/lib/cacheInvalidation';
 import {useForm, Controller} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
 import {useSearchParams} from 'next/navigation';
 import {profileService} from '@/services/profileService';
 import {authService} from '@/services/authService';
-import api from '@/lib/api';
 import { showSuccessToast, showErrorToast, getErrorMessage } from '@/lib/toast';
+import { resolveProfilePhotoUrl } from '@/lib/utils';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -25,7 +27,19 @@ import {
     siblingCountOptions, siblingPositionOptions,
     experienceOptions,
 } from '@/lib/profileOptions';
-import { useOptions, useChildOptions, type OptionItem } from '@/hooks/useSelectOptions';
+import {
+    useOptionsBulk,
+    useChildOptions,
+    useChildOptionsBulk,
+    pickOptions,
+    PROFILE_EDIT_OPTION_GROUPS,
+} from '@/hooks/useSelectOptions';
+
+// ─── Tab order for auto-advance after save ───────────────────────────────────
+const PROFILE_EDIT_TABS = [
+    'basic', 'location', 'religion', 'career', 'lifestyle', 'family',
+    'horoscope', 'photo', 'preferences', 'security',
+] as const;
 
 // ─── ENUM fields that must not be sent as empty string ───────────────────────
 const ENUM_FIELDS = new Set([
@@ -267,16 +281,21 @@ function ProfileEditInner() {
         setActiveTab(tabFromUrl);
     }, [searchParams]);
 
-    const {data:profileRes,isLoading} = useQuery({queryKey:['my-profile'],queryFn:()=>profileService.getMyProfile().then(r=>r.data)});
-    const {data:completionRes} = useQuery({queryKey:['profile-completion'],queryFn:()=>profileService.getCompletionStatus().then(r=>r.data.data)});
+    const {data:profileRes,isLoading} = useUserQuery({queryKey:['my-profile'],queryFn:()=>profileService.getMyProfile().then(r=>r.data)});
+    const {data:completionRes} = useUserQuery({queryKey:['profile-completion'],queryFn:()=>profileService.getCompletionStatus().then(r=>r.data.data)});
+
+    const invalidateProfileData = () => {
+        invalidateProfileQueries(queryClient);
+        invalidateDashboardQueries(queryClient);
+    };
 
     const saveMutation = useMutation({
         mutationFn:(data:Record<string,unknown>)=>profileService.updateProfile(data),
-        onSuccess:()=>{queryClient.invalidateQueries({queryKey:['my-profile']});queryClient.invalidateQueries({queryKey:['profile-completion']});},
+        onSuccess:()=>{invalidateProfileData();},
     });
     const prefMutation = useMutation({
         mutationFn:(data:Record<string,unknown>)=>profileService.updatePreferences(data),
-        onSuccess:()=>{queryClient.invalidateQueries({queryKey:['my-profile']});queryClient.invalidateQueries({queryKey:['profile-completion']});},
+        onSuccess:()=>{invalidateProfileData();},
     });
     const changePasswordMutation = useMutation({mutationFn:(data:ChangePasswordForm)=>authService.changePassword(data)});
 
@@ -297,42 +316,44 @@ function ProfileEditInner() {
     const watchedCity = locationForm.watch('city');
     const watchedState = locationForm.watch('state');
 
-    // ── Dynamic select options from API ─────────────────────────────────────
-    const { data: profileCreatedByOptions = [] }  = useOptions('profile_created_by');
-    const { data: profileCreatedForOptions = [] } = useOptions('profile_created_for');
-    const { data: lookingForOptions = [] }        = useOptions('looking_for');
-    const { data: maritalStatusOptions = [] }     = useOptions('marital_status');
-    const { data: haveChildrenOptions = [] }      = useOptions('have_children');
-    const { data: childLivingStatusOptions = [] } = useOptions('child_living_status');
-    const { data: bodyTypeOptions = [] }          = useOptions('body_type');
-    const { data: eyeColorOptions = [] }          = useOptions('eye_color');
-    const { data: hairColorOptions = [] }         = useOptions('hair_color');
-    const { data: complexionOptions = [] }        = useOptions('complexion');
-    const { data: bloodGroupOptions = [] }        = useOptions('blood_group');
-    const { data: disabilityOptions = [] }        = useOptions('disability');
-    const { data: smokingOptions = [] }           = useOptions('smoking');
-    const { data: drinkingOptions = [] }          = useOptions('drinking');
-    const { data: religionOptions = [] }          = useOptions('religion');
-    const { data: religiousnessOptions = [] }     = useOptions('religiousness');
-    const { data: prayOptions = [] }              = useOptions('pray');
-    const { data: manglikStatusOptions = [] }     = useOptions('manglik_status');
-    const { data: motherTongueOptions = [] }      = useOptions('mother_tongue');
-    const { data: familyValuesOptions = [] }      = useOptions('family_values');
-    const { data: occupationOptions = [] }        = useOptions('occupation');
-    const { data: professionOptions = [] }        = useOptions('profession');
-    const { data: educationLevelOptions = [] }    = useOptions('education_level');
-    const { data: employedInOptions = [] }        = useOptions('employed_in');
-    const { data: dietOptions = [] }              = useOptions('diet');
-    const { data: eyeWearOptions = [] }           = useOptions('eye_wear');
-    const { data: hobbiesOptions = [] }           = useOptions('hobbies');
-    const { data: nationalityOptions = [] }       = useOptions('nationality');
-    const { data: countryOptions = [] }           = useOptions('country');
-    const { data: residingStatusOptions = [] }    = useOptions('residing_status');
-    const { data: familyTypeOptions = [] }        = useOptions('family_type');
-    const { data: familyStatusOptions = [] }      = useOptions('family_status');
-    const { data: rashiOptions = [] }             = useOptions('rashi');
-    const { data: workingStatusOptions = [] }     = useOptions('working_status');
-    const { data: prefHasChildrenOptions = [] }   = useOptions('pref_has_children');
+    // ── Dynamic select options from API (single bulk request) ───────────────
+    const { data: bulkOptions } = useOptionsBulk(PROFILE_EDIT_OPTION_GROUPS);
+
+    const profileCreatedByOptions = pickOptions(bulkOptions, 'profile_created_by');
+    const profileCreatedForOptions = pickOptions(bulkOptions, 'profile_created_for');
+    const lookingForOptions = pickOptions(bulkOptions, 'looking_for');
+    const maritalStatusOptions = pickOptions(bulkOptions, 'marital_status');
+    const haveChildrenOptions = pickOptions(bulkOptions, 'have_children');
+    const childLivingStatusOptions = pickOptions(bulkOptions, 'child_living_status');
+    const bodyTypeOptions = pickOptions(bulkOptions, 'body_type');
+    const eyeColorOptions = pickOptions(bulkOptions, 'eye_color');
+    const hairColorOptions = pickOptions(bulkOptions, 'hair_color');
+    const complexionOptions = pickOptions(bulkOptions, 'complexion');
+    const bloodGroupOptions = pickOptions(bulkOptions, 'blood_group');
+    const disabilityOptions = pickOptions(bulkOptions, 'disability');
+    const smokingOptions = pickOptions(bulkOptions, 'smoking');
+    const drinkingOptions = pickOptions(bulkOptions, 'drinking');
+    const religionOptions = pickOptions(bulkOptions, 'religion');
+    const religiousnessOptions = pickOptions(bulkOptions, 'religiousness');
+    const prayOptions = pickOptions(bulkOptions, 'pray');
+    const manglikStatusOptions = pickOptions(bulkOptions, 'manglik_status');
+    const motherTongueOptions = pickOptions(bulkOptions, 'mother_tongue');
+    const familyValuesOptions = pickOptions(bulkOptions, 'family_values');
+    const occupationOptions = pickOptions(bulkOptions, 'occupation');
+    const professionOptions = pickOptions(bulkOptions, 'profession');
+    const educationLevelOptions = pickOptions(bulkOptions, 'education_level');
+    const employedInOptions = pickOptions(bulkOptions, 'employed_in');
+    const dietOptions = pickOptions(bulkOptions, 'diet');
+    const eyeWearOptions = pickOptions(bulkOptions, 'eye_wear');
+    const hobbiesOptions = pickOptions(bulkOptions, 'hobbies');
+    const nationalityOptions = pickOptions(bulkOptions, 'nationality');
+    const countryOptions = pickOptions(bulkOptions, 'country');
+    const residingStatusOptions = pickOptions(bulkOptions, 'residing_status');
+    const familyTypeOptions = pickOptions(bulkOptions, 'family_type');
+    const familyStatusOptions = pickOptions(bulkOptions, 'family_status');
+    const rashiOptions = pickOptions(bulkOptions, 'rashi');
+    const workingStatusOptions = pickOptions(bulkOptions, 'working_status');
+    const prefHasChildrenOptions = pickOptions(bulkOptions, 'pref_has_children');
 
     // ── Dependent (nested) options ───────────────────────────────────────────
     // Caste depends on selected religion
@@ -380,24 +401,10 @@ function ProfileEditInner() {
             .map((o) => o.id);
     }, [isBangladeshSelected, watchedPrefDivisions, prefDivisionOpts]);
 
-    const prefDistrictQueries = useQueries({
-        queries: selectedPrefDivisionIds.map((divisionId) => ({
-            queryKey: ['options', 'country', 'districts', divisionId],
-            queryFn: () => api.get('/options/country', { params: { parent_id: divisionId } }).then((r) => r.data as OptionItem[]),
-            staleTime: 1000 * 60 * 60,
-            enabled: isBangladeshSelected,
-        })),
-    });
-
-    const prefDistrictOpts = useMemo(() => {
-        const merged = new Map<string, OptionItem>();
-        for (const query of prefDistrictQueries) {
-            for (const option of query.data ?? []) {
-                merged.set(option.value, option);
-            }
-        }
-        return Array.from(merged.values());
-    }, [prefDistrictQueries]);
+    const { data: prefDistrictOpts = [] } = useChildOptionsBulk(
+        'country',
+        isBangladeshSelected ? selectedPrefDivisionIds : [],
+    );
 
     // Get Canada country ID for fetching provinces
     const canadaOption = countryOptions.find(o => o.value === 'canada');
@@ -506,6 +513,13 @@ function ProfileEditInner() {
         return out;
     };
 
+    const goToNextTab = (currentTab: string) => {
+        const idx = PROFILE_EDIT_TABS.indexOf(currentTab as typeof PROFILE_EDIT_TABS[number]);
+        if (idx >= 0 && idx < PROFILE_EDIT_TABS.length - 1) {
+            setActiveTab(PROFILE_EDIT_TABS[idx + 1]);
+        }
+    };
+
     const handleSave = async(data:Record<string,unknown>,tabKey:string)=>{
         let processed={...data};
         for(const k of Object.keys(processed)){if(ENUM_FIELDS.has(k)&&processed[k]==='')delete processed[k];}
@@ -514,6 +528,7 @@ function ProfileEditInner() {
             await saveMutation.mutateAsync(processed);
             setSavedTab(tabKey); setTimeout(()=>setSavedTab(null),2000);
             showSuccessToast('Profile updated successfully.');
+            goToNextTab(tabKey);
         } catch (err: unknown) {
             showErrorToast(getErrorMessage(err), 'Update failed');
         }
@@ -556,6 +571,7 @@ function ProfileEditInner() {
             await prefMutation.mutateAsync(payload);
             setSavedTab('preferences'); setTimeout(()=>setSavedTab(null),2000);
             showSuccessToast('Preferences updated successfully.');
+            goToNextTab('preferences');
         } catch(err:unknown) {
             showErrorToast(getErrorMessage(err), 'Update failed');
             const apiErrors = (err as {response?:{data?:{errors?:Record<string,string[]>}}})?.response?.data?.errors;
@@ -588,12 +604,12 @@ function ProfileEditInner() {
     const handlePhotoUpload = async(e:React.ChangeEvent<HTMLInputElement>)=>{
         const file=e.target.files?.[0]; if(!file) return;
         setUploadingPhoto(true); setPhotoError(null);
-        try{await profileService.uploadPhoto(file);queryClient.invalidateQueries({queryKey:['my-profile']});queryClient.invalidateQueries({queryKey:['profile-completion']});}
+        try{await profileService.uploadPhoto(file);invalidateProfileData();}
         catch{setPhotoError('Upload failed. Please try a smaller image (max 5 MB).');}
         finally{setUploadingPhoto(false);if(fileInputRef.current)fileInputRef.current.value='';}
     };
-    const handleDeletePhoto=async(id:number)=>{await profileService.deletePhoto(id);queryClient.invalidateQueries({queryKey:['my-profile']});queryClient.invalidateQueries({queryKey:['profile-completion']});};
-    const handleSetPrimary=async(id:number)=>{await profileService.setPrimaryPhoto(id);queryClient.invalidateQueries({queryKey:['my-profile']});};
+    const handleDeletePhoto=async(id:number)=>{await profileService.deletePhoto(id);invalidateProfileData();};
+    const handleSetPrimary=async(id:number)=>{await profileService.setPrimaryPhoto(id);invalidateProfileQueries(queryClient);};
 
     const dobValue = basicForm.watch('dob');
     const age = useMemo(()=>{
@@ -1069,7 +1085,7 @@ function ProfileEditInner() {
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                 {photos.map(photo=>(
                                     <div key={photo.id} className="relative group rounded-xl overflow-hidden border border-gray-100">
-                                        <img src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${photo.file_path}`} alt="Profile photo" className="w-full aspect-square object-cover"/>
+                                        <img src={resolveProfilePhotoUrl(photo) ?? ''} alt="Profile photo" className="w-full aspect-square object-cover"/>
                                         {photo.is_primary && <span className="absolute top-2 left-2 bg-[#C9A227] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Primary</span>}
                                         {photo.moderation_status==='pending' && <span className="absolute top-2 right-2 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Pending</span>}
                                         {photo.moderation_status==='rejected' && <span className="absolute top-2 right-2 bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full">Rejected</span>}

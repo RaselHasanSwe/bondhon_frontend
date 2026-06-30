@@ -6,6 +6,7 @@ import Link from 'next/link';
 import {authService} from '@/services/authService';
 import {useAuthStore} from '@/store/authStore';
 import {getPostAuthRedirect} from '@/lib/authRedirect';
+import {useSettings} from '@/lib/useSettings';
 
 // ── Mode A: Verification callback (user clicked the email link) ─────────────
 function VerifyCallback({vUrl}: { vUrl: string }) {
@@ -13,6 +14,8 @@ function VerifyCallback({vUrl}: { vUrl: string }) {
     const updateUser = useAuthStore((s) => s.updateUser);
     const user = useAuthStore((s) => s.user);
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+    const {settings} = useSettings();
+    const otpExpiryMinutes = settings.email_otp_expiry_minutes ?? '15';
     const [status, setStatus] = useState<'loading' | 'success' | 'already' | 'error'>('loading');
     const [errorMsg, setErrorMsg] = useState('');
 
@@ -128,7 +131,7 @@ function VerifyCallback({vUrl}: { vUrl: string }) {
                 {errorMsg}
             </div>
             <p className="text-xs text-muted-foreground">
-                Links expire after 60 minutes. Enter the 6-digit code from your email or request a new one below.
+                Verification codes expire after {otpExpiryMinutes} minutes. Enter the 6-digit code from your email or request a new one below.
             </p>
             <Link href="/verify-email">
                 <button className="btn-gold w-full"
@@ -145,6 +148,8 @@ function OtpVerification() {
     const router = useRouter();
     const user = useAuthStore((s) => s.user);
     const updateUser = useAuthStore((s) => s.updateUser);
+    const {settings} = useSettings();
+    const otpExpiryMinutes = settings.email_otp_expiry_minutes ?? '15';
     const [digits, setDigits] = useState<string[]>(['', '', '', '', '', '']);
     const [submitting, setSubmitting] = useState(false);
     const [resending, setResending] = useState(false);
@@ -232,7 +237,7 @@ function OtpVerification() {
                 <p className="text-muted-foreground text-sm leading-relaxed mt-2">
                     We sent a 6-digit code to{' '}
                     <span className="font-semibold text-foreground">{user?.email ?? 'your email'}</span>.
-                    Enter it below to continue.
+                    Enter it below to continue. The code expires in {otpExpiryMinutes} minutes.
                 </p>
             </div>
 
@@ -285,10 +290,6 @@ function OtpVerification() {
                 >
                     {resending ? 'sending…' : 'resend code'}
                 </button>
-            </p>
-
-            <p className="text-xs text-muted-foreground text-center">
-                You can also click the verification link in the same email.
             </p>
         </div>
     );

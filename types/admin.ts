@@ -36,7 +36,7 @@ export interface AdminUser {
         latest_capture?: {
             id: number;
             capture_key: string;
-            image_url: string;
+            image_path: string;
             metadata: Record<string, unknown> | null;
             captured_at: string | null;
         } | null;
@@ -47,6 +47,7 @@ export interface AdminPhoto {
     id: number;
     user_id: number;
     file_path: string;
+    url?: string | null;
     is_primary: boolean;
     is_approved: boolean;
     moderation_status: 'pending' | 'approved' | 'rejected';
@@ -115,7 +116,7 @@ export interface AdminUserDetail {
         captures: Array<{
             id: number;
             capture_key: string;
-            image_url: string;
+            image_path: string;
             metadata: Record<string, unknown> | null;
             captured_at: string | null;
         }>;

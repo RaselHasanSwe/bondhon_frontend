@@ -5,22 +5,46 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
 }
 
-/**
- * Resolve a photo path returned by the Laravel backend into a full URL
- * that Next.js <Image> can load.
- *
- * The backend's Storage::url() returns a relative path like /storage/...
- * when no ASSET_URL is configured.  We must prepend the API base-URL so
- * Next.js loads from the backend server, not the frontend server.
- */
+function getCfConfig() {
+    return {
+        delivery: (process.env.NEXT_PUBLIC_CF_IMAGE_DELIVERY_URL ?? '').replace(/\/$/, ''),
+        hash: process.env.NEXT_PUBLIC_CF_ACCOUNT_HASH ?? '',
+    };
+}
+
+/** Build a Cloudflare Images delivery URL using the public variant. */
+export function cfImageUrl(imageRef: string | null | undefined): string | null {
+    if (!imageRef) return null;
+
+    const base = resolveCfImageBase(imageRef);
+    if (!base) return null;
+
+    return `${base}/public`;
+}
+
+function resolveCfImageBase(ref: string): string | null {
+    if (/^https?:\/\//i.test(ref)) {
+        return ref.replace(/\/(public|w=[^/]+(?:,[^/]+)*)$/, '');
+    }
+
+    const { delivery, hash } = getCfConfig();
+    if (!delivery || !hash) return null;
+
+    const imageId = ref.replace(/^\//, '');
+    return `${delivery}/${hash}/${imageId}`;
+}
+
+/** Resolve a Cloudflare image ID from the API into a delivery URL. */
 export function resolvePhotoUrl(path: string | null | undefined): string | null {
-    if (!path) return null;
-    // Already an absolute URL (https://... or http://...)
-    if (/^https?:\/\//i.test(path)) return path;
-    // Remove accidental leading slash before joining with base URL
-    const base = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '');
-    const rel = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${rel}`;
+    return cfImageUrl(path);
+}
+
+/** Resolve a profile photo using `file_path` or `url` from the API. */
+export function resolveProfilePhotoUrl(
+    photo: { url?: string | null; file_path?: string | null } | null | undefined,
+): string | null {
+    if (!photo) return null;
+    return cfImageUrl(photo.file_path ?? photo.url);
 }
 
 export function formatAge(dob: string | null | undefined): string {
@@ -73,4 +97,3 @@ export function timeAgo(dateString: string | null | undefined): string {
     if (days < 30) return `${days}d ago`;
     return date.toLocaleDateString();
 }
-

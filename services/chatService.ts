@@ -28,10 +28,10 @@ interface ApiResponse<T> {
 }
 
 export const chatService = {
-    /** Fetch all conversations for the current user */
-    async getConversations(): Promise<Conversation[]> {
-        const res = await api.get<ApiResponse<ConversationsResponse>>('/conversations');
-        return res.data.data.data;
+    /** Fetch paginated conversations for the current user */
+    async getConversations(page = 1): Promise<ConversationsResponse> {
+        const res = await api.get<ApiResponse<ConversationsResponse>>('/conversations', {params: {page}});
+        return res.data.data;
     },
 
     /** Get or create a conversation with another user (mutual interest required) */

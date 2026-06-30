@@ -52,13 +52,20 @@ export const profileService = {
     setPrimaryPhoto: (photoId: number) =>
         api.put(`/profile/photos/${photoId}/primary`),
 
-    getMyViewers: (page = 1) =>
-        api.get<ApiResponse<PaginatedResponse<ProfileView>>>('/profile-views', { params: { page } }),
+    getMyViewers: (page = 1, search?: string) =>
+        api.get<ApiResponse<PaginatedResponse<ProfileView>>>('/profile-views', {
+            params: {page, ...(search ? {search} : {})},
+        }),
 };
 
 export const matchService = {
-    getMatches: (page = 1) =>
-        api.get<ApiResponse<PaginatedResponse<MatchScore>>>('/matches', {params: {page}}),
+    getMatches: (
+        page = 1,
+        params?: { search?: string; date_from?: string; date_to?: string },
+    ) =>
+        api.get<ApiResponse<PaginatedResponse<MatchScore>>>('/matches', {
+            params: { page, ...params },
+        }),
 
     search: (filters: SearchFilters) =>
         api.get<ApiResponse<PaginatedResponse<ProfileCard>>>('/matches/search', {params: filters}),
@@ -75,14 +82,25 @@ export const interestService = {
     send: (receiverId: number) =>
         api.post('/interests', {receiver_id: receiverId}),
 
-    getReceived: (page = 1) =>
-        api.get('/interests/received', {params: {page}}),
+    getReceived: (page = 1, search?: string) =>
+        api.get('/interests/received', {params: {page, ...(search ? {search} : {})}}),
 
-    getSent: (page = 1) =>
-        api.get('/interests/sent', {params: {page}}),
+    getSent: (page = 1, search?: string) =>
+        api.get('/interests/sent', {params: {page, ...(search ? {search} : {})}}),
+
+    getContacts: (page = 1, search?: string) =>
+        api.get('/interests/contacts', {params: {page, ...(search ? {search} : {})}}),
 
     checkStatus: (userId: number) =>
-        api.get<ApiResponse<{status: 'none' | 'pending' | 'accepted'; is_sender?: boolean; created_at?: string; expires_at?: string}>>(`/interests/status/${userId}`),
+        api.get<ApiResponse<{
+            status: 'none' | 'pending' | 'accepted' | 'declined' | 'ignored';
+            interest_id?: number | null;
+            is_sender?: boolean;
+            send_count?: number;
+            can_send_interest?: boolean;
+            created_at?: string;
+            expires_at?: string;
+        }>>(`/interests/status/${userId}`),
 
     accept: (id: number) =>
         api.put(`/interests/${id}/accept`),
@@ -98,8 +116,8 @@ export const shortlistService = {
     toggle: (userId: number) =>
         api.post(`/shortlist/${userId}`),
 
-    getAll: (page = 1) =>
-        api.get('/shortlist', {params: {page}}),
+    getAll: (page = 1, search?: string) =>
+        api.get('/shortlist', {params: {page, ...(search ? {search} : {})}}),
 };
 
 export const blockService = {
@@ -116,7 +134,7 @@ export const reportService = {
 };
 
 export const profileViewService = {
-    getMyViewers: (page = 1) =>
-        api.get('/profile-views', {params: {page}}),
+    getMyViewers: (page = 1, search?: string) =>
+        api.get('/profile-views', {params: {page, ...(search ? {search} : {})}}),
 };
 

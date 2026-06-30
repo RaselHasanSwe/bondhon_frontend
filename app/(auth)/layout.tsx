@@ -1,12 +1,24 @@
 import type {Metadata} from 'next';
 import {GuestGuard} from '@/components/auth/GuestGuard';
 import Link from 'next/link';
+import {getSettings} from '@/services/publicService';
 
-export const metadata: Metadata = {
-    title: {default: 'Sign In', template: '%s | MyBouma'},
-};
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'Enorsia';
 
-export default function AuthLayout({children}: { children: React.ReactNode }) {
+export async function generateMetadata(): Promise<Metadata> {
+    const settings = await getSettings();
+    const siteName = settings.site_name ?? APP_NAME;
+
+    return {
+        title: {default: 'Sign In', template: `%s | ${siteName}`},
+    };
+}
+
+export default async function AuthLayout({children}: { children: React.ReactNode }) {
+    const settings = await getSettings();
+    const siteName = settings.site_name ?? APP_NAME;
+    const siteSlogan = settings.site_slogan ?? 'Find Your Perfect Match';
+
     return (
         <GuestGuard>
             <div className="min-h-screen flex">
@@ -41,8 +53,8 @@ export default function AuthLayout({children}: { children: React.ReactNode }) {
                                     backgroundClip: 'text',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
-                                }}>MyBouma</h1>
-                                <p className="text-[10px] text-[#C9A227]/70 tracking-widest uppercase">MyBouma Matrimony</p>
+                                }}>{siteName}</h1>
+                                <p className="text-[10px] text-[#C9A227]/70 tracking-widest uppercase">{siteSlogan}</p>
                             </div>
                         </Link>
                     </div>
@@ -55,8 +67,8 @@ export default function AuthLayout({children}: { children: React.ReactNode }) {
                             </span>
                             <h2 className="text-4xl font-bold text-white leading-tight mb-4"
                                 style={{fontFamily: 'var(--font-heading)'}}>
-                                Find Your
-                                <span className="block" style={{
+                                Find Your{' '}
+                                <span style={{
                                     background: 'linear-gradient(135deg, #C9A227, #E8C547)',
                                     backgroundClip: 'text',
                                     WebkitBackgroundClip: 'text',
@@ -64,25 +76,26 @@ export default function AuthLayout({children}: { children: React.ReactNode }) {
                                 }}>Perfect Match</span>
                             </h2>
                             <p className="text-white/55 text-sm leading-relaxed max-w-xs">
-                                Join thousands of families who found their perfect life partner through MyBouma's intelligent matchmaking.
+                                Join a trusted matrimony platform designed to help individuals and families connect with compatible life partners through secure and intelligent matchmaking.
                             </p>
                         </div>
 
-                        {/* Stats row */}
-                        <div className="flex gap-6">
+                        {/* Feature list */}
+                        <div className="flex flex-col gap-3">
                             {[
-                                {value: '50K+', label: 'Members'},
-                                {value: '12K+', label: 'Matches Made'},
-                                {value: '98%', label: 'Satisfaction'},
-                            ].map((s) => (
-                                <div key={s.label}>
-                                    <p className="text-xl font-bold" style={{
-                                        background: 'linear-gradient(135deg, #C9A227, #E8C547)',
-                                        backgroundClip: 'text',
-                                        WebkitBackgroundClip: 'text',
-                                        WebkitTextFillColor: 'transparent',
-                                    }}>{s.value}</p>
-                                    <p className="text-white/45 text-xs mt-0.5">{s.label}</p>
+                                'Verified Profiles',
+                                'Smart Match Suggestions',
+                                'Privacy & Security',
+                                'Start Your Journey Today',
+                            ].map((feature) => (
+                                <div key={feature} className="flex items-center gap-3">
+                                    <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                                         style={{background: 'linear-gradient(135deg, #C9A227, #E8C547)'}}>
+                                        <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                    </div>
+                                    <p className="text-white/70 text-sm">{feature}</p>
                                 </div>
                             ))}
                         </div>
@@ -90,7 +103,7 @@ export default function AuthLayout({children}: { children: React.ReactNode }) {
 
                     {/* Bottom tagline */}
                     <div className="relative z-10 p-10">
-                        <p className="text-white/30 text-xs italic">&ldquo;Where hearts find their home&rdquo;</p>
+                        <p className="text-white/30 text-xs italic">&ldquo;Where meaningful relationships begin&rdquo;</p>
                     </div>
 
                     {/* Diagonal separator */}
@@ -108,8 +121,8 @@ export default function AuthLayout({children}: { children: React.ReactNode }) {
                             backgroundClip: 'text',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
-                        }}>MyBouma</h1>
-                        <p className="text-xs text-[#8A7A62] mt-1 tracking-widest uppercase">MyBouma Matrimony</p>
+                        }}>{siteName}</h1>
+                        <p className="text-xs text-[#8A7A62] mt-1 tracking-widest uppercase">{siteName} Matrimony</p>
                     </div>
 
                     <div className="w-full max-w-md animate-fade-in-up">

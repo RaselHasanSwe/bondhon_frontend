@@ -10,22 +10,22 @@
 
 ## Left Side of Login Page
 
-### 1. Site Name
+### 1. Site Name (Done)
 
-* Currently showing **"MyBouma"** as a static value.
+* Currently showing **"Enorsia"** as a static value.
 * Make it dynamic and load from:
 
   * **Site Settings → Site Name**
 
-### 2. Slogan
+### 2. Slogan (Done)
 
-* Currently showing **"MyBouma Matrimony"** as a static value.
+* Currently showing **"Enorsia Matrimony"** as a static value.
 * Create a new field:
 
   * **Site Settings → Slogan**
 * Display the slogan dynamically.
 
-### 3. Replace Hero Section Content
+### 3. Replace Hero Section Content (Done)
 
 Keep the existing design and indentation unchanged.
 
@@ -37,14 +37,14 @@ Replace the following text across all pages where it appears:
 * Forgot Password
 * Reset Password
 
-#### Remove
+#### Find
 
 ```text
 Premium Matrimony Platform
 Find Your
 Perfect Match
 
-Join thousands of families who found their perfect life partner through MyBouma's intelligent matchmaking.
+Join thousands of families who found their perfect life partner through Enorsia's intelligent matchmaking.
 
 50K+
 Members
@@ -80,14 +80,14 @@ Start Your Journey Today
 
 ---
 
-## Right Side of Login Page
+## Right Side of Login Page (Done)
 
 ### Sign In Text
 
 Replace:
 
 ```text
-Sign in to your MyBouma account
+Sign in to your Enorsia account
 ```
 
 With:
@@ -100,7 +100,7 @@ Where `{Site Name}` is loaded dynamically from Site Settings.
 
 ---
 
-## Reset Password Page
+## Reset Password Page (Done)
 
 ### Issue
 
@@ -112,11 +112,12 @@ When a user clicks the password reset link from email:
 ```text
 T
 ```
+
 ---
 
 # OTP Confirmation Email & Reset Password Email Template
 
-## Global Email Template Changes
+## Global Email Template Changes (Done)
 
 ### Email Header
 
@@ -138,7 +139,7 @@ Both values should be loaded dynamically from Site Settings.
 
 ---
 
-## Registration OTP Email
+## Registration OTP Email (Done)
 
 ### 1. Email Subject
 
@@ -150,12 +151,12 @@ Replace with:
 
 ---
 
-### 2. Welcome Text
+### 2. Welcome Text (Done)
 
 Replace:
 
 ```text
-Welcome to My Bouma
+Welcome to Enorsia
 ```
 
 With:
@@ -166,7 +167,7 @@ Welcome to {Site Name}
 
 ---
 
-### 3. Remove Verification Button Section
+### 3. Remove Verification Button Section (Done)
 
 Remove:
 
@@ -190,7 +191,7 @@ The email should only display the OTP code.
 
 ---
 
-### 4. OTP Expiry Time
+### 4. OTP Expiry Time (Done)
 
 Current text:
 
@@ -206,7 +207,7 @@ Requirements:
 
 ---
 
-### 5. Remove Verification Link Expiry Text
+### 5. Remove Verification Link Expiry Text (Done)
 
 Remove:
 
@@ -216,7 +217,7 @@ This verification link will expire in 60 minutes.
 
 ---
 
-### 6. Remove Fallback Link Section
+### 6. Remove Fallback Link Section (Done)
 
 Remove:
 
@@ -228,18 +229,18 @@ Remove the URL displayed below it.
 
 ---
 
-### 7. Replace "My Bouma" Globally
+### 7. Replace "Enorsia" Globally (Done)
 
 Replace all occurrences of:
 
 ```text
-My Bouma
+Enorsia
 ```
 
 or
 
 ```text
-MyBouma
+Enorsia
 ```
 
 with:
@@ -252,7 +253,7 @@ across all email templates.
 
 ---
 
-### 8. Footer Updates
+### 8. Footer Updates (Done)
 
 #### Remove
 
@@ -273,6 +274,7 @@ Replace with:
 ```text
 {Slogan}
 ```
+
 add social link on footer.
 
 loaded dynamically from Site Settings.
@@ -281,25 +283,25 @@ Apply this change globally to all email templates.
 
 # Additional Frontend Fix Requirements
 
-## After Login - Global Sidebar
+## After Login - Global Sidebar (Done)
 
-1. Clicking the Site Name should redirect to the Home page.
-2. Display the **Slogan** after the Site Name and remove the static text **"Matrimony"**.
-3. Move **Upgrade Plan** menu directly below **My Profile**.
-4. Rename **Profile Views** to **Profile Viewers** and place it after **Notifications**.
-5. In Mobile View, all sidebar menu items are not visible. Investigate and ensure all menu items are accessible and displayed properly.
+1. Clicking the Site Name should redirect to the Home page. (Done)
+2. Display the **Slogan** after the Site Name and remove the static text **"Matrimony"**. (Done)
+3. Move **Upgrade Plan** menu directly below **My Profile**. (Done)
+4. Rename **Profile Views** to **Profile Viewers** and place it after **Notifications**. (Done)
+5. In Mobile View, all sidebar menu items are not visible. Investigate and ensure all menu items are accessible and displayed properly. (Done)
 
 ---
 
-## Edit Profile
+## Edit Profile (Done)
 
-1. After successfully saving a tab, automatically navigate the user to the next tab.
-2. Fix dropdown positioning issues. On smaller screens, dropdown options are cut off and not fully visible (e.g., **Employed In** field).
+1. After successfully saving a tab, automatically navigate the user to the next tab. (Done)
+2. Fix dropdown positioning issues. On smaller screens, dropdown options are cut off and not fully visible (e.g., **Employed In** field). (Done)
 3. Add a new setting:
 
-   * **Site Settings → Photo Auto Approval**
-   * If enabled, uploaded photos should be approved automatically.
-4. Upload profile photos to Cloudflare from the backend and serve all profile images from Cloudflare.
+   * **Site Settings → Photo Auto Approval** (Done)
+   * If enabled, uploaded photos should be approved automatically. (Done)
+4. Upload profile photos to Cloudflare from the backend and serve all profile images from Cloudflare. (Done)
 
 ---
 
@@ -307,12 +309,12 @@ Apply this change globally to all email templates.
 
 1. Rename button text:
 
-   * **Apply Filters** → **Apply**
-2. Apply **Verified** badge/filter for all verified profiles.
-3. Display profile images from Cloudflare and ensure image sizing matches card dimensions.
-4. When a user clicks **Send Interest**, send an email notification to the recipient.
-5. Implement infinite scroll / scroll pagination.
-6. Exclude Admin users from search results.
+   * **Apply Filters** → **Apply** (Done)
+2. Apply **Verified** badge/filter for all verified (face approved) profiles. (Done)
+3. Display profile images from Cloudflare and ensure image sizing matches card dimensions. (Done)
+4. When a user clicks **Send Interest**, send an email notification to the recipient. (Done)
+5. Implement infinite scroll / scroll pagination. (Done, not check yet)
+6. Exclude Admin users from search results. (Done)
 
 ---
 
@@ -320,34 +322,33 @@ Apply this change globally to all email templates.
 
 ### General
 
-1. Implement scroll pagination for:
+1. Implement scroll pagination for: (Done)
 
    * Received Interests
    * Sent Interests
-
-2. If an interest request has been accepted, display a **Message** button.
+2. If an interest request has been accepted, display a **Message** button. (Done)
 
 ### New Contacts Tab
 
-Create a new tab:
+Create a new tab: (Done)
 
-**Contacts**
+**Contacts (Done)**
 
-Requirements:
+Requirements: (Done)
 
 * Show all accepted connections.
 * Display **Message** button for each connection.
 * Support search functionality.
 * Support scroll pagination.
 
-### All Tabs
+### All Tabs (Done)
 
 The following tabs should support:
 
 * Search
 * Scroll Pagination
 
-Tabs:
+Tabs: (Done)
 
 * Received
 * Sent
@@ -361,57 +362,57 @@ Tabs:
 
 1. Rename:
 
-   * **Matrimonial Profile** → **Profile**
-2. Profile completion percentage is incorrectly calculated. Review and fix the calculation logic.
-3. Free account holders should not be able to view full profiles.
+   * **Matrimonial Profile** → **Profile** (Done)
+2. Profile completion percentage is incorrectly calculated. Review and fix the calculation logic. (this is the profile i visit that profile percentage) (Done)
+3. Free account holders should not be able to view full profiles. (Done )
 
-   * Display subscription upgrade prompt.
-   * Show **Upgrade Plan** button.
-4. All images should be loaded from Cloudflare.
-5. Remove thumbnail strip from the main profile area and show only the primary profile image initially.
-6. Create a dedicated photo gallery section:
+   * Display subscription upgrade prompt. (Done)
+   * Show **Upgrade Plan** button. (Done)
+4. All images should be loaded from Cloudflare. (Done)
+5. Remove thumbnail strip from the main profile area and show only the primary profile image initially. (Done)
+6. Create a dedicated photo gallery section: (Done)
 
-   * Show all uploaded images as thumbnails.
-   * Clicking a thumbnail should open a larger preview.
-   * Use Fancybox or similar image viewer.
+   * Show all uploaded images as thumbnails. (Done)
+   * Clicking a thumbnail should open a larger preview. (Done)
+   * Use Fancybox or similar image viewer. (Done)
 
 ---
 
 ## Profile Viewers
 
-1. Remove **Free** text and icon.
-2. Implement scroll pagination.
-3. Show actions based on relationship status:
+1. Remove **Free** text and icon. (Done)
+2. Implement scroll pagination. (Done)
+3. Show actions based on relationship status: (Done)
 
-   * No connection → Show **Interest** button.
-   * Accepted connection → Show **Message** button.
-4. When someone views a profile:
+   * No connection → Show **Interest** button. (Done)
+   * Accepted connection → Show **Message** button. (Done)
+4. When someone views a profile: (Done)
 
-   * Send notification to the profile owner.
-   * Send email notification to the profile owner.
-   * Do not send notifications for free account holders.
+   * Send notification to the profile owner. (Done)
+   * Send email notification to the profile owner. (Done)
+   * Do not send notifications for free account holders. (Done)
 
 ---
 
 ## Shortlist
 
-1. Shortlisted profile count is incorrect. Review and fix the count calculation.
-2. If a shortlisted profile already has an accepted interest connection, show **Message** button.
-3. Implement scroll pagination.
+1. Shortlisted profile count is incorrect. Review and fix the count calculation. (Done)
+2. If a shortlisted profile already has an accepted interest connection, show **Message** button. (Done)
+3. Implement scroll pagination. (Done)
 
 ---
 
 ## Notifications
 
-1. Implement scroll pagination.
+1. Implement scroll pagination. (Done)
 
 ---
 
-## New Menu: Account Disable Request
+## New Menu: Account Disable (Done)
 
 Add a new sidebar menu:
 
-### Account Disable Request
+### Account Disable Request (Done)
 
 Fields:
 
@@ -424,7 +425,7 @@ Fields:
 
 * User entered message/reason
 
-### Admin Actions
+### Admin Actions (Done)
 
 * Admin receives the request.
 * Admin can disable/ban the account.
@@ -434,7 +435,7 @@ Fields:
 
 # Home Page
 
-## Header
+## Header (Done)
 
 1. Display Site Name and Slogan.
 2. Keep only the following menu items:
@@ -454,7 +455,7 @@ Fields:
 
 ---
 
-## Footer
+## Footer (Done)
 
 1. Display actual site logo and slogan.
 2. Display all configured social media links.
@@ -465,8 +466,6 @@ Fields:
    * Terms
    * Privacy
    * Contact
-
-
 
 # Home Page Content Update
 
@@ -583,29 +582,32 @@ Display the following feature cards/items:
   * Successful Marriages
 * Future statistics should only be displayed when actual data is available from the platform.
 
-
 ## Section 4: Platform Benefits (Keep IT)
 
-## Section 5: Newly Joined Members (Keep IT) 
--  Make it dynamic
+## Section 5: Newly Joined Members (Keep IT)
+
+- Make it dynamic
 
 ## Section 6: Your Journey to a Perfect Match (Keep IT)
 
 ## Section 7: Your Safety is Our Priority (Keep it)
+
 - Replace NID verified to Face Verified and content.
 
 ## Section 7: Membership Plans (Keep IT)
--  Make dynamic
 
-Remove 'Real Couples, Educated · Verified · From All 64 Districts, FAQ' section 
+- Make dynamic
+
+Remove 'Real Couples, Educated · Verified · From All 64 Districts, FAQ' section
 
 ## Section 7: Membership Plans (Keep IT)
 
 ## Section 8: Begin Your Journey Today (Keep IT)
+
 - Remove '50,000+ Members'
 
-
 # Implement Search prfile page same like exising search page. but user can not see profile details.
+
 - Scroll pagiantion must.
 
 # Implement Pricing page with dynamic content.
