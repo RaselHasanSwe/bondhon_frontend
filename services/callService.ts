@@ -1,7 +1,12 @@
 import api from '@/lib/api';
-import type {CallLog, CallType, InitiateCallResponse} from '@/types/call';
+import type {CallLog, CallType, IceServer, InitiateCallResponse} from '@/types/call';
 
 export const callService = {
+    /** Fetch ICE server config (STUN + TURN) from the backend. */
+    async getIceServers(): Promise<IceServer[]> {
+        const res = await api.get('/calls/ice-servers');
+        return res.data.data.ice_servers;
+    },
     /**
      * Initiate an outgoing audio or video call to a user.
      * Returns the created CallLog + ICE server config.
