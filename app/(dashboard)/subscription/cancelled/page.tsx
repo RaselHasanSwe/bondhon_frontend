@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -10,7 +11,7 @@ const REASON_MESSAGES: Record<string, string> = {
     not_found:      'Transaction not found. Please contact support.',
 };
 
-export default function SubscriptionCancelledPage() {
+function SubscriptionCancelledContent() {
     const searchParams = useSearchParams();
     const reason = searchParams.get('reason') ?? 'cancelled';
 
@@ -52,6 +53,18 @@ export default function SubscriptionCancelledPage() {
                 </p>
             </div>
         </main>
+    );
+}
+
+export default function SubscriptionCancelledPage() {
+    return (
+        <Suspense fallback={
+            <main className="min-h-[70vh] flex items-center justify-center px-4">
+                <p className="text-sm text-gray-500">Loading…</p>
+            </main>
+        }>
+            <SubscriptionCancelledContent/>
+        </Suspense>
     );
 }
 

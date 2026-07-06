@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {queryClient} from '@/lib/queryClient';
@@ -20,7 +20,7 @@ const PLAN_ICONS: Record<string, string> = {
     platinum: '💎',
 };
 
-export default function SubscriptionSuccessPage() {
+function SubscriptionSuccessContent() {
     const searchParams = useSearchParams();
     const { updateUser } = useAuthStore();
     const plan = searchParams.get('plan') ?? '';
@@ -80,6 +80,18 @@ export default function SubscriptionSuccessPage() {
                 </div>
             </div>
         </main>
+    );
+}
+
+export default function SubscriptionSuccessPage() {
+    return (
+        <Suspense fallback={
+            <main className="min-h-[70vh] flex items-center justify-center px-4">
+                <p className="text-sm text-gray-500">Loading…</p>
+            </main>
+        }>
+            <SubscriptionSuccessContent/>
+        </Suspense>
     );
 }
 

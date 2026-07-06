@@ -16,9 +16,11 @@ import {Label} from '@/components/ui/label';
 import {Textarea} from '@/components/ui/textarea';
 
 const schema = z.object({
-    request_type: z.enum(['personal_reason', 'got_married_through_platform'], {
-        required_error: 'Please select a request type.',
-    }),
+    request_type: z
+        .enum(['personal_reason', 'got_married_through_platform'])
+        .refine((val) => val !== undefined, {
+            message: 'Please select a request type.',
+        }),
     message: z
         .string()
         .min(10, 'Please provide at least 10 characters explaining your reason.')
