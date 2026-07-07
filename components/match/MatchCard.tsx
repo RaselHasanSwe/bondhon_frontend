@@ -1,7 +1,6 @@
 'use client';
 
 import React, {useState, useEffect} from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import {useUserQuery} from '@/hooks/useUserQuery';
 import {useMutation, useQueryClient} from '@tanstack/react-query';
@@ -12,7 +11,7 @@ import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
 import {handleSendInterestError} from '@/lib/interest';
 import {invalidateInterestQueries, invalidateShortlistQueries} from '@/lib/cacheInvalidation';
 import type {ProfileCard} from '@/types/profile';
-import {MapPinIcon, ReligionIcon, GraduationCapIcon, MailIcon, StarIcon, StarFilledIcon, UserIcon, CheckIcon} from '@/components/ui/icons';
+import {MapPinIcon, ReligionIcon, GraduationCapIcon, MailIcon, StarIcon, StarFilledIcon, UserIcon, CheckIcon, ClockIcon} from '@/components/ui/icons';
 
 interface MatchCardProps {
     profile: ProfileCard;
@@ -154,50 +153,76 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
 
     const handleShortlist = async (e: React.MouseEvent) => {
         e.preventDefault();
+        e.stopPropagation();
         if (shortlistMutation.isPending) return;
         shortlistMutation.mutate(profile.id);
     };
 
+    const shortlistButtonClass = `flex items-center justify-center rounded-full border shadow-md backdrop-blur-sm transition-all active:scale-95 ${
+        shortlisted
+            ? 'border-[var(--primary)] text-[var(--primary)] bg-white/95'
+            : 'border-white/80 text-white bg-black/35 hover:bg-black/50'
+    }`;
+
+    const shortlistIcon = shortlisted
+        ? <StarFilledIcon size={16} strokeWidth={1.8}/>
+        : <StarIcon size={16} strokeWidth={1.8}/>;
+
     return (
         <div
-            className="card-premium overflow-hidden group animate-fade-in flex flex-col h-full">
+            className="card-premium overflow-hidden group animate-fade-in flex flex-col h-full min-w-0">
             {/* Photo */}
-            <Link href={profileUrl} className="block relative aspect-[4/5] bg-[var(--gold-50)]">
-                {resolvePhotoUrl(profile.primary_photo) ? (
-                    <img
-                        src={resolvePhotoUrl(profile.primary_photo)!}
-                        className="w-full h-full object-cover"
-                    />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                        <UserIcon size={48} className="text-[var(--gold-200)]" strokeWidth={1.2}/>
-                    </div>
-                )}
+            <div className="relative aspect-[4/5] bg-[var(--gold-50)]">
+                <Link href={profileUrl} className="block w-full h-full">
+                    {resolvePhotoUrl(profile.primary_photo) ? (
+                        <img
+                            src={resolvePhotoUrl(profile.primary_photo)!}
+                            alt={profile.name}
+                            className="w-full h-full object-cover"
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                            <UserIcon size={48} className="text-[var(--gold-200)]" strokeWidth={1.2}/>
+                        </div>
+                    )}
 
-                {/* Score badge */}
-                {showScore && score !== undefined && (
-                    <div className="absolute top-3 right-3">
-                        <CompatibilityScore score={score} size="sm"/>
-                    </div>
-                )}
+                    {/* Score badge */}
+                    {showScore && score !== undefined && (
+                        <div className="absolute top-3 right-3">
+                            <CompatibilityScore score={score} size="sm"/>
+                        </div>
+                    )}
 
-                {/* Verified badge — shown only when face scan is approved */}
-                {profile.profile?.is_verified && (
-                    <div
-                        className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-green-600 font-medium flex items-center gap-1 shadow-sm">
-                        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Verified
-                    </div>
-                )}
+                    {/* Verified badge — shown only when face scan is approved */}
+                    {profile.profile?.is_verified && (
+                        <div
+                            className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-green-600 font-medium flex items-center gap-1 shadow-sm">
+                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            Verified
+                        </div>
+                    )}
 
-                {/* Gradient overlay on hover */}
-                <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>
-            </Link>
+                    {/* Gradient overlay on hover */}
+                    <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>
+                </Link>
+
+                {/* Mobile shortlist — on photo, keeps action row full-width */}
+                <button
+                    type="button"
+                    onClick={handleShortlist}
+                    disabled={shortlistMutation.isPending}
+                    title={shortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
+                    aria-label={shortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
+                    className={`absolute bottom-2.5 right-2.5 z-10 w-9 h-9 sm:hidden ${shortlistButtonClass}`}
+                >
+                    {shortlistIcon}
+                </button>
+            </div>
 
             {/* Info */}
-            <div className="p-4 flex flex-col h-full">
+            <div className="p-3 sm:p-4 flex flex-col flex-1 min-w-0">
                 {/* Profile Content - Takes up space */}
-                <div>
+                <div className="min-w-0">
                     <Link href={profileUrl}>
                         <h3 className="font-semibold text-foreground truncate hover:text-[var(--primary)] transition-colors" style={{fontFamily:'var(--font-heading)'}}>
                             {profile.name}
@@ -230,12 +255,13 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                     </div>
                 </div>
 
-                {/* Actions - Bottom Aligned */}
-                <div className="mt-auto pt-4 flex items-center gap-2">
+                {/* Actions - full width on mobile; shortlist beside button on sm+ */}
+                <div className="mt-auto pt-3 sm:pt-4 flex items-stretch gap-2 min-w-0">
                     <button
+                        type="button"
                         onClick={handleSendInterest}
                         disabled={!canSendInterest || sendInterestMutation.isPending}
-                        className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                        className={`w-full sm:flex-1 min-w-0 min-h-10 sm:min-h-9 px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 leading-tight ${
                             interestStatus === 'accepted'
                                 ? 'bg-green-50 text-green-600 border border-green-200'
                                 : interestStatus === 'pending' && isInterestSender && !canSendInterest
@@ -244,37 +270,46 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                                         ? 'bg-red-50 text-red-500 border border-red-200'
                                         : interestStatus === 'ignored'
                                             ? 'bg-gray-50 text-gray-500 border border-gray-200'
-                                            : 'btn-gold'
+                                            : canSendInterest
+                                                ? 'text-white shadow-sm active:scale-[0.98]'
+                                                : 'bg-gray-50 text-gray-500 border border-gray-200'
                         }`}
-                        style={{height:'auto', padding:'0.5rem', borderRadius:'0.75rem'}}
+                        style={canSendInterest && interestStatus !== 'accepted' && !(interestStatus === 'pending' && isInterestSender && !canSendInterest) && interestStatus !== 'declined' && interestStatus !== 'ignored'
+                            ? {background: 'var(--gradient-gold-btn)'}
+                            : undefined}
                     >
-                        {interestStatus === 'accepted'
-                            ? <><CheckIcon size={12} strokeWidth={2.5}/> Approved</>
-                            : interestStatus === 'pending' && isInterestSender && !canSendInterest
-                                ? <><CheckIcon size={12} strokeWidth={2.5}/> Already Sent</>
-                                : interestStatus === 'declined'
-                                    ? <>Declined</>
-                                    : interestStatus === 'ignored'
-                                        ? <>Ignored</>
-                                        : canSendInterest
-                                            ? <><MailIcon size={12} strokeWidth={2}/> Send Interest</>
-                                            : <>Unavailable</>
-                        }
+                        {sendInterestMutation.isPending ? (
+                            <><ClockIcon size={12} strokeWidth={1.8} className="shrink-0"/><span className="truncate">Sending…</span></>
+                        ) : interestStatus === 'accepted' ? (
+                            <><CheckIcon size={12} strokeWidth={2.5} className="shrink-0"/><span className="truncate">Approved</span></>
+                        ) : interestStatus === 'pending' && isInterestSender && !canSendInterest ? (
+                            <><CheckIcon size={12} strokeWidth={2.5} className="shrink-0"/><span className="truncate">Already Sent</span></>
+                        ) : interestStatus === 'declined' ? (
+                            <span className="truncate">Declined</span>
+                        ) : interestStatus === 'ignored' ? (
+                            <span className="truncate">Ignored</span>
+                        ) : canSendInterest ? (
+                            <>
+                                <MailIcon size={12} strokeWidth={2} className="shrink-0"/>
+                                <span className="truncate">Send Interest</span>
+                            </>
+                        ) : (
+                            <span className="truncate">Unavailable</span>
+                        )}
                     </button>
                     <button
+                        type="button"
                         onClick={handleShortlist}
                         disabled={shortlistMutation.isPending}
                         title={shortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
-                        className={`p-2 rounded-xl border transition-all ${
+                        aria-label={shortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
+                        className={`hidden sm:flex shrink-0 w-9 h-9 items-center justify-center rounded-xl border transition-all active:scale-95 ${
                             shortlisted
                                 ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--accent)]'
                                 : 'border-[var(--border)] text-muted-foreground hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--accent)]'
                         }`}
                     >
-                        {shortlisted
-                            ? <StarFilledIcon size={16} strokeWidth={1.8}/>
-                            : <StarIcon size={16} strokeWidth={1.8}/>
-                        }
+                        {shortlistIcon}
                     </button>
                 </div>
             </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import {useState, useRef} from 'react';
+import {useState} from 'react';
 import {useUserQuery} from '@/hooks/useUserQuery';
 import {useQueryClient} from '@tanstack/react-query';
 import {invalidateSubscriptionQueries, invalidateDashboardQueries} from '@/lib/cacheInvalidation';
@@ -365,16 +365,42 @@ function InvoiceModal({item, onClose, currencySymbol}: {
     onClose: () => void;
     currencySymbol: string
 }) {
-    const printRef = useRef<HTMLDivElement>(null);
+    const [printing, setPrinting] = useState(false);
+    const [printError, setPrintError] = useState<string | null>(null);
 
-    const handlePrint = () => {
-        const content = printRef.current?.innerHTML;
-        if (!content) return;
-        const win = window.open('', '_blank');
-        if (!win) return;
-        win.document.write(`<html lang="en"><head><title>Invoice #${item.transaction_id}</title><style>body{font-family:sans-serif;padding:32px;color:#111}table{width:100%;border-collapse:collapse;margin:16px 0}td,th{padding:8px 12px;border:1px solid #e5e7eb;font-size:13px}th{background:#f9fafb;text-align:left;font-weight:600}.total{font-size:20px;font-weight:700}</style></head><body>${content}</body></html>`);
-        win.document.close();
-        win.print();
+    const handlePrint = async () => {
+        setPrinting(true);
+        setPrintError(null);
+
+        try {
+            const blob = await subscriptionService.downloadInvoice(item.id);
+            const url = URL.createObjectURL(new Blob([blob], {type: 'application/pdf'}));
+
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+            iframe.src = url;
+            document.body.appendChild(iframe);
+
+            iframe.onload = () => {
+                setTimeout(() => {
+                    iframe.contentWindow?.focus();
+                    iframe.contentWindow?.print();
+                    setTimeout(() => {
+                        URL.revokeObjectURL(url);
+                        document.body.removeChild(iframe);
+                    }, 1000);
+                }, 300);
+            };
+        } catch {
+            setPrintError('Could not load invoice. Please try again.');
+        } finally {
+            setPrinting(false);
+        }
     };
 
     return (
@@ -385,8 +411,9 @@ function InvoiceModal({item, onClose, currencySymbol}: {
                     <h2 className="text-base font-bold text-gray-900">Payment Invoice</h2>
                     <div className="flex gap-2">
                         <button onClick={handlePrint}
-                                className="px-3 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 flex items-center gap-1 transition-colors">
-                            🖨️ Print
+                                disabled={printing}
+                                className="px-3 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 disabled:opacity-60 flex items-center gap-1 transition-colors">
+                            {printing ? 'Loading…' : '🖨️ Print'}
                         </button>
                         <button onClick={onClose}
                                 className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">✕
@@ -394,7 +421,13 @@ function InvoiceModal({item, onClose, currencySymbol}: {
                     </div>
                 </div>
 
-                <div ref={printRef} className="px-6 py-5 space-y-4">
+                {printError && (
+                    <div className="mx-6 mt-4 rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-xs text-red-600">
+                        {printError}
+                    </div>
+                )}
+
+                <div className="px-6 py-5 space-y-4">
                     <div className="flex justify-between items-start">
                         <div>
                             <div className="text-xl font-black text-[#C9A227]">💍 Enorsia</div>

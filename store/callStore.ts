@@ -77,7 +77,7 @@ export const useCallStore = create<CallStore>()((set, get) => ({
             activeCall: {
                 callId,
                 callType,
-                status: 'ringing',
+                status: 'calling',
                 isCaller: true,
                 remoteParticipant,
                 iceServers,

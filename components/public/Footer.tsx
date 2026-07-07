@@ -72,17 +72,11 @@ export default async function Footer({settings}: FooterProps) {
                                     className="h-9 w-auto object-contain rounded-lg"
                                 />
                             ) : (
-                                <div
-                                    className="h-9 w-9 rounded-lg flex items-center justify-center text-white font-bold shrink-0"
-                                    style={{background: 'linear-gradient(135deg, #C9A227, #D4AF37)'}}
-                                >
-                                    {settings.site_name.charAt(0)}
-                                </div>
+                                <span className="font-semibold text-base"
+                                      style={{fontFamily: 'var(--font-heading, serif)'}}>
+                                    {settings.site_name}
+                                </span>
                             )}
-                            <span className="font-semibold text-base"
-                                  style={{fontFamily: 'var(--font-heading, serif)'}}>
-                                 {settings.site_name}
-                            </span>
                         </div>
                         {settings.site_slogan && (
                             <p className="text-gray-400 text-sm leading-relaxed max-w-xs">

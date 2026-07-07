@@ -35,6 +35,7 @@ const TYPE_ICONS: Record<AppNotification['type'], ComponentType<IconProps>> = {
     match_digest: HeartIcon,
     subscription_expiring: AlertTriangleIcon,
     subscription_expiry: AlertTriangleIcon,
+    subscription_activated: CheckCircleIcon,
     photo_approved: CheckCircleIcon,
     photo_rejected: XCircleIcon,
     face_scan_approved: CheckCircleIcon,

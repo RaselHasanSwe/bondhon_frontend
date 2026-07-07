@@ -4,6 +4,7 @@ import {useEffect, useRef, useState} from 'react';
 import {useRouter, useParams} from 'next/navigation';
 import {useNotificationStore} from '@/store/notificationStore';
 import {notificationService} from '@/services/notificationService';
+import {getActionButtonLabel} from '@/lib/notificationNavigation';
 import type {AppNotification} from '@/types/notification';
 import {cn} from '@/lib/utils';
 import {
@@ -36,6 +37,7 @@ const TYPE_ICONS: Record<AppNotification['type'], ComponentType<IconProps>> = {
     match_digest: HeartIcon,
     subscription_expiring: AlertTriangleIcon,
     subscription_expiry: AlertTriangleIcon,
+    subscription_activated: CheckCircleIcon,
     photo_approved: CheckCircleIcon,
     photo_rejected: XCircleIcon,
     face_scan_approved: CheckCircleIcon,
@@ -62,6 +64,7 @@ const TYPE_ICON_COLORS: Record<AppNotification['type'], string> = {
     match_digest: 'bg-purple-100 text-purple-600',
     subscription_expiring: 'bg-yellow-100 text-yellow-600',
     subscription_expiry: 'bg-yellow-100 text-yellow-600',
+    subscription_activated: 'bg-green-100 text-green-600',
     photo_approved: 'bg-green-100 text-green-600',
     photo_rejected: 'bg-red-100 text-red-600',
     face_scan_approved: 'bg-green-100 text-green-600',
@@ -88,6 +91,7 @@ const TYPE_LABELS: Record<AppNotification['type'], string> = {
     match_digest: 'Match Digest',
     subscription_expiring: 'Subscription Expiring',
     subscription_expiry: 'Subscription Expiry',
+    subscription_activated: 'Payment Confirmed',
     photo_approved: 'Photo Approved',
     photo_rejected: 'Photo Rejected',
     face_scan_approved: 'Face Scan Approved',
@@ -175,6 +179,7 @@ export default function NotificationDetailPage() {
     const NIcon = TYPE_ICONS[notification.type] ?? MegaphoneIcon;
     const iconColor = TYPE_ICON_COLORS[notification.type] ?? 'bg-amber-100 text-amber-600';
     const typeLabel = TYPE_LABELS[notification.type] ?? 'Notification';
+    const actionLabel = getActionButtonLabel(notification.type);
 
     return (
         <div className="max-w-2xl mx-auto pb-20 md:pb-6">
@@ -233,32 +238,30 @@ export default function NotificationDetailPage() {
                         {notification.body}
                     </p>
 
-                    {/* Meta */}
-                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground border-t border-border pt-4">
-                        <ClockIcon size={13} strokeWidth={1.8}/>
-                        {formatFullDate(notification.created_at)}
-                        {notification.is_read && (
-                            <span className="ml-auto flex items-center gap-1">
-                                <CheckCircleIcon size={13} strokeWidth={1.8} className="text-green-500"/>
-                                Read
-                            </span>
+                    {/* Meta + action */}
+                    <div className="flex items-center gap-3 border-t border-border pt-4">
+                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground min-w-0 flex-1">
+                            <ClockIcon size={13} strokeWidth={1.8}/>
+                            <span className="truncate">{formatFullDate(notification.created_at)}</span>
+                            {notification.is_read && (
+                                <span className="ml-auto flex items-center gap-1 shrink-0">
+                                    <CheckCircleIcon size={13} strokeWidth={1.8} className="text-green-500"/>
+                                    Read
+                                </span>
+                            )}
+                        </div>
+
+                        {notification.action_url && (
+                            <button
+                                onClick={() => router.push(notification.action_url!)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/15 transition-colors shrink-0"
+                            >
+                                {actionLabel}
+                                <ExternalLinkIcon size={13} strokeWidth={2}/>
+                            </button>
                         )}
                     </div>
                 </div>
-
-                {/* Action button — goes to the relevant section (chat, profile, etc.) */}
-                {/*{notification.action_url && (*/}
-                {/*    <div className="px-6 pb-6">*/}
-                {/*        <button*/}
-                {/*            onClick={() => router.push(notification.action_url!)}*/}
-                {/*            className="w-full btn-primary py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[.98]"*/}
-                {/*            style={{background: 'var(--primary)', color: '#fff'}}*/}
-                {/*        >*/}
-                {/*            View Details*/}
-                {/*            <ExternalLinkIcon size={15} strokeWidth={2}/>*/}
-                {/*        </button>*/}
-                {/*    </div>*/}
-                {/*)}*/}
             </div>
         </div>
     );

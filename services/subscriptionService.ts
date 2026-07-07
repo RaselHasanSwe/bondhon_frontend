@@ -49,4 +49,19 @@ export const subscriptionService = {
         const res = await api.post<ApiResponse<SwitchPlanResponse>>(`/subscription/${subscriptionId}/switch`);
         return res.data.data;
     },
+
+    /** Download PDF invoice for a subscription */
+    downloadInvoice: async (subscriptionId: number): Promise<Blob> => {
+        const res = await api.get(`/subscription/${subscriptionId}/invoice`, {
+            responseType: 'blob',
+        });
+
+        if (res.data.type === 'application/json') {
+            const text = await (res.data as Blob).text();
+            const json = JSON.parse(text) as { message?: string };
+            throw new Error(json.message || 'Failed to download invoice.');
+        }
+
+        return res.data;
+    },
 };

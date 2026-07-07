@@ -30,6 +30,10 @@ export function invalidateConversationQueries(queryClient: QueryClient): void {
     invalidateUserQueries(queryClient, 'conversations');
 }
 
+export function invalidateMessageUnreadQueries(queryClient: QueryClient): void {
+    invalidateUserQueries(queryClient, 'messages-unread-count');
+}
+
 export function invalidateDashboardQueries(queryClient: QueryClient): void {
     invalidateUserQueries(
         queryClient,

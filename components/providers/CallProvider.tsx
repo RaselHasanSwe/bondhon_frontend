@@ -9,9 +9,12 @@ import {
     invalidateConversationQueries,
     invalidateDashboardQueries,
     invalidateInterestQueries,
+    invalidateMessageUnreadQueries,
     invalidateNotificationQueries,
 } from '@/lib/cacheInvalidation';
+import {dismissCallById, matchesCallId} from '@/lib/callDismiss';
 import {notificationService} from '@/services/notificationService';
+import {initSoundUnlock, playNotificationSound} from '@/lib/soundPlayer';
 import {IncomingCallModal} from '@/components/call/IncomingCallModal';
 import {CallScreen} from '@/components/call/CallScreen';
 import type {IncomingCallPayload} from '@/types/call';
@@ -22,19 +25,15 @@ import type {BackendNotification} from '@/types/notification';
  *
  * Mounted at the root layout — listens on the current user's private
  * Reverb channel for incoming call events and renders the call UI.
- *
- * Handles:
- *  - call.initiated  → shows IncomingCallModal
- *  - call.ended      → dismisses any active call/incoming UI
- *  - call.declined   → dismisses incoming call UI (if we're still ringing)
- *  - notification.created → updates notification store + cache
  */
 export function CallProvider({children}: {children: React.ReactNode}) {
     const user = useAuthStore((s) => s.user);
-    // Only read activeCall for rendering — event handlers use getState() to avoid stale closures
     const activeCall = useCallStore((s) => s.activeCall);
 
-    // Load bell notifications once per session (shared by sidebar + mobile bells)
+    useEffect(() => {
+        return initSoundUnlock();
+    }, []);
+
     useEffect(() => {
         if (!user?.id) return;
         useNotificationStore.getState().fetchNotifications();
@@ -52,34 +51,42 @@ export function CallProvider({children}: {children: React.ReactNode}) {
             channel = await getPrivateChannel(`user.${user.id}`);
             if (cancelled || !channel) return;
 
-            // Incoming call — show ring modal
+            // Receiver is ringing — caller shows "Ringing…" + ringback sound
+            channel.listen('.call.ringing', (e: {call_id: number | string}) => {
+                if (cancelled) return;
+                const {activeCall: ac} = useCallStore.getState();
+                if (
+                    ac?.isCaller
+                    && matchesCallId(ac.callId, e.call_id)
+                    && ac.status === 'calling'
+                ) {
+                    useCallStore.getState().setCallStatus('ringing');
+                }
+            });
+
             channel.listen('.call.initiated', (e: IncomingCallPayload) => {
                 if (cancelled) return;
                 useCallStore.getState().setIncomingCall({
-                    callId: e.call_id,
+                    callId: Number(e.call_id),
                     callType: e.type,
                     caller: e.caller,
                 });
             });
 
-            // Remote party ended call (covers: caller cancels while we're ringing,
-            // or other side ends while we're in CallScreen)
-            channel.listen('.call.ended', (e: {call_id: number}) => {
+            // Caller cancelled — instant dismiss for receiver
+            channel.listen('.call.cancelled', (e: {call_id: number | string}) => {
                 if (cancelled) return;
-                const {incomingCall, activeCall: ac, clearIncomingCall, endCall} = useCallStore.getState();
-                if (incomingCall?.callId === e.call_id) clearIncomingCall();
-                if (ac?.callId === e.call_id) {
-                    endCall();
-                    // Notify chat windows to refresh call logs
-                    window.dispatchEvent(new CustomEvent('call:ended'));
-                }
+                dismissCallById(e.call_id);
             });
 
-            // Caller cancelled / timed out while we haven't answered yet
-            channel.listen('.call.declined', (e: {call_id: number}) => {
+            channel.listen('.call.ended', (e: {call_id: number | string}) => {
                 if (cancelled) return;
-                const {incomingCall, clearIncomingCall} = useCallStore.getState();
-                if (incomingCall?.callId === e.call_id) clearIncomingCall();
+                dismissCallById(e.call_id);
+            });
+
+            channel.listen('.call.declined', (e: {call_id: number | string}) => {
+                if (cancelled) return;
+                dismissCallById(e.call_id);
             });
 
             channel.listen('.notification.created', (e: BackendNotification) => {
@@ -107,6 +114,15 @@ export function CallProvider({children}: {children: React.ReactNode}) {
                 }
 
                 useNotificationStore.getState().addNotification(notificationService.transformNotification(e));
+
+                const skipMessageSound =
+                    e.type === 'new_message'
+                    && e.data?.conversation_id
+                    && window.location.pathname === `/chat/${e.data.conversation_id}`;
+                if (!skipMessageSound) {
+                    void playNotificationSound();
+                }
+
                 invalidateNotificationQueries(queryClient);
                 if (e.type.startsWith('interest_')) {
                     invalidateInterestQueries(queryClient);
@@ -114,6 +130,13 @@ export function CallProvider({children}: {children: React.ReactNode}) {
                 }
                 if (e.type === 'new_message') {
                     invalidateConversationQueries(queryClient);
+                    const convId = e.data?.conversation_id;
+                    const viewingConversation = convId
+                        && (window.location.pathname === `/chat/${convId}`
+                            || window.location.pathname.startsWith(`/chat/${convId}/`));
+                    if (!viewingConversation) {
+                        invalidateMessageUnreadQueries(queryClient);
+                    }
                 }
                 if (e.type === 'profile_viewed') {
                     invalidateDashboardQueries(queryClient);
@@ -125,22 +148,19 @@ export function CallProvider({children}: {children: React.ReactNode}) {
             cancelled = true;
             if (channel) {
                 channel.stopListening('.call.initiated');
+                channel.stopListening('.call.ringing');
+                channel.stopListening('.call.cancelled');
                 channel.stopListening('.call.ended');
                 channel.stopListening('.call.declined');
                 channel.stopListening('.notification.created');
             }
         };
-    // Re-subscribe only when the logged-in user changes
     }, [user?.id]);
 
     return (
         <>
             {children}
-
-            {/* Incoming call ring overlay */}
             <IncomingCallModal/>
-
-            {/* Active call screen */}
             {activeCall && <CallScreen currentUserId={user?.id ?? 0}/>}
         </>
     );

@@ -11,7 +11,8 @@
  */
 
 import api from '@/lib/api';
-import type {AppNotification, BackendNotification, NotificationType} from '@/types/notification';
+import {normalizeNotificationType, resolveActionUrl} from '@/lib/notificationNavigation';
+import type {AppNotification, BackendNotification} from '@/types/notification';
 
 interface ApiResponse<T> {
     success: boolean;
@@ -38,37 +39,6 @@ interface NotificationsResponse {
     pagination: NotificationPagination;
 }
 
-/** Map notification type string to action_url */
-function resolveActionUrl(type: string, data: BackendNotification['data']): string | null {
-    switch (type) {
-        case 'interest_received':
-            return '/interests';
-        case 'interest_accepted':
-            return data.conversation_id ? `/chat/${data.conversation_id}` : '/chat';
-        case 'profile_viewed':
-            return data.profile_id ? `/profile/${data.profile_id}` : null;
-        case 'new_message':
-            return data.conversation_id ? `/chat/${data.conversation_id}` : '/chat';
-        case 'match_digest':
-        case 'match_suggestion':
-            return '/matches';
-        case 'subscription_expiry':
-        case 'subscription_expiring':
-            return '/subscription';
-        case 'photo_approved':
-        case 'photo_rejected':
-            return '/profile/edit';
-        case 'account_disable_request_submitted':
-        case 'account_disable_request_dismissed':
-            return '/account-disable-request';
-        case 'account_disable_request_reactivated':
-        case 'admin_account_reactivated':
-            return '/login';
-        default:
-            return null;
-    }
-}
-
 /** Append admin reason to notification body when stored separately */
 function formatNotificationBody(n: BackendNotification): string {
     const message = n.data?.message ?? '';
@@ -81,24 +51,14 @@ function formatNotificationBody(n: BackendNotification): string {
 
 /** Transform a backend notification to the frontend AppNotification shape */
 function transformNotification(n: BackendNotification): AppNotification {
-    const type = (n.type as NotificationType) in {
-        interest_received: 1, interest_accepted: 1, interest_expired: 1,
-        profile_viewed: 1, new_message: 1, match_suggestion: 1, match_digest: 1,
-        subscription_expiring: 1, subscription_expiry: 1, photo_approved: 1,
-        photo_rejected: 1, face_scan_approved: 1, face_scan_rejected: 1,
-        account_disable_request_submitted: 1, account_disable_request_disabled: 1,
-        account_disable_request_banned: 1, account_disable_request_dismissed: 1,
-        account_disable_request_reactivated: 1,
-        admin_account_disabled: 1, admin_account_banned: 1, admin_account_reactivated: 1,
-        system: 1, broadcast_message: 1,
-    } ? (n.type as NotificationType) : 'system' as NotificationType;
+    const type = normalizeNotificationType(n);
 
     return {
         id: n.id,
         type,
         title: n.data?.title ?? 'Notification',
         body: formatNotificationBody(n),
-        action_url: resolveActionUrl(n.type, n.data ?? {}),
+        action_url: resolveActionUrl(type, n.data ?? {}),
         avatar: null,
         is_read: n.is_read,
         read_at: n.read_at ?? null,

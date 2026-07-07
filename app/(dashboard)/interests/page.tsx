@@ -1,8 +1,8 @@
 'use client';
 
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState, Suspense} from 'react';
 import {useMutation, useQueryClient} from '@tanstack/react-query';
-import {useRouter} from 'next/navigation';
+import {useRouter, useSearchParams} from 'next/navigation';
 import {interestService, shortlistService} from '@/services/profileService';
 import {chatService} from '@/services/chatService';
 import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
@@ -33,6 +33,11 @@ import {
 } from '@/components/ui/icons';
 
 type Tab = 'received' | 'sent' | 'contacts';
+
+function parseInterestTab(value: string | null): Tab {
+    if (value === 'sent' || value === 'contacts' || value === 'received') return value;
+    return 'received';
+}
 
 const TAB_CONFIG: Record<Tab, { label: string; emptyTitle: string; emptyHint: string }> = {
     received: {
@@ -192,15 +197,33 @@ function InterestCard({
 }
 
 export default function InterestsPage() {
+    return (
+        <Suspense fallback={<div className="max-w-3xl mx-auto"><div className="skeleton-gold h-96 rounded-2xl"/></div>}>
+            <InterestsPageInner/>
+        </Suspense>
+    );
+}
+
+function InterestsPageInner() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const queryClient = useQueryClient();
     const userId = useAuthStore((s) => s.user?.id);
-    const [tab, setTab] = useState<Tab>('received');
+    const [tab, setTab] = useState<Tab>(() => parseInterestTab(searchParams.get('tab')));
     const [searchInput, setSearchInput] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [messagingId, setMessagingId] = useState<number | null>(null);
     const [togglingShortlistId, setTogglingShortlistId] = useState<number | null>(null);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        setTab(parseInterestTab(searchParams.get('tab')));
+    }, [searchParams]);
+
+    const handleTabChange = useCallback((nextTab: Tab) => {
+        setTab(nextTab);
+        router.replace(`/interests?tab=${nextTab}`, {scroll: false});
+    }, [router]);
 
     useEffect(() => {
         setSearchInput('');
@@ -326,7 +349,7 @@ export default function InterestsPage() {
                 {(['received', 'sent', 'contacts'] as Tab[]).map((t) => (
                     <button
                         key={t}
-                        onClick={() => setTab(t)}
+                        onClick={() => handleTabChange(t)}
                         className={`tab-pill flex-1 flex items-center justify-center gap-1.5 capitalize ${tab === t ? 'active' : ''}`}
                     >
                         {t === 'received' ? <InboxIcon size={14} strokeWidth={2}/>
