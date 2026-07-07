@@ -11,6 +11,7 @@ import {CallButton} from '@/components/call/CallButton';
 import type {Conversation, Message, MessageType, MediaItem} from '@/types/message';
 import type {CallLog, CallParticipant} from '@/types/call';
 import {cfImageUrl} from '@/lib/utils';
+import {showErrorToast} from '@/lib/toast';
 
 interface ChatWindowProps {
     conversationId: number;
@@ -18,10 +19,26 @@ interface ChatWindowProps {
 }
 
 const ACCEPT_IMAGE = 'image/jpeg,image/png,image/gif,image/webp';
-const ACCEPT_VIDEO = 'video/mp4,video/webm,video/quicktime';
-const ACCEPT_FILE = '.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar,.csv';
+const ACCEPT_FILE = '.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 const MAX_IMAGES = 10;
 const MAX_FILES = 2;
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+
+const DOC_EXTENSIONS = new Set(['pdf', 'doc', 'docx']);
+const DOC_MIMES = new Set([
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+]);
+
+function isAllowedDoc(file: File): boolean {
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+    return DOC_EXTENSIONS.has(ext) || DOC_MIMES.has(file.type);
+}
+
+function isMediaMessageType(type: MessageType): boolean {
+    return type === 'image' || type === 'document' || type === 'video';
+}
 
 function formatFileSize(bytes: number) {
     if (bytes < 1024) return `${bytes} B`;
@@ -40,14 +57,13 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
     const [isLoading, setIsLoading] = useState(true);
     const [hasMore, setHasMore] = useState(false);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [paginationEnabled, setPaginationEnabled] = useState(false);
 
     // ── Multi-media pending state ─────────────────────────────────────────
-    type PendingKind = 'images' | 'video' | 'docs' | null;
+    type PendingKind = 'images' | 'docs' | null;
     const [pendingKind, setPendingKind] = useState<PendingKind>(null);
     const [pendingImages, setPendingImages] = useState<File[]>([]);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-    const [pendingVideo, setPendingVideo] = useState<File | null>(null);
-    const [videoPreview, setVideoPreview] = useState<string | null>(null);
     const [pendingDocs, setPendingDocs] = useState<File[]>([]);
     const [mediaLabel, setMediaLabel] = useState('');
 
@@ -55,12 +71,16 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
 
     const bottomRef = useRef<HTMLDivElement>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const contentInnerRef = useRef<HTMLDivElement>(null);
+    const topSentinelRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const imageRef = useRef<HTMLInputElement>(null);
-    const videoRef = useRef<HTMLInputElement>(null);
     const fileRef = useRef<HTMLInputElement>(null);
     const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const initialScrollDone = useRef(false);
+    const isLoadingMoreRef = useRef(false);
+    const stickToBottomUntilRef = useRef(0);
+    const stickOnNextCallLogsRef = useRef(false);
     // Tracks blob URLs per optimistic message ID so we can revoke AFTER real message arrives
     const blobUrlsMap = useRef<Map<number, string[]>>(new Map());
 
@@ -69,8 +89,6 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
         setPendingKind(null);
         setPendingImages([]);
         setImagePreviews([]);
-        setPendingVideo(null);
-        setVideoPreview(null);
         setPendingDocs([]);
         setMediaLabel('');
     }, []);
@@ -78,9 +96,8 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
     // For explicit cancel (user clicks Cancel), do revoke
     const clearPending = useCallback(() => {
         imagePreviews.forEach((u) => URL.revokeObjectURL(u));
-        if (videoPreview) URL.revokeObjectURL(videoPreview);
         clearPendingState();
-    }, [imagePreviews, videoPreview, clearPendingState]);
+    }, [imagePreviews, clearPendingState]);
 
     // ── Initial load ──────────────────────────────────────────────────────
     useEffect(() => {
@@ -88,24 +105,26 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
         setMessages([]);
         setCallLogs([]);
         setHasMore(false);
+        setPaginationEnabled(false);
         initialScrollDone.current = false;
+        stickOnNextCallLogsRef.current = false;
 
         async function load() {
             setIsLoading(true);
             try {
-                const [conv, msgsResponse] = await Promise.all([
-                    chatService.getConversation(conversationId),
+                const conv = await chatService.getConversation(conversationId);
+                if (!active) return;
+
+                const [msgsResponse, callHistory] = await Promise.all([
                     chatService.getMessages(conversationId),
+                    callService.getHistory(1, conv.participant.id).catch(() => ({data: [] as CallLog[]})),
                 ]);
                 if (!active) return;
+
                 setConversation(conv);
                 setMessages(msgsResponse.data);
                 setHasMore(msgsResponse.pagination.has_more);
-
-                // Load call logs for this conversation partner (for inline timeline display)
-                callService.getHistory(1, conv.participant.id)
-                    .then((res) => { if (active) setCallLogs(res.data ?? []); })
-                    .catch(() => {}); // non-blocking
+                setCallLogs(callHistory.data ?? []);
 
                 await chatService.markAsRead(conversationId);
             } finally {
@@ -119,60 +138,124 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
         };
     }, [conversationId]);
 
+    const scrollToBottom = useCallback((repeatForLayout = false) => {
+        const doScroll = () => {
+            const el = scrollRef.current;
+            if (el) el.scrollTop = el.scrollHeight;
+        };
+        // Double RAF ensures the DOM has re-rendered before we measure + scroll
+        requestAnimationFrame(() => {
+            requestAnimationFrame(doScroll);
+        });
+        // Media messages change height as images load — retry until layout settles
+        if (repeatForLayout) {
+            [50, 150, 300, 500, 800, 1200].forEach((ms) => setTimeout(doScroll, ms));
+        }
+    }, []);
+
+    const isNearBottom = useCallback(() => {
+        const el = scrollRef.current;
+        if (!el) return true;
+        return el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+    }, []);
+
+    const stickToBottomForLayout = useCallback(() => {
+        stickToBottomUntilRef.current = Date.now() + 1500;
+        scrollToBottom(true);
+    }, [scrollToBottom]);
+
+    // Keep pinned to bottom while media content grows (sender + receiver)
+    useEffect(() => {
+        const scrollEl = scrollRef.current;
+        const contentEl = contentInnerRef.current;
+        if (!scrollEl || !contentEl) return;
+
+        let rafId = 0;
+        const observer = new ResizeObserver(() => {
+            if (Date.now() < stickToBottomUntilRef.current) {
+                cancelAnimationFrame(rafId);
+                rafId = requestAnimationFrame(() => {
+                    scrollEl.scrollTop = scrollEl.scrollHeight;
+                });
+            }
+        });
+
+        observer.observe(contentEl);
+        return () => {
+            observer.disconnect();
+            cancelAnimationFrame(rafId);
+        };
+    }, [conversationId]);
+
     // ── Scroll to bottom on first load ───────────────────────────────────
     useEffect(() => {
-        if (!isLoading && messages.length > 0 && !initialScrollDone.current) {
+        if (!isLoading && !initialScrollDone.current) {
             initialScrollDone.current = true;
+            stickToBottomUntilRef.current = Date.now() + 1500;
+            scrollToBottom(true);
             requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    const el = scrollRef.current;
-                    if (el) el.scrollTop = el.scrollHeight;
-                });
+                requestAnimationFrame(() => setPaginationEnabled(true));
             });
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isLoading]);
+    }, [isLoading, scrollToBottom]);
 
-    // ── Auto-scroll for new messages ──────────────────────────────────────
+    // ── Scroll when call history updates (after a call ends) ─────────────
     useEffect(() => {
-        if (!initialScrollDone.current) return;
+        if (!initialScrollDone.current || isLoading) return;
+        if (!stickOnNextCallLogsRef.current) return;
+
+        stickOnNextCallLogsRef.current = false;
+        stickToBottomForLayout();
+    }, [callLogs, isLoading, stickToBottomForLayout]);
+
+    // ── Auto-scroll for new messages / call history ─────────────────────
+    useEffect(() => {
+        if (!initialScrollDone.current || isLoading) return;
+        if (stickOnNextCallLogsRef.current) return;
+
+        const forceStick = Date.now() < stickToBottomUntilRef.current;
+        const lastMsg = messages[messages.length - 1];
+        const ownSending = lastMsg?.sender_id === currentUserId && lastMsg?.status === 'sending';
+
+        const latestCall = callLogs.reduce<CallLog | null>((acc, c) => {
+            if (!acc || new Date(c.created_at) > new Date(acc.created_at)) return c;
+            return acc;
+        }, null);
+        const latestMsgTime = lastMsg ? new Date(lastMsg.created_at).getTime() : 0;
+        const latestCallTime = latestCall ? new Date(latestCall.created_at).getTime() : 0;
+        const lastIsCall = latestCallTime > latestMsgTime;
+        const needsLayoutRetries = lastIsCall || (lastMsg ? isMediaMessageType(lastMsg.type) : false);
+
+        // Stick to bottom after the user sends or while layout is settling
+        if (forceStick || ownSending) {
+            scrollToBottom(forceStick || needsLayoutRetries);
+            return;
+        }
+
         const el = scrollRef.current;
         if (!el) return;
         const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-        // Auto-scroll only if within 150px of the bottom
         if (distFromBottom < 150) {
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    const el2 = scrollRef.current;
-                    if (el2) el2.scrollTop = el2.scrollHeight;
-                });
-            });
+            if (needsLayoutRetries) stickToBottomUntilRef.current = Date.now() + 1500;
+            scrollToBottom(needsLayoutRetries);
         }
-    }, [messages, isTyping]);
-
-    const scrollToBottom = useCallback(() => {
-        // Double RAF ensures the DOM has fully re-rendered (e.g. pending bar removed,
-        // new message added) before we measure + scroll
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                const el = scrollRef.current;
-                if (el) el.scrollTop = el.scrollHeight;
-            });
-        });
-    }, []);
+    }, [messages, callLogs, isTyping, isLoading, scrollToBottom, currentUserId]);
 
     // ── Refresh call logs when a call ends (from CallScreen/CallProvider) ─
     useEffect(() => {
         if (!conversation) return;
         const participantId = conversation.participant.id;
         const handler = () => {
+            if (isNearBottom()) stickOnNextCallLogsRef.current = true;
             callService.getHistory(1, participantId)
                 .then((res) => setCallLogs(res.data ?? []))
-                .catch(() => {});
+                .catch(() => {
+                    stickOnNextCallLogsRef.current = false;
+                });
         };
         window.addEventListener('call:ended', handler);
         return () => window.removeEventListener('call:ended', handler);
-    }, [conversation]);
+    }, [conversation, isNearBottom]);
 
     // ── Real-time: subscribe to conversation channel ──────────────────────
     // Uses `cancelled` flag pattern — no race between echoRef + cleanup
@@ -193,12 +276,22 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                 // Sender already has the message (optimistic) — skip own events
                 if (e.sender_id === currentUserId) return;
 
+                const nearBottom = isNearBottom();
+
                 setMessages((prev) => {
                     if (prev.some((m) => m.id === e.id)) return prev;
                     return [...prev, e];
                 });
                 setIsTyping(false);
-                scrollToBottom();
+
+                if (nearBottom) {
+                    if (isMediaMessageType(e.type)) {
+                        stickToBottomForLayout();
+                    } else {
+                        scrollToBottom();
+                    }
+                }
+
                 chatService.markAsRead(conversationId).catch(() => {
                 });
             });
@@ -230,14 +323,15 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                 leavePrivateChannel(`conversation.${conversationId}`);
             })();
         };
-    }, [conversationId, currentUserId, scrollToBottom]);
+    }, [conversationId, currentUserId, scrollToBottom, isNearBottom, stickToBottomForLayout]);
 
     // ── Load more (pagination) ────────────────────────────────────────────
     const loadMore = useCallback(async () => {
-        if (isLoadingMore || !hasMore || messages.length === 0) return;
+        if (isLoadingMoreRef.current || !hasMore || messages.length === 0) return;
         const oldestId = messages[0].id;
         const scrollEl = scrollRef.current;
         const prevScrollHeight = scrollEl?.scrollHeight ?? 0;
+        isLoadingMoreRef.current = true;
         setIsLoadingMore(true);
         try {
             const res = await chatService.getMessages(conversationId, oldestId);
@@ -248,25 +342,50 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
             setMessages((prev) => [...res.data, ...prev]);
             setHasMore(res.pagination.has_more);
             requestAnimationFrame(() => {
-                if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight - prevScrollHeight;
+                requestAnimationFrame(() => {
+                    if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight - prevScrollHeight;
+                });
             });
         } finally {
+            isLoadingMoreRef.current = false;
             setIsLoadingMore(false);
         }
-    }, [isLoadingMore, hasMore, messages, conversationId]);
+    }, [hasMore, messages, conversationId]);
 
-    const handleScroll = useCallback(() => {
-        const el = scrollRef.current;
-        if (!el) return;
-        if (el.scrollTop < 80) loadMore();
-    }, [loadMore]);
+    // Load older messages when scrolling to the top
+    useEffect(() => {
+        if (!paginationEnabled) return;
+
+        const sentinel = topSentinelRef.current;
+        const root = scrollRef.current;
+        if (!sentinel || !root || !hasMore) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0]?.isIntersecting) {
+                    loadMore();
+                }
+            },
+            {root, rootMargin: '120px', threshold: 0},
+        );
+
+        observer.observe(sentinel);
+        return () => observer.disconnect();
+    }, [hasMore, loadMore, paginationEnabled]);
 
     // ── File pick handlers ────────────────────────────────────────────────
     const handleImagesPick = useCallback((files: File[]) => {
         const allowed = files.filter((f) => f.type.startsWith('image/'));
-        if (allowed.length === 0) return;
+        const tooLarge = allowed.filter((f) => f.size > MAX_FILE_SIZE);
+        const valid = allowed.filter((f) => f.size <= MAX_FILE_SIZE);
+
+        if (tooLarge.length > 0) {
+            showErrorToast(`Each photo must be 2 MB or smaller. ${tooLarge.map((f) => f.name).join(', ')} exceeded the limit.`);
+        }
+        if (valid.length === 0) return;
+
         const remaining = MAX_IMAGES - pendingImages.length;
-        const toAdd = allowed.slice(0, remaining);
+        const toAdd = valid.slice(0, remaining);
         const newPreviews = toAdd.map((f) => URL.createObjectURL(f));
         setPendingKind('images');
         setPendingImages((prev) => [...prev, ...toAdd]);
@@ -285,15 +404,20 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
         }
     }, [imagePreviews, pendingImages]);
 
-    const handleVideoPick = useCallback((file: File) => {
-        if (videoPreview) URL.revokeObjectURL(videoPreview);
-        setPendingKind('video');
-        setPendingVideo(file);
-        setVideoPreview(URL.createObjectURL(file));
-    }, [videoPreview]);
-
     const handleDocsPick = useCallback((files: File[]) => {
-        const toAdd = files.slice(0, MAX_FILES - pendingDocs.length);
+        const rejected = files.filter((f) => !isAllowedDoc(f));
+        const allowed = files.filter(isAllowedDoc);
+        const tooLarge = allowed.filter((f) => f.size > MAX_FILE_SIZE);
+        const valid = allowed.filter((f) => f.size <= MAX_FILE_SIZE);
+
+        if (rejected.length > 0) {
+            showErrorToast('Only PDF and Word documents (.pdf, .doc, .docx) are allowed.');
+        }
+        if (tooLarge.length > 0) {
+            showErrorToast(`Each file must be 2 MB or smaller. ${tooLarge.map((f) => f.name).join(', ')} exceeded the limit.`);
+        }
+
+        const toAdd = valid.slice(0, MAX_FILES - pendingDocs.length);
         if (toAdd.length === 0) return;
         setPendingKind('docs');
         setPendingDocs((prev) => [...prev, ...toAdd]);
@@ -316,12 +440,10 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
 
         let type: MessageType = 'text';
         if (pendingKind === 'images') type = 'image';
-        else if (pendingKind === 'video') type = 'video';
         else if (pendingKind === 'docs') type = 'document';
 
         // Capture blob URLs BEFORE clearing state (they're still valid)
         const capturedImagePreviews = [...imagePreviews];
-        const capturedVideoPreview = videoPreview;
 
         // Build optimistic media items (blob URLs still valid at this point)
         const optimisticMediaItems: MediaItem[] = pendingKind === 'images'
@@ -351,10 +473,10 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
             type,
             body: body || null,
             label: label ?? null,
-            file_path: pendingKind === 'video' ? (capturedVideoPreview ?? null) : null,
-            file_name: pendingKind === 'video' ? (pendingVideo?.name ?? null) : null,
-            file_size: pendingKind === 'video' ? (pendingVideo?.size ?? null) : null,
-            file_mime_type: pendingKind === 'video' ? (pendingVideo?.type ?? null) : null,
+            file_path: null,
+            file_name: null,
+            file_size: null,
+            file_mime_type: null,
             media_items: optimisticMediaItems.length > 0 ? optimisticMediaItems : undefined,
             is_deleted: false,
             delivered_at: null,
@@ -365,7 +487,6 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
 
         // Track blob URLs for this optimistic message — revoke AFTER real message arrives
         const blobsForThisMsg: string[] = [...capturedImagePreviews];
-        if (capturedVideoPreview) blobsForThisMsg.push(capturedVideoPreview);
         if (blobsForThisMsg.length > 0) blobUrlsMap.current.set(optimisticId, blobsForThisMsg);
 
         setMessages((prev) => [...prev, optimistic]);
@@ -374,13 +495,17 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
         // Snapshot files before clearing state (state reset doesn't affect File objects)
         const imgFiles = [...pendingImages];
         const docFiles = [...pendingDocs];
-        const vidFile = pendingVideo;
         const sendType = type;
 
         // Clear state WITHOUT revoking blob URLs (still used by optimistic message)
         clearPendingState();
         setIsSending(true);
-        scrollToBottom();
+
+        const isMediaSend = sendType !== 'text';
+        if (isMediaSend) {
+            stickToBottomUntilRef.current = Date.now() + 1500;
+        }
+        scrollToBottom(isMediaSend);
 
         try {
             const sent = await chatService.sendMessage({
@@ -388,13 +513,16 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                 type: sendType,
                 body: body || undefined,
                 label: label,
-                file: sendType === 'video' ? (vidFile ?? undefined) : undefined,
                 files: sendType === 'image' ? imgFiles
                     : sendType === 'document' ? docFiles
                         : undefined,
             });
             // Replace optimistic with real message
             setMessages((prev) => prev.map((m) => (m.id === optimisticId ? sent : m)));
+            if (isMediaSend) {
+                stickToBottomUntilRef.current = Date.now() + 1500;
+                scrollToBottom(true);
+            }
             // NOW safe to revoke the blob URLs (real message has server URLs)
             const blobs = blobUrlsMap.current.get(optimisticId);
             if (blobs) {
@@ -417,7 +545,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
             setIsSending(false);
         }
     }, [text, isSending, mediaLabel, hasPending, pendingKind, pendingImages, imagePreviews,
-        pendingVideo, videoPreview, pendingDocs, conversationId, currentUserId,
+        pendingDocs, conversationId, currentUserId,
         clearPendingState, scrollToBottom]);
 
     const handleTypingChange = useCallback((value: string) => {
@@ -430,6 +558,12 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
             });
         }, 3000);
     }, [conversationId]);
+
+    const handleMediaLoad = useCallback(() => {
+        if (Date.now() < stickToBottomUntilRef.current || isNearBottom()) {
+            scrollToBottom();
+        }
+    }, [isNearBottom, scrollToBottom]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -580,9 +714,10 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
             {/* ── Messages ────────────────────────────────────────────────── */}
             <div
                 ref={scrollRef}
-                onScroll={handleScroll}
-                className="flex-1 overflow-y-auto bg-[#F8F9FB] px-2 sm:px-4 py-3 sm:py-4 space-y-3"
+                className="flex-1 overflow-y-auto bg-[#F8F9FB] px-2 sm:px-4 py-3 sm:py-4"
             >
+                <div ref={contentInnerRef} className="space-y-3">
+                <div ref={topSentinelRef} className="h-px shrink-0" aria-hidden="true"/>
                 {isLoadingMore && (
                     <div className="flex justify-center py-2">
                         <span
@@ -627,6 +762,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                                         isMine={isMine}
                                         senderName={participant.name}
                                         showAvatar={showAvatar}
+                                        onMediaLoad={handleMediaLoad}
                                     />
                                 );
                             })}
@@ -636,6 +772,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
 
                 {isTyping && <TypingIndicator name={participant.name}/>}
                 <div ref={bottomRef}/>
+                </div>
             </div>
 
             {/* ── Pending media preview bar ────────────────────────────────── */}
@@ -670,24 +807,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                                     </button>
                                 )}
                             </div>
-                            <p className="text-[10px] text-gray-400">{pendingImages.length}/{MAX_IMAGES} images</p>
-                        </div>
-                    )}
-
-                    {/* Video preview */}
-                    {pendingKind === 'video' && pendingVideo && (
-                        <div className="flex items-center gap-2">
-                            {videoPreview && <video src={videoPreview}
-                                                    className="w-14 h-14 object-cover rounded-xl border border-gray-200 shrink-0"
-                                                    muted/>}
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold text-[#1F2937] truncate">{pendingVideo.name}</p>
-                                <p className="text-[11px] text-gray-400">{formatFileSize(pendingVideo.size)}</p>
-                            </div>
-                             <button onClick={clearPending}
-                                     className="w-6 h-6 rounded-full bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-500 flex items-center justify-center transition-colors shrink-0">
-                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                             </button>
+                            <p className="text-[10px] text-gray-400">{pendingImages.length}/{MAX_IMAGES} images · max 2 MB each</p>
                         </div>
                     )}
 
@@ -715,7 +835,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                             {pendingDocs.length < MAX_FILES && (
                                 <button onClick={() => fileRef.current?.click()}
                                         className="text-xs text-[#C9A227] hover:underline text-left pl-1">+ Add file
-                                    (max {MAX_FILES})</button>
+                                    (PDF/DOC, max {MAX_FILES}, 2 MB each)</button>
                             )}
                         </div>
                     )}
@@ -746,12 +866,6 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                            if (pendingKind === null || pendingKind === 'images') handleImagesPick(files);
                            e.target.value = '';
                        }}/>
-                <input ref={videoRef} type="file" accept={ACCEPT_VIDEO} className="hidden"
-                       onChange={(e) => {
-                           const f = e.target.files?.[0];
-                           if (f) handleVideoPick(f);
-                           e.target.value = '';
-                       }}/>
                 <input ref={fileRef} type="file" accept={ACCEPT_FILE} multiple className="hidden"
                        onChange={(e) => {
                            const files = Array.from(e.target.files ?? []);
@@ -768,7 +882,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                             }}
                             disabled={!!pendingKind && pendingKind !== 'images'}
                             className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:text-[#C9A227] hover:bg-[#C9A227]/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                            title={`Send photos (max ${MAX_IMAGES})`}
+                            title={`Send photos (max ${MAX_IMAGES}, 2 MB each)`}
                         >
                             <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                  strokeWidth={1.8}>
@@ -778,25 +892,11 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                         </button>
                         <button
                             onClick={() => {
-                                if (!pendingKind || pendingKind === 'video') videoRef.current?.click();
-                            }}
-                            disabled={!!pendingKind && pendingKind !== 'video'}
-                            className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:text-[#C9A227] hover:bg-[#C9A227]/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                            title="Send video"
-                        >
-                            <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                 strokeWidth={1.8}>
-                                <path strokeLinecap="round" strokeLinejoin="round"
-                                      d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                            </svg>
-                        </button>
-                        <button
-                            onClick={() => {
                                 if (!pendingKind || pendingKind === 'docs') fileRef.current?.click();
                             }}
                             disabled={!!pendingKind && pendingKind !== 'docs'}
                             className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:text-[#C9A227] hover:bg-[#C9A227]/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                            title={`Send files (max ${MAX_FILES})`}
+                            title={`Send PDF/DOC files (max ${MAX_FILES}, 2 MB each)`}
                         >
                             <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                  strokeWidth={1.8}>
@@ -836,7 +936,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                 </div>
 
                 <p className="text-[9px] sm:text-[10px] text-gray-400 mt-1 text-center">
-                    Chat only available between users with mutually accepted interests
+                    Photos &amp; files max 2 MB each · Documents: PDF, DOC, DOCX only · Chat available between mutually accepted interests
                 </p>
             </div>
         </div>

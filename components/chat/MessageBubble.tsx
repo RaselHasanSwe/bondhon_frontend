@@ -18,6 +18,7 @@ interface MessageBubbleProps {
     isMine: boolean;
     senderName?: string;
     showAvatar?: boolean;
+    onMediaLoad?: () => void;
 }
 
 function formatTime(iso: string): string {
@@ -145,7 +146,7 @@ function Lightbox({images, startIndex, onClose}: LightboxProps) {
 }
 
 // ── Image Grid ────────────────────────────────────────────────────────────
-function ImageGrid({items, isMine}: { items: { src: string; name?: string | null }[]; isMine: boolean }) {
+function ImageGrid({items, isMine, onMediaLoad}: { items: { src: string; name?: string | null }[]; isMine: boolean; onMediaLoad?: () => void }) {
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
     const count = items.length;
 
@@ -159,6 +160,7 @@ function ImageGrid({items, isMine}: { items: { src: string; name?: string | null
                 src={items[0].src}
                 alt={items[0].name ?? 'Image'}
                 onClick={() => setLightboxIdx(0)}
+                onLoad={onMediaLoad}
                 className={cn('rounded-xl max-w-full max-h-72 object-cover cursor-zoom-in', isMine ? 'border-2 border-white/20' : '')}
                 draggable={false}
             />
@@ -169,7 +171,7 @@ function ImageGrid({items, isMine}: { items: { src: string; name?: string | null
                 {[0, 1].map((i) => <div key={i} className="aspect-square overflow-hidden cursor-zoom-in"
                                         onClick={() => setLightboxIdx(i)}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={items[i].src} alt="" className="w-full h-full object-cover" draggable={false}/>
+                    <img src={items[i].src} alt="" className="w-full h-full object-cover" draggable={false} onLoad={onMediaLoad}/>
                 </div>)}
             </div>
         );
@@ -179,12 +181,12 @@ function ImageGrid({items, isMine}: { items: { src: string; name?: string | null
                 <div className="overflow-hidden cursor-zoom-in row-span-2" onClick={() => setLightboxIdx(0)}
                      style={{height: 196}}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={items[0].src} alt="" className="w-full h-full object-cover" draggable={false}/>
+                    <img src={items[0].src} alt="" className="w-full h-full object-cover" draggable={false} onLoad={onMediaLoad}/>
                 </div>
                 {[1, 2].map((i) => <div key={i} className="overflow-hidden cursor-zoom-in" style={{height: 96}}
                                         onClick={() => setLightboxIdx(i)}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={items[i].src} alt="" className="w-full h-full object-cover" draggable={false}/>
+                    <img src={items[i].src} alt="" className="w-full h-full object-cover" draggable={false} onLoad={onMediaLoad}/>
                 </div>)}
             </div>
         );
@@ -199,7 +201,7 @@ function ImageGrid({items, isMine}: { items: { src: string; name?: string | null
                         <div key={i} className="relative overflow-hidden cursor-zoom-in" style={{height: 96}}
                              onClick={() => setLightboxIdx(i)}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={items[i].src} alt="" className="w-full h-full object-cover" draggable={false}/>
+                            <img src={items[i].src} alt="" className="w-full h-full object-cover" draggable={false} onLoad={onMediaLoad}/>
                             {isLast && (
                                 <div className="absolute inset-0 bg-black/55 flex items-center justify-center">
                                     <span className="text-white text-2xl font-bold">+{extra}</span>
@@ -321,7 +323,7 @@ function DocumentMessage({src, name, size, mime, isMine}: {
 
 // ── Main export ───────────────────────────────────────────────────────────
 
-export function MessageBubble({message, isMine, senderName, showAvatar = true}: MessageBubbleProps) {
+export function MessageBubble({message, isMine, senderName, showAvatar = true, onMediaLoad}: MessageBubbleProps) {
     if (message.is_deleted) {
         return (
             <div className={cn('flex items-end gap-2', isMine ? 'flex-row-reverse' : 'flex-row')}>
@@ -395,7 +397,7 @@ export function MessageBubble({message, isMine, senderName, showAvatar = true}: 
 
                     {/* Image grid */}
                     {hasImages && imageList.length > 0 &&
-                        <div className="p-1"><ImageGrid items={imageList} isMine={isMine}/></div>}
+                        <div className="p-1"><ImageGrid items={imageList} isMine={isMine} onMediaLoad={onMediaLoad}/></div>}
 
                     {/* Video */}
                     {hasVideo && message.file_path &&
