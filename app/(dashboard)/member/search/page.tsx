@@ -487,7 +487,7 @@ export default function SearchPage() {
                     </div>
 
                     {isLoading && (
-                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 min-[380px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                             {Array.from({ length: 8 }).map((_, i) => <div key={i} className="skeleton-gold aspect-[3/4] rounded-2xl" />)}
                         </div>
                     )}
@@ -518,7 +518,7 @@ export default function SearchPage() {
 
                     {!isLoading && results.length > 0 && (
                         <>
-                            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 stagger">
+                            <div className="grid grid-cols-1 min-[380px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 stagger">
                                 {results.map(profile => <MatchCard key={profile.id} profile={profile} showScore={false} />)}
                             </div>
 
