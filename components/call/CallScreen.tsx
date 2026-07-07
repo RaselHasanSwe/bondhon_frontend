@@ -5,6 +5,8 @@ import Swal from 'sweetalert2';
 import {useCallStore} from '@/store/callStore';
 import {callService} from '@/services/callService';
 import {WebRTCManager} from '@/lib/webrtc';
+import {matchesCallId} from '@/lib/callDismiss';
+import {startCallerRingback, stopAllCallSounds, stopCallerRingback} from '@/lib/soundPlayer';
 import type {WebRTCSignalPayload} from '@/types/call';
 import {cfImageUrl} from '@/lib/utils';
 
@@ -33,8 +35,6 @@ export function CallScreen({currentUserId}: CallScreenProps) {
     const localVideoRef = useRef<HTMLVideoElement | null>(null);
     const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
     const durationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const ringbackCtxRef = useRef<AudioContext | null>(null);
-    const ringbackIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [connectionState, setConnectionState] = useState<string>('Connecting…');
     const [isEnding, setIsEnding] = useState(false);
     const [isPipSwapped, setIsPipSwapped] = useState(false);
@@ -51,20 +51,28 @@ export function CallScreen({currentUserId}: CallScreenProps) {
     const handleEnd = useCallback(async () => {
         if (!activeCall || isEnding) return;
         setIsEnding(true);
+
+        const callId = activeCall.callId;
+        const isCallerCancelling = activeCall.isCaller
+            && (activeCall.status === 'calling' || activeCall.status === 'ringing');
+
         destroyManager();
+        stopAllCallSounds();
+        endCall();
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('call:ended'));
+        }
+
+        // Lightweight notify first so receiver dismisses without waiting for end DB work
+        if (isCallerCancelling) {
+            void callService.cancelNotify(callId).catch(() => {});
+        }
         try {
-            await callService.endCall(activeCall.callId);
+            await callService.endCall(callId);
         } catch (err: unknown) {
-            // 409 means the call was already ended by the other party — that's fine, ignore it.
             const status = (err as {response?: {status?: number}})?.response?.status;
             if (status !== 409) {
-                // Any other error is unexpected but we still close the UI
                 console.error('[endCall]', err);
-            }
-        } finally {
-            endCall();
-            if (typeof window !== 'undefined') {
-                window.dispatchEvent(new CustomEvent('call:ended'));
             }
         }
     }, [activeCall, isEnding, destroyManager, endCall]);
@@ -91,58 +99,24 @@ export function CallScreen({currentUserId}: CallScreenProps) {
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, [activeCall?.callId]);
 
-    // ── Ringback tone for caller (plays while status === 'ringing') ───────
+    // ── Caller ringback (bip-bip) only after receiver is ringing ─────────
     useEffect(() => {
-        const isRinging = activeCall?.isCaller && activeCall?.status === 'ringing';
-        if (!isRinging) {
-            // Stop ringback
-            if (ringbackIntervalRef.current) clearInterval(ringbackIntervalRef.current);
-            ringbackIntervalRef.current = null;
-            if (ringbackCtxRef.current) {
-                ringbackCtxRef.current.close().catch(() => {});
-                ringbackCtxRef.current = null;
-            }
+        const shouldRingback = activeCall?.isCaller && activeCall?.status === 'ringing';
+        if (!shouldRingback) {
+            stopCallerRingback();
             return;
         }
 
-        const AudioCtx =
-            window.AudioContext ||
-            (window as typeof window & {webkitAudioContext: typeof AudioContext}).webkitAudioContext;
-        if (!AudioCtx) return;
+        void startCallerRingback();
+        return () => stopCallerRingback();
+    }, [activeCall?.isCaller, activeCall?.status]);
 
-        const playRingback = () => {
-            try {
-                if (!ringbackCtxRef.current || ringbackCtxRef.current.state === 'closed') {
-                    ringbackCtxRef.current = new AudioCtx();
-                }
-                const ctx = ringbackCtxRef.current;
-                if (ctx.state === 'suspended') ctx.resume().catch(() => {});
-                // Two-tone ringback (440 Hz + 480 Hz blend, 1.5s on / 2s off pattern)
-                [440, 480].forEach((freq) => {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.frequency.value = freq;
-                    gain.gain.setValueAtTime(0.09, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
-                    osc.start(ctx.currentTime);
-                    osc.stop(ctx.currentTime + 1.5);
-                });
-            } catch { /* ignore */ }
-        };
-
-        playRingback();
-        ringbackIntervalRef.current = setInterval(playRingback, 3500);
-
-        return () => {
-            if (ringbackIntervalRef.current) clearInterval(ringbackIntervalRef.current);
-            ringbackIntervalRef.current = null;
-            if (ringbackCtxRef.current) {
-                ringbackCtxRef.current.close().catch(() => {});
-                ringbackCtxRef.current = null;
-            }
-        };
+    // ── Caller UI label: Calling… → Ringing… → Connecting… ───────────────
+    useEffect(() => {
+        if (!activeCall?.isCaller) return;
+        if (activeCall.status === 'calling') setConnectionState('Calling…');
+        else if (activeCall.status === 'ringing') setConnectionState('Ringing…');
+        else if (activeCall.status === 'connecting') setConnectionState('Connecting…');
     }, [activeCall?.isCaller, activeCall?.status]);
 
     // ── Set up WebRTC + Reverb signaling ─────────────────────────────────
@@ -257,8 +231,8 @@ export function CallScreen({currentUserId}: CallScreenProps) {
             });
 
             // Remote party ended
-            channel.listen('.call.ended', (e: {call_id: number}) => {
-                if (cancelled || e.call_id !== activeCall.callId) return;
+            channel.listen('.call.ended', (e: {call_id: number | string}) => {
+                if (cancelled || !matchesCallId(e.call_id, activeCall.callId)) return;
                 destroyManager();
                 endCall();
                 Swal.fire({
@@ -273,8 +247,8 @@ export function CallScreen({currentUserId}: CallScreenProps) {
             });
 
             // Remote party declined (while caller is ringing)
-            channel.listen('.call.declined', (e: {call_id: number}) => {
-                if (cancelled || e.call_id !== activeCall.callId) return;
+            channel.listen('.call.declined', (e: {call_id: number | string}) => {
+                if (cancelled || !matchesCallId(e.call_id, activeCall.callId)) return;
                 destroyManager();
                 endCall();
                 Swal.fire({
@@ -290,7 +264,6 @@ export function CallScreen({currentUserId}: CallScreenProps) {
 
             // Caller starts after receiver answers
             if (activeCall.isCaller) {
-                setConnectionState('Ringing…');
                 channel.listen('.call.answered', async (e: {call_id: number}) => {
                     if (cancelled || e.call_id !== activeCall.callId) return;
                     setConnectionState('Connecting…');
@@ -679,11 +652,14 @@ function CtrlBtn({label, active, onClick, icon}: {label: string; active: boolean
 
 function StatusIndicator({state}: {state: string}) {
     const isLive = state === 'active';
+    const isCalling = state === 'calling';
+    const isRinging = state === 'ringing';
+    const label = isLive ? 'Live' : isRinging ? 'Ringing' : isCalling ? 'Calling' : 'Connecting';
     return (
         <div className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-semibold
             ${isLive ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
             <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isLive ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`}/>
-            <span className="hidden xs:inline">{isLive ? 'Live' : 'Connecting'}</span>
+            <span className="hidden xs:inline">{label}</span>
         </div>
     );
 }

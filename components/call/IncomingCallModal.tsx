@@ -4,6 +4,7 @@ import {useEffect, useRef, useState, useCallback} from 'react';
 import Swal from 'sweetalert2';
 import {useCallStore} from '@/store/callStore';
 import {callService} from '@/services/callService';
+import {retryIncomingCallRingtoneIfNeeded, startIncomingCallRingtone, stopIncomingCallRingtone} from '@/lib/soundPlayer';
 import {cfImageUrl} from '@/lib/utils';
 
 /**
@@ -18,12 +19,10 @@ export function IncomingCallModal() {
     const [remainingSeconds, setRemainingSeconds] = useState(45);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const audioCtxRef = useRef<AudioContext | null>(null);
-    const ringIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     // Track callId to detect re-use of handleDecline after timer fires
     const callIdRef = useRef<number | null>(null);
 
-    // ── Oscillator ringtone + countdown ───────────────────────────────────
+    // ── Call ringtone + countdown ─────────────────────────────────────────
     useEffect(() => {
         if (!incomingCall) return;
         callIdRef.current = incomingCall.callId;
@@ -31,41 +30,8 @@ export function IncomingCallModal() {
         setIsAnswering(false);
         setIsDeclining(false);
 
-        const AudioCtx =
-            window.AudioContext ||
-            (window as typeof window & {webkitAudioContext: typeof AudioContext}).webkitAudioContext;
-
-        const playRing = () => {
-            if (!AudioCtx) return;
-            // Don't attempt AudioContext before a user gesture — Chrome will warn
-            // and refuse to start. Check userActivation if available.
-            const nav = navigator as Navigator & {userActivation?: {hasBeenActive: boolean}};
-            if (nav.userActivation && !nav.userActivation.hasBeenActive) return;
-            try {
-                if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
-                    audioCtxRef.current = new AudioCtx();
-                }
-                const ctx = audioCtxRef.current;
-                if (ctx.state === 'suspended') {
-                    ctx.resume().catch(() => {});
-                }
-                if (ctx.state !== 'running') return;
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.frequency.setValueAtTime(440, ctx.currentTime);
-                osc.frequency.setValueAtTime(520, ctx.currentTime + 0.2);
-                osc.frequency.setValueAtTime(440, ctx.currentTime + 0.4);
-                gain.gain.setValueAtTime(0.28, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.65);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.65);
-            } catch { /* ignore */ }
-        };
-
-        playRing();
-        ringIntervalRef.current = setInterval(playRing, 1800);
+        void startIncomingCallRingtone();
+        callService.notifyRinging(incomingCall.callId).catch(() => {});
 
         // Countdown: just decrement — don't call any store action inside the updater
         intervalRef.current = setInterval(() => {
@@ -73,11 +39,9 @@ export function IncomingCallModal() {
         }, 1000);
 
         return () => {
-            if (ringIntervalRef.current) clearInterval(ringIntervalRef.current);
             if (intervalRef.current) clearInterval(intervalRef.current);
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
-            audioCtxRef.current?.close().catch(() => {});
-            audioCtxRef.current = null;
+            stopIncomingCallRingtone();
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [incomingCall?.callId]);
@@ -86,19 +50,18 @@ export function IncomingCallModal() {
     // Separate effect so we never update Zustand inside a React state updater
     useEffect(() => {
         if (remainingSeconds === 0 && incomingCall && !isAnswering && !isDeclining) {
-            // Notify backend so caller's side also closes
-            callService.declineCall(incomingCall.callId).catch(() => {});
+            const callId = incomingCall.callId;
+            stopRing();
             clearIncomingCall();
+            callService.declineCall(callId).catch(() => {});
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [remainingSeconds]);
 
     const stopRing = useCallback(() => {
-        if (ringIntervalRef.current) clearInterval(ringIntervalRef.current);
         if (intervalRef.current) clearInterval(intervalRef.current);
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        audioCtxRef.current?.close().catch(() => {});
-        audioCtxRef.current = null;
+        stopIncomingCallRingtone();
     }, []);
 
     const handleAnswer = useCallback(async () => {
@@ -127,11 +90,13 @@ export function IncomingCallModal() {
     const handleDecline = useCallback(async () => {
         if (!incomingCall || isDeclining) return;
         setIsDeclining(true);
+        const callId = incomingCall.callId;
         stopRing();
+        clearIncomingCall();
         try {
-            await callService.declineCall(incomingCall.callId);
-        } finally {
-            clearIncomingCall();
+            await callService.declineCall(callId);
+        } catch {
+            // UI already dismissed — ignore network errors
         }
     }, [incomingCall, isDeclining, stopRing, clearIncomingCall]);
 
@@ -141,7 +106,10 @@ export function IncomingCallModal() {
     const initials = caller.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
+        <div
+            className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
+            onTouchStart={retryIncomingCallRingtoneIfNeeded}
+        >
             {/* Backdrop blur */}
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm"/>
 

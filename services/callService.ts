@@ -27,6 +27,16 @@ export const callService = {
         await api.put(`/calls/${callId}/decline`);
     },
 
+    /** Tell the caller the receiver is now showing the incoming-call UI. */
+    async notifyRinging(callId: number): Promise<void> {
+        await api.put(`/calls/${callId}/ringing`);
+    },
+
+    /** Caller: instant WebSocket push so receiver dismisses before full end completes. */
+    async cancelNotify(callId: number): Promise<void> {
+        await api.put(`/calls/${callId}/cancel-notify`);
+    },
+
     /** End an active call (caller or receiver can call this). */
     async endCall(callId: number): Promise<void> {
         await api.put(`/calls/${callId}/end`);

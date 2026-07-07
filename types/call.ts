@@ -3,7 +3,8 @@ export type CallType = 'audio' | 'video';
 export type CallStatus =
     | 'idle'           // no call
     | 'initiating'     // waiting for server response
-    | 'ringing'        // outgoing — waiting for answer
+    | 'calling'        // outgoing — waiting for receiver to get the call
+    | 'ringing'        // outgoing — receiver is ringing
     | 'incoming'       // incoming — waiting for user action
     | 'connecting'     // answered, setting up WebRTC
     | 'active'         // call connected
