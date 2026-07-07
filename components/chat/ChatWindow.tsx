@@ -12,6 +12,8 @@ import type {Conversation, Message, MessageType, MediaItem} from '@/types/messag
 import type {CallLog, CallParticipant} from '@/types/call';
 import {cfImageUrl} from '@/lib/utils';
 import {showErrorToast} from '@/lib/toast';
+import {queryClient} from '@/lib/queryClient';
+import {invalidateMessageUnreadQueries} from '@/lib/cacheInvalidation';
 
 interface ChatWindowProps {
     conversationId: number;
@@ -127,6 +129,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                 setCallLogs(callHistory.data ?? []);
 
                 await chatService.markAsRead(conversationId);
+                invalidateMessageUnreadQueries(queryClient);
             } finally {
                 if (active) setIsLoading(false);
             }
@@ -294,6 +297,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
 
                 chatService.markAsRead(conversationId).catch(() => {
                 });
+                invalidateMessageUnreadQueries(queryClient);
             });
 
             // Typing indicator

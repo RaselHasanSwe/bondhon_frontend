@@ -17,6 +17,8 @@ import {
 } from '@/lib/authRedirect';
 import {NotificationBell} from '@/components/notification/NotificationBell';
 import {CallProvider} from '@/components/providers/CallProvider';
+import {MessageUnreadBadge} from '@/components/chat/MessageUnreadBadge';
+import {useUnreadMessageCount} from '@/hooks/useUnreadMessageCount';
 import {
     HomeIcon, MatchesIcon, SearchIcon, InterestIcon, ChatIcon,
     StarIcon, BellIcon, UserIcon, LogOutIcon, EyeIcon,
@@ -70,6 +72,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
     const {isAuthenticated, user, clearAuth, updateUser} = useAuthStore();
     const {settings} = useSettings();
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const unreadMessageCount = useUnreadMessageCount();
 
     const [mounted, setMounted] = useState(false);
     const [accessReady, setAccessReady] = useState(false);
@@ -198,7 +201,10 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                                     )}
                                 >
                                     <item.Icon size={18} strokeWidth={active ? 2.2 : 1.8}/>
-                                    {item.label}
+                                    <span className="flex-1 truncate">{item.label}</span>
+                                    {item.href === '/chat' && (
+                                        <MessageUnreadBadge count={unreadMessageCount} className="ml-auto"/>
+                                    )}
                                 </Link>
                             );
                         })}
@@ -310,7 +316,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                                                 href={item.href}
                                                 onClick={() => setDrawerOpen(false)}
                                                 className={cn(
-                                                    'flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl text-[11px] text-center transition-colors',
+                                                    'relative flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl text-[11px] text-center transition-colors',
                                                     isUpgrade
                                                         ? 'bg-amber-50 text-amber-600'
                                                         : active
@@ -318,7 +324,14 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                                                             : 'text-muted-foreground hover:bg-gray-50'
                                                 )}
                                             >
-                                                <item.Icon size={22} strokeWidth={isUpgrade || active ? 2.1 : 1.8}/>
+                                                <span className="relative">
+                                                    <item.Icon size={22} strokeWidth={isUpgrade || active ? 2.1 : 1.8}/>
+                                                    {item.href === '/chat' && unreadMessageCount > 0 && (
+                                                        <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#C9A227] text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                                                            {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
+                                                        </span>
+                                                    )}
+                                                </span>
                                                 <span className="leading-tight">{item.label}</span>
                                             </Link>
                                         );

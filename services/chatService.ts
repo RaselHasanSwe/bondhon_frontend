@@ -34,6 +34,12 @@ export const chatService = {
         return res.data.data;
     },
 
+    /** Total unread messages across all conversations */
+    async getUnreadMessageCount(): Promise<number> {
+        const res = await api.get<ApiResponse<{ unread_count: number }>>('/conversations/unread-count');
+        return res.data.data.unread_count;
+    },
+
     /** Get or create a conversation with another user (mutual interest required) */
     async getOrCreateConversation(userId: number): Promise<Conversation> {
         const res = await api.post<ApiResponse<Conversation>>('/conversations', {user_id: userId});

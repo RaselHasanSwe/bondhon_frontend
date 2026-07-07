@@ -9,6 +9,7 @@ import {
     invalidateConversationQueries,
     invalidateDashboardQueries,
     invalidateInterestQueries,
+    invalidateMessageUnreadQueries,
     invalidateNotificationQueries,
 } from '@/lib/cacheInvalidation';
 import {dismissCallById, matchesCallId} from '@/lib/callDismiss';
@@ -129,6 +130,13 @@ export function CallProvider({children}: {children: React.ReactNode}) {
                 }
                 if (e.type === 'new_message') {
                     invalidateConversationQueries(queryClient);
+                    const convId = e.data?.conversation_id;
+                    const viewingConversation = convId
+                        && (window.location.pathname === `/chat/${convId}`
+                            || window.location.pathname.startsWith(`/chat/${convId}/`));
+                    if (!viewingConversation) {
+                        invalidateMessageUnreadQueries(queryClient);
+                    }
                 }
                 if (e.type === 'profile_viewed') {
                     invalidateDashboardQueries(queryClient);
