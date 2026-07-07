@@ -19,7 +19,7 @@ const REQUIRED_STEPS = ['front', 'left', 'right', 'up', 'down', 'smile'] as cons
 type RequiredStep = typeof REQUIRED_STEPS[number];
 
 const STEP_INSTRUCTIONS: Record<RequiredStep, { title: string; hint: string; icon: string }> = {
-    front: { title: 'Look straight ahead', hint: 'Face the camera then blink once to capture', icon: '👁️' },
+    front: { title: 'Look straight ahead', hint: 'Face the camera, then blink once naturally — a light blink is enough', icon: '👁️' },
     left:  { title: 'Turn head LEFT',       hint: 'Slowly turn left — auto-captures when detected',  icon: '←' },
     right: { title: 'Turn head RIGHT',      hint: 'Slowly turn right — auto-captures when detected', icon: '→' },
     up:    { title: 'Tilt head UP',         hint: 'Tilt chin up — auto-captures when detected',      icon: '↑' },
@@ -103,6 +103,51 @@ function getEyeOpenScore(result: FaceLandmarkerResult): number {
     const lOpen = 1 - (shapes.find(c => c.categoryName === 'eyeBlinkLeft')?.score ?? 0);
     const rOpen = 1 - (shapes.find(c => c.categoryName === 'eyeBlinkRight')?.score ?? 0);
     return (lOpen + rOpen) / 2;
+}
+
+/** Max of left/right blink blendshape — one eye closing is enough. */
+function getEyeBlinkBlendScore(result: FaceLandmarkerResult): number {
+    const shapes = result.faceBlendshapes?.[0]?.categories;
+    if (!shapes) return 0;
+    const l = shapes.find(c => c.categoryName === 'eyeBlinkLeft')?.score ?? 0;
+    const r = shapes.find(c => c.categoryName === 'eyeBlinkRight')?.score ?? 0;
+    return Math.max(l, r);
+}
+
+/** Lenient blink detection — works for partial / light blinks across several frames. */
+function detectBlink(
+    eyeOpen: number,
+    blinkBlend: number,
+    history: number[],
+    blinkPending: boolean,
+    cooldown: boolean,
+): { blinked: boolean; pending: boolean } {
+    if (cooldown) return { blinked: false, pending: false };
+
+    const CLOSED_EYE = 0.58;
+    const OPEN_EYE = 0.38;
+    const BLINK_BLEND = 0.18;
+
+    let pending = blinkPending;
+
+    if (!pending && (eyeOpen < CLOSED_EYE || blinkBlend > BLINK_BLEND)) {
+        pending = true;
+    }
+
+    if (pending && eyeOpen > OPEN_EYE) {
+        return { blinked: true, pending: false };
+    }
+
+    if (history.length >= 3) {
+        const recent = history.slice(-5);
+        const minOpen = Math.min(...recent);
+        const maxOpen = Math.max(...recent);
+        if (maxOpen - minOpen >= 0.14 && minOpen < CLOSED_EYE && eyeOpen >= OPEN_EYE) {
+            return { blinked: true, pending: false };
+        }
+    }
+
+    return { blinked: false, pending };
 }
 
 function checkFacePosition(
@@ -435,7 +480,9 @@ export default function FaceScanPage() {
             if (capturingRef.current) return;
 
             frameSkip++;
-            if (frameSkip < 3) return;
+            const nextStepPreview = REQUIRED_STEPS.find(s => !completedSteps.includes(s));
+            const frameSkipLimit = nextStepPreview === 'front' ? 1 : 3;
+            if (frameSkip < frameSkipLimit) return;
 
             let landmarker: FaceLandmarker;
             try {
@@ -469,6 +516,7 @@ export default function FaceScanPage() {
             if (!result.faceLandmarks?.length) {
                 setFaceStatus(prev => ({ ...prev, position: 'no_face' }));
                 blinkReadyRef.current = false;
+                blinkPendingRef.current = false;
                 setBlinkReady(false);
                 clearCountdown();
                 if (overlayCanvasRef.current && video) {
@@ -486,6 +534,7 @@ export default function FaceScanPage() {
             const pitch      = estimatePitch(result);
             const smileScore = getSmileScore(result);
             const eyeOpen    = getEyeOpenScore(result);
+            const blinkBlend = getEyeBlinkBlendScore(result);
             const position   = checkFacePosition(result, video.videoWidth, video.videoHeight);
 
             // ── Glasses debounce (±5 vote) ────────────────────────────────────
@@ -497,18 +546,22 @@ export default function FaceScanPage() {
                     glassesVoteRef.current <= -5 ? false : glassesState;
             if (stableGlasses !== glassesState) setGlassesState(stableGlasses);
 
-            // ── Blink detection ───────────────────────────────────────────────
+            // ── Blink detection (lenient — light blinks count) ───────────────
             eyeHistoryRef.current.push(eyeOpen);
-            if (eyeHistoryRef.current.length > 8) eyeHistoryRef.current.shift();
-            const hist = eyeHistoryRef.current;
-            const blinkNow =
-                !blinkCooldownRef.current &&
-                hist.length >= 4 &&
-                hist[hist.length - 2] < 0.35 &&
-                hist[hist.length - 1] > 0.70;
+            if (eyeHistoryRef.current.length > 10) eyeHistoryRef.current.shift();
+            const blinkResult = detectBlink(
+                eyeOpen,
+                blinkBlend,
+                eyeHistoryRef.current,
+                blinkPendingRef.current,
+                blinkCooldownRef.current,
+            );
+            blinkPendingRef.current = blinkResult.pending;
+            const blinkNow = blinkResult.blinked;
             if (blinkNow) {
                 blinkCooldownRef.current = true;
-                setTimeout(() => { blinkCooldownRef.current = false; }, 1500);
+                blinkPendingRef.current = false;
+                setTimeout(() => { blinkCooldownRef.current = false; }, 1000);
             }
 
             // ── Update UI ─────────────────────────────────────────────────────
@@ -533,6 +586,7 @@ export default function FaceScanPage() {
             // ── Block on glasses or bad position ─────────────────────────────
             if (stableGlasses === true || position !== 'ok') {
                 blinkReadyRef.current = false;
+                blinkPendingRef.current = false;
                 setBlinkReady(false);
                 clearCountdown();
                 return;
@@ -545,6 +599,7 @@ export default function FaceScanPage() {
                 const posGood = direction === 'front' && pitch === 'ok' && smileScore < 0.35;
                 if (!posGood) {
                     blinkReadyRef.current = false;
+                    blinkPendingRef.current = false;
                     setBlinkReady(false);
                     clearCountdown();
                     return;
@@ -559,6 +614,7 @@ export default function FaceScanPage() {
 
                 // Blink detected → capture immediately
                 blinkReadyRef.current = false;
+                blinkPendingRef.current = false;
                 setBlinkReady(false);
                 clearCountdown();
 
@@ -710,6 +766,7 @@ export default function FaceScanPage() {
             glassesVoteRef.current    = 0;
             eyeHistoryRef.current     = [];
             blinkCooldownRef.current  = false;
+            blinkPendingRef.current   = false;
             blinkReadyRef.current     = false;
             capturingRef.current      = false;
             setGlassesState(null);
@@ -735,6 +792,7 @@ export default function FaceScanPage() {
         setGlassesState(null);
         setBlinkReady(false);
         blinkReadyRef.current = false;
+        blinkPendingRef.current = false;
         capturingRef.current  = false;
         setFaceStatus(DEFAULT_FACE_STATUS);
         setCaptureCountdown(null);
@@ -807,7 +865,7 @@ export default function FaceScanPage() {
         if (nextStep === 'front') {
             if (faceStatus.direction !== 'front') return { text: 'Face straight ahead', type: 'warn', arrow: '⊕' };
             if (faceStatus.smile >= 0.35)         return { text: 'Relax your face — no smiling yet', type: 'warn' };
-            if (blinkReady) return { text: '👁️  Position locked — blink once to capture', type: 'ok' };
+            if (blinkReady) return { text: '👁️  Position locked — blink once naturally (a light blink is enough)', type: 'ok' };
             return { text: 'Hold still and face forward…', type: 'info' };
         }
         if (nextStep === 'left') {
@@ -1165,7 +1223,7 @@ export default function FaceScanPage() {
                             </div>
 
                             <div className="mt-4 rounded-xl bg-stone-50 border border-stone-100 p-3 text-[11px] text-stone-500 space-y-1 leading-snug">
-                                <p>• <strong>Front:</strong> face forward, no smile, then blink once.</p>
+                                <p>• <strong>Front:</strong> face forward, no smile, then blink once naturally.</p>
                                 <p>• <strong>Left / Right:</strong> turn head, hold 2 s — auto-captures.</p>
                                 <p>• <strong>Up / Down:</strong> tilt chin, hold 2 s — auto-captures.</p>
                                 <p>• <strong>Smile:</strong> show teeth, hold 2 s — auto-captures.</p>

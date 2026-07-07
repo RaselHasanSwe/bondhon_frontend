@@ -115,7 +115,7 @@ export default async function AuthLayout({children}: { children: React.ReactNode
                 <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12"
                      style={{background: 'linear-gradient(160deg, #F7F3EC 0%, #FCF8F2 100%)'}}>
                     {/* Mobile logo */}
-                    <div className="text-center mb-8 lg:hidden">
+                    <Link href="/" className="text-center mb-8 lg:hidden block">
                         <h1 className="text-3xl font-bold" style={{
                             background: 'linear-gradient(135deg, #B8911F, #C9A227, #E8C547)',
                             backgroundClip: 'text',
@@ -123,7 +123,7 @@ export default async function AuthLayout({children}: { children: React.ReactNode
                             WebkitTextFillColor: 'transparent',
                         }}>{siteName}</h1>
                         <p className="text-xs text-[#8A7A62] mt-1 tracking-widest uppercase">{siteName} Matrimony</p>
-                    </div>
+                    </Link>
 
                     <div className="w-full max-w-md animate-fade-in-up">
                         {children}
