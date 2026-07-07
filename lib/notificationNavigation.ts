@@ -10,6 +10,7 @@ const KNOWN_TYPES: Record<NotificationType, 1> = {
     match_digest: 1,
     subscription_expiring: 1,
     subscription_expiry: 1,
+    subscription_activated: 1,
     photo_approved: 1,
     photo_rejected: 1,
     face_scan_approved: 1,
@@ -52,6 +53,7 @@ export function resolveActionUrl(type: NotificationType, data: BackendNotificati
             return '/matches';
         case 'subscription_expiry':
         case 'subscription_expiring':
+        case 'subscription_activated':
             return '/subscription';
         case 'photo_approved':
         case 'photo_rejected':
@@ -90,6 +92,7 @@ export function getActionButtonLabel(type: NotificationType): string {
             return 'Edit profile';
         case 'subscription_expiry':
         case 'subscription_expiring':
+        case 'subscription_activated':
             return 'View subscription';
         default:
             return 'Details';

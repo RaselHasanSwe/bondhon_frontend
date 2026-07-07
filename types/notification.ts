@@ -7,6 +7,7 @@ export type NotificationType =
     | 'match_digest'
     | 'subscription_expiring'
     | 'subscription_expiry'
+    | 'subscription_activated'
     | 'photo_approved'
     | 'photo_rejected'
     | 'face_scan_approved'
