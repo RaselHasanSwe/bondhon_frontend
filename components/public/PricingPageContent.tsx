@@ -96,7 +96,7 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
             </section>
 
             {/* Plan cards */}
-            <section className="relative -mt-8 sm:-mt-10 pb-16 md:pb-24">
+            <section className="relative -mt-8 sm:-mt-10 pb-16 md:pb-10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {sortedPlans.length === 0 ? (
                         <div className="rounded-3xl border border-gray-200 bg-white p-16 text-center text-gray-500 shadow-xl">
@@ -144,128 +144,128 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
             </section>
 
             {/* Feature comparison — dynamic from API feature data */}
-            {sortedPlans.length > 1 && comparisonKeys.length > 0 && (
-                <AnimateSection>
-                    <section className="py-20 md:py-28 bg-white border-y border-gray-100">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                            <div className="text-center mb-14">
-                                <p className="text-xs font-bold uppercase tracking-widest text-[#C9A227] mb-3">
-                                    Compare plans
-                                </p>
-                                <h2
-                                    className="text-3xl md:text-4xl font-bold text-gray-900"
-                                    style={{ fontFamily: 'var(--font-heading, serif)' }}
-                                >
-                                    Everything you need, side by side
-                                </h2>
-                                <p className="mt-3 text-gray-500 max-w-xl mx-auto text-sm">
-                                    Features loaded from your active plans — highest access shown first.
-                                </p>
-                            </div>
+            {/*{sortedPlans.length > 1 && comparisonKeys.length > 0 && (*/}
+            {/*    <AnimateSection>*/}
+            {/*        <section className="py-20 md:py-28 bg-white border-y border-gray-100">*/}
+            {/*            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">*/}
+            {/*                <div className="text-center mb-14">*/}
+            {/*                    <p className="text-xs font-bold uppercase tracking-widest text-[#C9A227] mb-3">*/}
+            {/*                        Compare plans*/}
+            {/*                    </p>*/}
+            {/*                    <h2*/}
+            {/*                        className="text-3xl md:text-4xl font-bold text-gray-900"*/}
+            {/*                        style={{ fontFamily: 'var(--font-heading, serif)' }}*/}
+            {/*                    >*/}
+            {/*                        Everything you need, side by side*/}
+            {/*                    </h2>*/}
+            {/*                    <p className="mt-3 text-gray-500 max-w-xl mx-auto text-sm">*/}
+            {/*                        Features loaded from your active plans — highest access shown first.*/}
+            {/*                    </p>*/}
+            {/*                </div>*/}
 
-                            {/* Desktop / tablet: scrollable table */}
-                            <div className="hidden sm:block overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
-                                <table
-                                    className="w-full text-sm"
-                                    style={{ minWidth: comparisonTableMinWidth(sortedPlans.length) }}
-                                >
-                                    <thead>
-                                        <tr className="border-b border-gray-200 bg-gray-50/80">
-                                            <th className="sticky left-0 z-20 bg-gray-50/95 backdrop-blur-sm text-left py-4 px-5 font-semibold text-gray-500 min-w-[180px] sm:min-w-[220px]">
-                                                Feature
-                                            </th>
-                                            {sortedPlans.map((plan) => (
-                                                <th
-                                                    key={plan.id}
-                                                    className="py-4 px-3 text-center font-bold text-gray-900 min-w-[120px] whitespace-nowrap"
-                                                >
-                                                    <span className="block truncate max-w-[140px] mx-auto" title={plan.name}>
-                                                        {plan.name}
-                                                    </span>
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {comparisonKeys.map((key, rowIdx) => (
-                                            <tr
-                                                key={key}
-                                                className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}
-                                            >
-                                                <td className="sticky left-0 z-10 bg-inherit py-3.5 px-5 text-gray-700 font-medium min-w-[180px] sm:min-w-[220px] border-r border-gray-100/80">
-                                                    {getFeatureLabel(key, featureDefinitions)}
-                                                </td>
-                                                {sortedPlans.map((plan) => {
-                                                    const val = featureValueForPlan(plan.features, key, featureDefinitions);
-                                                    return (
-                                                        <td key={plan.id} className="py-3.5 px-3 text-center min-w-[120px]">
-                                                            {val === '—' ? (
-                                                                <Minus size={16} className="mx-auto text-gray-300" />
-                                                            ) : val === '✓' ? (
-                                                                <Check
-                                                                    size={18}
-                                                                    className="mx-auto text-emerald-500"
-                                                                    strokeWidth={2.5}
-                                                                />
-                                                            ) : (
-                                                                <span className="font-semibold text-gray-800 text-xs sm:text-sm">
-                                                                    {val}
-                                                                </span>
-                                                            )}
-                                                        </td>
-                                                    );
-                                                })}
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+            {/*                /!* Desktop / tablet: scrollable table *!/*/}
+            {/*                <div className="hidden sm:block overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">*/}
+            {/*                    <table*/}
+            {/*                        className="w-full text-sm"*/}
+            {/*                        style={{ minWidth: comparisonTableMinWidth(sortedPlans.length) }}*/}
+            {/*                    >*/}
+            {/*                        <thead>*/}
+            {/*                            <tr className="border-b border-gray-200 bg-gray-50/80">*/}
+            {/*                                <th className="sticky left-0 z-20 bg-gray-50/95 backdrop-blur-sm text-left py-4 px-5 font-semibold text-gray-500 min-w-[180px] sm:min-w-[220px]">*/}
+            {/*                                    Feature*/}
+            {/*                                </th>*/}
+            {/*                                {sortedPlans.map((plan) => (*/}
+            {/*                                    <th*/}
+            {/*                                        key={plan.id}*/}
+            {/*                                        className="py-4 px-3 text-center font-bold text-gray-900 min-w-[120px] whitespace-nowrap"*/}
+            {/*                                    >*/}
+            {/*                                        <span className="block truncate max-w-[140px] mx-auto" title={plan.name}>*/}
+            {/*                                            {plan.name}*/}
+            {/*                                        </span>*/}
+            {/*                                    </th>*/}
+            {/*                                ))}*/}
+            {/*                            </tr>*/}
+            {/*                        </thead>*/}
+            {/*                        <tbody>*/}
+            {/*                            {comparisonKeys.map((key, rowIdx) => (*/}
+            {/*                                <tr*/}
+            {/*                                    key={key}*/}
+            {/*                                    className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}*/}
+            {/*                                >*/}
+            {/*                                    <td className="sticky left-0 z-10 bg-inherit py-3.5 px-5 text-gray-700 font-medium min-w-[180px] sm:min-w-[220px] border-r border-gray-100/80">*/}
+            {/*                                        {getFeatureLabel(key, featureDefinitions)}*/}
+            {/*                                    </td>*/}
+            {/*                                    {sortedPlans.map((plan) => {*/}
+            {/*                                        const val = featureValueForPlan(plan.features, key, featureDefinitions);*/}
+            {/*                                        return (*/}
+            {/*                                            <td key={plan.id} className="py-3.5 px-3 text-center min-w-[120px]">*/}
+            {/*                                                {val === '—' ? (*/}
+            {/*                                                    <Minus size={16} className="mx-auto text-gray-300" />*/}
+            {/*                                                ) : val === '✓' ? (*/}
+            {/*                                                    <Check*/}
+            {/*                                                        size={18}*/}
+            {/*                                                        className="mx-auto text-emerald-500"*/}
+            {/*                                                        strokeWidth={2.5}*/}
+            {/*                                                    />*/}
+            {/*                                                ) : (*/}
+            {/*                                                    <span className="font-semibold text-gray-800 text-xs sm:text-sm">*/}
+            {/*                                                        {val}*/}
+            {/*                                                    </span>*/}
+            {/*                                                )}*/}
+            {/*                                            </td>*/}
+            {/*                                        );*/}
+            {/*                                    })}*/}
+            {/*                                </tr>*/}
+            {/*                            ))}*/}
+            {/*                        </tbody>*/}
+            {/*                    </table>*/}
+            {/*                </div>*/}
 
-                            {/* Mobile: stacked cards per feature */}
-                            <div className="sm:hidden space-y-3">
-                                {comparisonKeys.map((key) => (
-                                    <div
-                                        key={key}
-                                        className="rounded-2xl border border-gray-200 bg-white overflow-hidden"
-                                    >
-                                        <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 font-semibold text-sm text-gray-800">
-                                            {getFeatureLabel(key, featureDefinitions)}
-                                        </div>
-                                        <div className="divide-y divide-gray-100">
-                                            {sortedPlans.map((plan) => {
-                                                const val = featureValueForPlan(plan.features, key, featureDefinitions);
-                                                return (
-                                                    <div
-                                                        key={plan.id}
-                                                        className="flex items-center justify-between gap-3 px-4 py-2.5"
-                                                    >
-                                                        <span className="text-xs text-gray-500 truncate flex-1">
-                                                            {plan.name}
-                                                        </span>
-                                                        <span className="shrink-0 text-sm font-semibold text-gray-800">
-                                                            {val === '—' ? (
-                                                                <Minus size={14} className="text-gray-300" />
-                                                            ) : val === '✓' ? (
-                                                                <Check size={16} className="text-emerald-500" strokeWidth={2.5} />
-                                                            ) : (
-                                                                val
-                                                            )}
-                                                        </span>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </section>
-                </AnimateSection>
-            )}
+            {/*                /!* Mobile: stacked cards per feature *!/*/}
+            {/*                <div className="sm:hidden space-y-3">*/}
+            {/*                    {comparisonKeys.map((key) => (*/}
+            {/*                        <div*/}
+            {/*                            key={key}*/}
+            {/*                            className="rounded-2xl border border-gray-200 bg-white overflow-hidden"*/}
+            {/*                        >*/}
+            {/*                            <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 font-semibold text-sm text-gray-800">*/}
+            {/*                                {getFeatureLabel(key, featureDefinitions)}*/}
+            {/*                            </div>*/}
+            {/*                            <div className="divide-y divide-gray-100">*/}
+            {/*                                {sortedPlans.map((plan) => {*/}
+            {/*                                    const val = featureValueForPlan(plan.features, key, featureDefinitions);*/}
+            {/*                                    return (*/}
+            {/*                                        <div*/}
+            {/*                                            key={plan.id}*/}
+            {/*                                            className="flex items-center justify-between gap-3 px-4 py-2.5"*/}
+            {/*                                        >*/}
+            {/*                                            <span className="text-xs text-gray-500 truncate flex-1">*/}
+            {/*                                                {plan.name}*/}
+            {/*                                            </span>*/}
+            {/*                                            <span className="shrink-0 text-sm font-semibold text-gray-800">*/}
+            {/*                                                {val === '—' ? (*/}
+            {/*                                                    <Minus size={14} className="text-gray-300" />*/}
+            {/*                                                ) : val === '✓' ? (*/}
+            {/*                                                    <Check size={16} className="text-emerald-500" strokeWidth={2.5} />*/}
+            {/*                                                ) : (*/}
+            {/*                                                    val*/}
+            {/*                                                )}*/}
+            {/*                                            </span>*/}
+            {/*                                        </div>*/}
+            {/*                                    );*/}
+            {/*                                })}*/}
+            {/*                            </div>*/}
+            {/*                        </div>*/}
+            {/*                    ))}*/}
+            {/*                </div>*/}
+            {/*            </div>*/}
+            {/*        </section>*/}
+            {/*    </AnimateSection>*/}
+            {/*)}*/}
 
             {/* Value props */}
             <AnimateSection>
-                <section className="py-20 md:py-24" style={{ background: '#F8F9FB' }}>
+                <section className="py-5 md:py-5" style={{ background: '#F8F9FB' }}>
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                             {[

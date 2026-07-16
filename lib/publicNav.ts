@@ -9,7 +9,7 @@ export interface NavLink {
 export const STATIC_NAV_LINKS: NavLink[] = [
   { href: '/', label: 'Home' },
   { href: '/search', label: 'Search Profile' },
-  { href: '/plan', label: 'Pricing' },
+  { href: '/plan', label: 'Membership' },
 ];
 
 /** CMS slugs that must never appear in the menu (content-only pages). */
