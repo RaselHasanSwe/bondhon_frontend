@@ -218,10 +218,9 @@ export default async function HomePage() {
                 HERO — full-screen photo + layered dark/gold overlay
             ══════════════════════════════════════════════════════════════════ */}
             <section className="relative overflow-hidden min-h-[94vh] flex flex-col justify-center">
-                {/* Unsplash photo */}
                 <div className="absolute inset-0 z-0">
                     <Image
-                        src="https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=1920&auto=format&fit=crop&q=80"
+                        src="/myboumna-home-page-bg.png"
                         alt="Happy couple — Enorsia matrimony"
                         fill priority
                         className="object-cover object-center"
