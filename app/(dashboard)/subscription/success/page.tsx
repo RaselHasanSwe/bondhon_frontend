@@ -54,13 +54,13 @@ function SubscriptionSuccessContent() {
                     Payment Successful!
                 </h1>
 
-                <p className="text-gray-500 mb-2">
+                <p className="text-meta mb-2">
                     {plan && PLAN_LABELS[plan]
                         ? <>Your <strong className="text-gray-800">{PLAN_LABELS[plan]}</strong> subscription is now active.</>
                         : 'Your subscription is now active.'
                     }
                 </p>
-                <p className="text-sm text-gray-400 mb-8">
+                <p className="text-sm text-[#4A3F2E] mb-8">
                     You now have access to all premium features. Enjoy your Enorsia experience!
                 </p>
 
@@ -87,7 +87,7 @@ export default function SubscriptionSuccessPage() {
     return (
         <Suspense fallback={
             <main className="min-h-[70vh] flex items-center justify-center px-4">
-                <p className="text-sm text-gray-500">Loading…</p>
+                <p className="text-sm text-meta">Loading…</p>
             </main>
         }>
             <SubscriptionSuccessContent/>

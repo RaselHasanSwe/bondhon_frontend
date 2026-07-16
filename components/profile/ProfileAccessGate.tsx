@@ -20,7 +20,7 @@ export function ProfileUpgradePrompt({ title, message }: ProfileUpgradePromptPro
                 style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
                 {title}
             </h3>
-            <p className="text-gray-500 mt-2 max-w-md mx-auto text-sm leading-relaxed"
+            <p className="text-meta mt-2 max-w-md mx-auto text-sm leading-relaxed"
                style={{ fontFamily: 'system-ui, sans-serif' }}>
                 {message}
             </p>

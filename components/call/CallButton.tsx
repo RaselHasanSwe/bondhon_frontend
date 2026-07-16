@@ -68,7 +68,7 @@ export function CallButton({receiverId, receiver, type, className = ''}: CallBut
             title={type === 'video' ? 'Video call' : 'Audio call'}
             aria-label={type === 'video' ? 'Start video call' : 'Start audio call'}
             className={`w-8 h-8 flex items-center justify-center rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed
-                text-gray-500 hover:text-[#1A1208] hover:bg-[#FFCF00]/10 ${className}`}
+                text-meta hover:text-[#1A1208] hover:bg-[#FFCF00]/10 ${className}`}
         >
             {isInitiating ? (
                 <span className="w-4 h-4 border-2 border-[#FFCF00]/30 border-t-[#FFCF00] rounded-full animate-spin"/>

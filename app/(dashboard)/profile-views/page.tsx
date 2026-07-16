@@ -92,7 +92,7 @@ function ViewerCard({
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                                <UserIcon size={24} strokeWidth={1.5} className="text-[#1A1208]/60" />
+                                <UserIcon size={24} strokeWidth={1.5} className="text-subtle" />
                             </div>
                         )}
                     </div>
@@ -336,7 +336,7 @@ export default function ProfileViewsPage() {
                             href="/dashboard"
                             className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
                         >
-                            <ArrowLeftIcon size={20} strokeWidth={1.8} className="text-gray-600" />
+                            <ArrowLeftIcon size={20} strokeWidth={1.8} className="text-[#3D3220]" />
                         </Link>
                         <div>
                             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"

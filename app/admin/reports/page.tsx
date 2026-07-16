@@ -20,7 +20,7 @@ const STATUS_STYLES: Record<string, string> = {
     pending:      'bg-amber-100 text-amber-700',
     reviewed:     'bg-blue-100 text-blue-700',
     action_taken: 'bg-green-100 text-green-700',
-    dismissed:    'bg-gray-100 text-gray-500',
+    dismissed:    'bg-gray-100 text-meta',
 };
 
 export default function AdminReportsPage() {
@@ -50,7 +50,7 @@ export default function AdminReportsPage() {
         <div className="space-y-6 max-w-7xl mx-auto">
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
-                <p className="text-sm text-gray-500 mt-0.5">
+                <p className="text-sm text-meta mt-0.5">
                     Review and take action on user reports{total > 0 ? ` · ${total} total` : ''}
                 </p>
             </div>
@@ -63,7 +63,7 @@ export default function AdminReportsPage() {
                         className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                             statusFilter === s
                                 ? 'bg-amber-500 text-white border-amber-500'
-                                : 'border-gray-200 text-gray-600 hover:bg-gray-100'
+                                : 'border-gray-200 text-[#3D3220] hover:bg-gray-100'
                         }`}
                     >
                         {s === '' ? 'All' : s.replace('_', ' ').replace(/^\w/, c => c.toUpperCase())}
@@ -73,19 +73,19 @@ export default function AdminReportsPage() {
 
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                 {isLoading ? (
-                    <div className="p-8 text-center text-gray-400">Loading…</div>
+                    <div className="p-8 text-center text-[#4A3F2E]">Loading…</div>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead className="bg-gray-50 border-b border-gray-100">
                                 <tr>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Reporter</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Reported User</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Reason</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Description</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Date</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Reporter</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Reported User</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Reason</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Description</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Status</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Date</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -94,13 +94,13 @@ export default function AdminReportsPage() {
                                         <td className="px-4 py-3">
                                             <div className="text-gray-900 font-medium">{report.reporter?.name ?? 'Unknown'}</div>
                                             {report.reporter?.profile?.profile_id && (
-                                                <div className="text-xs text-gray-400">{report.reporter.profile.profile_id}</div>
+                                                <div className="text-xs text-[#4A3F2E]">{report.reporter.profile.profile_id}</div>
                                             )}
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="text-gray-900 font-medium">{report.reported?.name ?? 'Unknown'}</div>
                                             {report.reported?.profile?.profile_id && (
-                                                <div className="text-xs text-gray-400">{report.reported.profile.profile_id}</div>
+                                                <div className="text-xs text-[#4A3F2E]">{report.reported.profile.profile_id}</div>
                                             )}
                                         </td>
                                         <td className="px-4 py-3">
@@ -108,7 +108,7 @@ export default function AdminReportsPage() {
                                                 {REASON_LABELS[report.reason] ?? report.reason}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 text-gray-500 max-w-xs truncate">
+                                        <td className="px-4 py-3 text-meta max-w-xs truncate">
                                             {report.description ?? '—'}
                                         </td>
                                         <td className="px-4 py-3">
@@ -116,7 +116,7 @@ export default function AdminReportsPage() {
                                                 {report.status.replace('_', ' ')}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 text-gray-400 text-xs">
+                                        <td className="px-4 py-3 text-[#4A3F2E] text-xs">
                                             {new Date(report.created_at).toLocaleDateString()}
                                         </td>
                                         <td className="px-4 py-3">
@@ -139,7 +139,7 @@ export default function AdminReportsPage() {
                                                     <button
                                                         onClick={() => actionMutation.mutate({ id: report.id, status: 'dismissed' })}
                                                         disabled={actionMutation.isPending}
-                                                        className="px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
+                                                        className="px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-50 text-[#3D3220] hover:bg-gray-100 transition-colors"
                                                     >
                                                         Dismiss
                                                     </button>
@@ -150,7 +150,7 @@ export default function AdminReportsPage() {
                                 ))}
                                 {reports.length === 0 && (
                                     <tr>
-                                        <td colSpan={7} className="px-4 py-10 text-center text-gray-400">
+                                        <td colSpan={7} className="px-4 py-10 text-center text-[#4A3F2E]">
                                             No reports found.
                                         </td>
                                     </tr>

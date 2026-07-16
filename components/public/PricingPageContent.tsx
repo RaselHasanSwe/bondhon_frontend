@@ -89,7 +89,7 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
                         </span>
                     </h1>
 
-                    <p className="mt-3 text-sm text-gray-400 max-w-xl mx-auto">
+                    <p className="mt-3 text-sm text-[#4A3F2E] max-w-xl mx-auto">
                         Start free, upgrade anytime on {settings.site_name}.
                     </p>
                 </div>
@@ -99,7 +99,7 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
             <section className="relative -mt-8 sm:-mt-10 pb-16 md:pb-10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {sortedPlans.length === 0 ? (
-                        <div className="rounded-3xl border border-gray-200 bg-white p-16 text-center text-gray-500 shadow-xl">
+                        <div className="rounded-3xl border border-gray-200 bg-white p-16 text-center text-meta shadow-xl">
                             No subscription plans are available right now. Please check back soon.
                         </div>
                     ) : manyPlans ? (
@@ -118,7 +118,7 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
                                     />
                                 ))}
                             </div>
-                            <p className="mt-3 text-center text-xs text-gray-400 lg:hidden">
+                            <p className="mt-3 text-center text-xs text-[#4A3F2E] lg:hidden">
                                 Swipe to compare all {sortedPlans.length} plans →
                             </p>
                         </div>
@@ -137,7 +137,7 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
                         </div>
                     )}
 
-                    <p className="mt-10 text-center text-xs text-gray-400">
+                    <p className="mt-10 text-center text-xs text-[#4A3F2E]">
                         Prices in {settings.currency ?? 'BDT'} · Secure checkout via SSLCommerz · Cancel anytime before renewal
                     </p>
                 </div>
@@ -158,7 +158,7 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
             {/*                    >*/}
             {/*                        Everything you need, side by side*/}
             {/*                    </h2>*/}
-            {/*                    <p className="mt-3 text-gray-500 max-w-xl mx-auto text-sm">*/}
+            {/*                    <p className="mt-3 text-meta max-w-xl mx-auto text-sm">*/}
             {/*                        Features loaded from your active plans — highest access shown first.*/}
             {/*                    </p>*/}
             {/*                </div>*/}
@@ -171,7 +171,7 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
             {/*                    >*/}
             {/*                        <thead>*/}
             {/*                            <tr className="border-b border-gray-200 bg-gray-50/80">*/}
-            {/*                                <th className="sticky left-0 z-20 bg-gray-50/95 backdrop-blur-sm text-left py-4 px-5 font-semibold text-gray-500 min-w-[180px] sm:min-w-[220px]">*/}
+            {/*                                <th className="sticky left-0 z-20 bg-gray-50/95 backdrop-blur-sm text-left py-4 px-5 font-semibold text-meta min-w-[180px] sm:min-w-[220px]">*/}
             {/*                                    Feature*/}
             {/*                                </th>*/}
             {/*                                {sortedPlans.map((plan) => (*/}
@@ -239,7 +239,7 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
             {/*                                            key={plan.id}*/}
             {/*                                            className="flex items-center justify-between gap-3 px-4 py-2.5"*/}
             {/*                                        >*/}
-            {/*                                            <span className="text-xs text-gray-500 truncate flex-1">*/}
+            {/*                                            <span className="text-xs text-meta truncate flex-1">*/}
             {/*                                                {plan.name}*/}
             {/*                                            </span>*/}
             {/*                                            <span className="shrink-0 text-sm font-semibold text-gray-800">*/}
@@ -296,7 +296,7 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
                                         <Icon size={22} className="text-[#1A1208]" />
                                     </div>
                                     <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
-                                    <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+                                    <p className="text-sm text-meta leading-relaxed">{desc}</p>
                                 </div>
                             ))}
                         </div>
@@ -316,7 +316,7 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
                     >
                         Ready to find your perfect match?
                     </h2>
-                    <p className="text-gray-400 mb-8 text-sm md:text-base">
+                    <p className="text-[#4A3F2E] mb-8 text-sm md:text-base">
                         Join thousands of verified members on {settings.site_name}. Create your free profile in under 5 minutes.
                     </p>
                     <Link
@@ -387,7 +387,7 @@ function PlanCard({
                 </div>
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900">{plan.name}</h2>
                 {plan.description && (
-                    <p className="mt-2 text-sm text-gray-500 leading-relaxed line-clamp-3">{plan.description}</p>
+                    <p className="mt-2 text-sm text-meta leading-relaxed line-clamp-3">{plan.description}</p>
                 )}
             </div>
 
@@ -397,7 +397,7 @@ function PlanCard({
                         <span className="text-4xl sm:text-5xl font-black text-emerald-600">Free</span>
                     ) : (
                         <>
-                            <span className="text-base sm:text-lg font-semibold text-gray-400 mb-1 sm:mb-2">
+                            <span className="text-base sm:text-lg font-semibold text-[#4A3F2E] mb-1 sm:mb-2">
                                 {currency}
                             </span>
                             <span className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight">
@@ -406,14 +406,14 @@ function PlanCard({
                         </>
                     )}
                 </div>
-                <p className="mt-2 text-sm text-gray-500">
+                <p className="mt-2 text-sm text-meta">
                     {isFree ? 'No credit card required' : `One-time for ${formatPlanDuration(plan)}`}
                 </p>
             </div>
 
             <ul className="mb-6 sm:mb-8 flex-1 space-y-2.5 sm:space-y-3">
                 {cardFeatures.length === 0 ? (
-                    <li className="text-sm text-gray-400">Core platform access included</li>
+                    <li className="text-sm text-[#4A3F2E]">Core platform access included</li>
                 ) : (
                     cardFeatures.map(({ key, label, extra }) => (
                         <li key={key} className="flex items-start gap-3 text-sm text-gray-700">

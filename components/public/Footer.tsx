@@ -120,7 +120,7 @@ export default async function Footer({settings}: FooterProps) {
                                 ))}
                             </ul>
                         ) : (
-                            <p className="text-gray-500 text-sm">No pages available.</p>
+                            <p className="text-gray-400 text-sm">No pages available.</p>
                         )}
                     </div>
 

@@ -45,7 +45,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {/* Logo */}
                 <div className="mb-8 px-2">
                     <h1 className="text-xl font-bold text-[#1A1208]">Admin Panel</h1>
-                    <p className="text-[10px] text-gray-400 tracking-widest uppercase mt-0.5">Enorsia Matrimony</p>
+                    <p className="text-[10px] text-[#4A3F2E] tracking-widest uppercase mt-0.5">Enorsia Matrimony</p>
                 </div>
 
                 {/* Navigation */}
@@ -60,7 +60,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                     'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
                                     active
                                         ? 'bg-amber-50 text-amber-700 border-l-2 border-amber-500 pl-2.5'
-                                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                        : 'text-[#3D3220] hover:bg-gray-100 hover:text-gray-900'
                                 )}
                             >
                                 <span>{item.icon}</span>
@@ -74,11 +74,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="border-t border-gray-200 pt-4 mt-4">
                     <Link
                         href="/dashboard"
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-colors mb-1"
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-meta hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-colors mb-1"
                     >
                         ← User Dashboard
                     </Link>
-                    <div className="px-3 py-2 text-xs text-gray-400 truncate">{user?.email}</div>
+                    <div className="px-3 py-2 text-xs text-[#4A3F2E] truncate">{user?.email}</div>
                     <button
                         onClick={handleLogout}
                         className="w-full text-left px-3 py-2 text-sm text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors"
@@ -96,7 +96,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <div className="flex gap-3 text-sm overflow-x-auto">
                         {NAV_ITEMS.map(item => (
                             <Link key={item.href} href={item.href}
-                                className={cn('whitespace-nowrap', pathname === item.href ? 'text-amber-600 font-semibold' : 'text-gray-500')}>
+                                className={cn('whitespace-nowrap', pathname === item.href ? 'text-amber-600 font-semibold' : 'text-meta')}>
                                 {item.icon}
                             </Link>
                         ))}

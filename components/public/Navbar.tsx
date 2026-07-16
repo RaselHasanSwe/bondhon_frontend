@@ -106,7 +106,7 @@ function DesktopNavMenu({navLinks, pathname}: { navLinks: NavLink[]; pathname: s
                             'relative z-10 px-2.5 xl:px-3.5 py-2 text-[0.75rem] xl:text-[0.8125rem] font-bold tracking-wide rounded-full transition-colors duration-200 whitespace-nowrap shrink-0',
                             active
                                 ? 'text-[#1A1208]'
-                                : 'text-[#1A1208]/85 hover:text-[#1A1208]',
+                                : 'text-[#1A1208] hover:text-[#1A1208]',
                         )}
                     >
                         {link.label}
@@ -398,7 +398,7 @@ function UserMenuTrigger({
                 <ChevronDown
                     size={14}
                     className={cn(
-                        'text-[#1A1208]/70 shrink-0 transition-transform duration-200',
+                        'text-meta shrink-0 transition-transform duration-200',
                         open && 'rotate-180',
                     )}
                 />
@@ -485,7 +485,7 @@ export default function Navbar({siteName, siteSlogan, logoUrl, navLinks}: Navbar
                                 {siteName}
                             </p>
                             {siteSlogan && (
-                                <p className="text-[10px] sm:text-[11px] text-[#1A1208]/65 font-semibold truncate mt-0.5 tracking-wide">
+                                <p className="text-[10px] sm:text-[11px] text-meta font-semibold truncate mt-0.5 tracking-wide">
                                     {siteSlogan}
                                 </p>
                             )}
@@ -500,7 +500,7 @@ export default function Navbar({siteName, siteSlogan, logoUrl, navLinks}: Navbar
                             <>
                                 <Link
                                     href="/login"
-                                    className="px-3 xl:px-4 py-2 text-[0.8125rem] font-semibold text-[#1A1208]/80 hover:text-[#1A1208] hover:bg-[#FFCF00]/15 rounded-lg transition-colors duration-200 whitespace-nowrap"
+                                    className="px-3 xl:px-4 py-2 text-[0.8125rem] font-semibold text-meta hover:text-[#1A1208] hover:bg-[#FFCF00]/15 rounded-lg transition-colors duration-200 whitespace-nowrap"
                                 >
                                     Sign in
                                 </Link>

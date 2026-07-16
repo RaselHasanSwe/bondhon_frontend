@@ -40,24 +40,24 @@ function OptionFormModal({
                 <h3 className="font-semibold text-gray-900 mb-4">{initial?.value ? 'Edit Option' : 'Add Option'}</h3>
                 <div className="space-y-3">
                     <div>
-                        <Label className="text-xs text-gray-600 mb-1 block">Group Key *</Label>
+                        <Label className="text-xs text-[#3D3220] mb-1 block">Group Key *</Label>
                         <Input value={form.group_key} onChange={e => setForm(f => ({ ...f, group_key: e.target.value }))} placeholder="e.g. religion, diet, country" className="border-gray-200"/>
                     </div>
                     <div>
-                        <Label className="text-xs text-gray-600 mb-1 block">Value * <span className="text-gray-400">(machine key, lowercase_underscore)</span></Label>
+                        <Label className="text-xs text-[#3D3220] mb-1 block">Value * <span className="text-[#4A3F2E]">(machine key, lowercase_underscore)</span></Label>
                         <Input value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} placeholder="e.g. islam, non_vegetarian" className="border-gray-200"/>
                     </div>
                     <div>
-                        <Label className="text-xs text-gray-600 mb-1 block">Label * <span className="text-gray-400">(shown in dropdown)</span></Label>
+                        <Label className="text-xs text-[#3D3220] mb-1 block">Label * <span className="text-[#4A3F2E]">(shown in dropdown)</span></Label>
                         <Input value={form.label} onChange={e => setForm(f => ({ ...f, label: e.target.value }))} placeholder="e.g. Islam, Non-Vegetarian" className="border-gray-200"/>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <Label className="text-xs text-gray-600 mb-1 block">Parent ID</Label>
+                            <Label className="text-xs text-[#3D3220] mb-1 block">Parent ID</Label>
                             <Input value={form.parent_id} onChange={e => setForm(f => ({ ...f, parent_id: e.target.value }))} placeholder="Leave empty for top-level" type="number" className="border-gray-200"/>
                         </div>
                         <div>
-                            <Label className="text-xs text-gray-600 mb-1 block">Sort Order</Label>
+                            <Label className="text-xs text-[#3D3220] mb-1 block">Sort Order</Label>
                             <Input value={form.sort_order} onChange={e => setForm(f => ({ ...f, sort_order: e.target.value }))} type="number" className="border-gray-200"/>
                         </div>
                     </div>
@@ -159,7 +159,7 @@ export default function AdminSelectOptionsPage() {
             <div className="flex items-start justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Select Options</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">Manage all dynamic dropdown options for profile forms</p>
+                    <p className="text-sm text-meta mt-0.5">Manage all dynamic dropdown options for profile forms</p>
                 </div>
                 <Button
                     onClick={() => setShowAddModal(true)}
@@ -173,7 +173,7 @@ export default function AdminSelectOptionsPage() {
             <div className="flex gap-2 flex-wrap">
                 <button
                     onClick={() => setGroupFilter('')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${!groupFilter ? 'bg-amber-500 text-white border-amber-500' : 'border-gray-200 text-gray-600 hover:bg-gray-100'}`}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${!groupFilter ? 'bg-amber-500 text-white border-amber-500' : 'border-gray-200 text-[#3D3220] hover:bg-gray-100'}`}
                 >
                     All Groups
                 </button>
@@ -181,7 +181,7 @@ export default function AdminSelectOptionsPage() {
                     <button
                         key={g}
                         onClick={() => setGroupFilter(g)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${groupFilter === g ? 'bg-amber-500 text-white border-amber-500' : 'border-gray-200 text-gray-600 hover:bg-gray-100'}`}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${groupFilter === g ? 'bg-amber-500 text-white border-amber-500' : 'border-gray-200 text-[#3D3220] hover:bg-gray-100'}`}
                     >
                         {g.replace(/_/g, ' ')}
                     </button>
@@ -191,20 +191,20 @@ export default function AdminSelectOptionsPage() {
             {/* Table */}
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                 {isLoading ? (
-                    <div className="p-8 text-center text-gray-400">Loading…</div>
+                    <div className="p-8 text-center text-[#4A3F2E]">Loading…</div>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead className="bg-gray-50 border-b border-gray-100">
                                 <tr>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Group</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Value</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Label</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Parent ID</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Sort</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Children</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Group</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Value</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Label</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Parent ID</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Sort</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Status</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Children</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -215,20 +215,20 @@ export default function AdminSelectOptionsPage() {
                                                 {opt.group_key}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-2.5 font-mono text-xs text-gray-600">{opt.value}</td>
+                                        <td className="px-4 py-2.5 font-mono text-xs text-[#3D3220]">{opt.value}</td>
                                         <td className="px-4 py-2.5 text-gray-900">{opt.label}</td>
-                                        <td className="px-4 py-2.5 text-gray-400 text-xs">{opt.parent_id ?? '—'}</td>
-                                        <td className="px-4 py-2.5 text-gray-400 text-xs">{opt.sort_order}</td>
+                                        <td className="px-4 py-2.5 text-[#4A3F2E] text-xs">{opt.parent_id ?? '—'}</td>
+                                        <td className="px-4 py-2.5 text-[#4A3F2E] text-xs">{opt.sort_order}</td>
                                         <td className="px-4 py-2.5">
                                             <button
                                                 onClick={() => toggleMutation.mutate(opt.id)}
                                                 disabled={toggleMutation.isPending}
-                                                className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium transition-colors cursor-pointer ${opt.is_active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                                                className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium transition-colors cursor-pointer ${opt.is_active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-meta hover:bg-gray-200'}`}
                                             >
                                                 {opt.is_active ? 'Active' : 'Inactive'}
                                             </button>
                                         </td>
-                                        <td className="px-4 py-2.5 text-gray-400 text-xs">
+                                        <td className="px-4 py-2.5 text-[#4A3F2E] text-xs">
                                             {opt.children?.length ?? 0}
                                         </td>
                                         <td className="px-4 py-2.5">
@@ -256,7 +256,7 @@ export default function AdminSelectOptionsPage() {
                                 ))}
                                 {options.length === 0 && (
                                     <tr>
-                                        <td colSpan={8} className="px-4 py-10 text-center text-gray-400">
+                                        <td colSpan={8} className="px-4 py-10 text-center text-[#4A3F2E]">
                                             No options found.{' '}
                                             {groupFilter && <button className="text-amber-600 underline" onClick={() => setGroupFilter('')}>Clear filter</button>}
                                         </td>

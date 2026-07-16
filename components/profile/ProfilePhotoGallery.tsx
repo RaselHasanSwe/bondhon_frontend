@@ -21,9 +21,9 @@ export function ProfilePhotoGallery({ photos, subjectName, className }: ProfileP
         return (
             <div className={cn('rounded-2xl border border-[#e8d59a]/60 bg-white/80 p-12 text-center', className)}>
                 <div className="w-20 h-20 rounded-full bg-[#FFCF00]/10 flex items-center justify-center mx-auto mb-4 profile-photo-border">
-                    <UserIcon size={40} className="text-[#1A1208]/40" strokeWidth={1.2} />
+                    <UserIcon size={40} className="text-[#5C4F3A]" strokeWidth={1.2} />
                 </div>
-                <p className="text-gray-500 text-sm" style={{ fontFamily: 'system-ui, sans-serif' }}>
+                <p className="text-meta text-sm" style={{ fontFamily: 'system-ui, sans-serif' }}>
                     No photos available yet.
                 </p>
             </div>

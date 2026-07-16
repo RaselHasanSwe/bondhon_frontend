@@ -31,7 +31,7 @@ function SubscriptionCancelledContent() {
                     {reason === 'cancelled' ? 'Payment Cancelled' : 'Payment Failed'}
                 </h1>
 
-                <p className="text-gray-500 mb-8">{message}</p>
+                <p className="text-meta mb-8">{message}</p>
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Link
@@ -48,7 +48,7 @@ function SubscriptionCancelledContent() {
                     </Link>
                 </div>
 
-                <p className="mt-6 text-xs text-gray-400">
+                <p className="mt-6 text-xs text-[#4A3F2E]">
                     Need help? Contact us at support@Enorsia.com
                 </p>
             </div>
@@ -60,7 +60,7 @@ export default function SubscriptionCancelledPage() {
     return (
         <Suspense fallback={
             <main className="min-h-[70vh] flex items-center justify-center px-4">
-                <p className="text-sm text-gray-500">Loading…</p>
+                <p className="text-sm text-meta">Loading…</p>
             </main>
         }>
             <SubscriptionCancelledContent/>

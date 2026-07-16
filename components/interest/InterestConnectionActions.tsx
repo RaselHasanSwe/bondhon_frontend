@@ -33,7 +33,7 @@ const TERMINAL_LABELS: Record<'declined' | 'ignored', { label: string; className
     },
     ignored: {
         label: 'Ignored',
-        className: 'bg-gray-50 text-gray-500 border border-gray-200',
+        className: 'bg-gray-50 text-meta border border-gray-200',
     },
 };
 

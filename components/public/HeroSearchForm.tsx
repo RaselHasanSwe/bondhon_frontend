@@ -57,7 +57,7 @@ export default function HeroSearchForm() {
             {/* Fields row */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
                 <div className="flex flex-col gap-1 px-2">
-                    <label className="text-xs text-gray-400 font-medium">Age</label>
+                    <label className="text-xs text-white/80 font-semibold">Age</label>
                     <div className="flex items-center gap-1">
                         <select
                             value={ageMin}
@@ -67,7 +67,7 @@ export default function HeroSearchForm() {
                         >
                             {ageOptions.map(a => <option key={a} value={a} className="bg-gray-900">{a} yrs</option>)}
                         </select>
-                        <span className="text-gray-500 text-xs">to</span>
+                        <span className="text-white/70 text-xs font-medium">to</span>
                         <select
                             value={ageMax}
                             onChange={e => setAgeMax(e.target.value)}
@@ -80,7 +80,7 @@ export default function HeroSearchForm() {
                 </div>
 
                 <div className="flex flex-col gap-1 px-2">
-                    <label className="text-xs text-gray-400 font-medium">Religion</label>
+                    <label className="text-xs text-white/80 font-semibold">Religion</label>
                     <select
                         value={religion}
                         onChange={e => setReligion(e.target.value)}

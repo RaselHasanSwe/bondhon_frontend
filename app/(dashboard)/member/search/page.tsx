@@ -487,8 +487,16 @@ export default function SearchPage() {
                     </div>
 
                     {isLoading && (
-                        <div className="grid grid-cols-1 min-[380px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-                            {Array.from({ length: 8 }).map((_, i) => <div key={i} className="skeleton-gold aspect-[3/4] rounded-2xl" />)}
+                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-2.5">
+                            {Array.from({ length: 8 }).map((_, i) => (
+                                <div key={i} className="card-premium profile-card overflow-hidden">
+                                    <div className="skeleton-gold profile-card-photo w-full" />
+                                    <div className="p-3 space-y-2">
+                                        <div className="skeleton-gold h-3.5 w-3/4 rounded" />
+                                        <div className="skeleton-gold h-3 w-1/2 rounded" />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     )}
 
@@ -518,7 +526,7 @@ export default function SearchPage() {
 
                     {!isLoading && results.length > 0 && (
                         <>
-                            <div className="grid grid-cols-1 min-[380px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 stagger">
+                            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-2.5 stagger">
                                 {results.map(profile => <MatchCard key={profile.id} profile={profile} showScore={false} />)}
                             </div>
 

@@ -44,12 +44,12 @@ function StatusIcon({status}: { status: Message['status'] }) {
         </svg>
     );
     if (status === 'sent') return (
-        <svg className="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg className="w-3.5 h-3.5 text-[#4A3F2E]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12"/>
         </svg>
     );
     if (status === 'delivered') return (
-        <svg className="w-4 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg className="w-4 h-3.5 text-[#4A3F2E]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="17 6 7 16 3 12"/>
             <polyline points="22 6 13 15"/>
         </svg>
@@ -282,7 +282,7 @@ function AudioPlayer({src, isMine}: { src: string; isMine: boolean }) {
                          style={{width: duration ? `${(progress / duration) * 100}%` : '0%'}}/>
                 </div>
                 <span
-                    className={cn('text-[10px] mt-0.5 block', isMine ? 'text-[#1A1208]/70' : 'text-gray-500')}>{fmt(progress)} / {duration ? fmt(duration) : '0:00'}</span>
+                    className={cn('text-[10px] mt-0.5 block', isMine ? 'text-meta' : 'text-meta')}>{fmt(progress)} / {duration ? fmt(duration) : '0:00'}</span>
             </div>
         </div>
     );
@@ -310,9 +310,9 @@ function DocumentMessage({src, name, size, mime, isMine}: {
             <div className="flex-1 min-w-0">
                 <p className={cn('text-xs font-semibold truncate', isMine ? 'text-[#1A1208]' : 'text-[#1F2937]')}>{name ?? 'Document'}</p>
                 {size &&
-                    <p className={cn('text-[10px]', isMine ? 'text-[#1A1208]/70' : 'text-gray-500')}>{formatSize(size)}</p>}
+                    <p className={cn('text-[10px]', isMine ? 'text-meta' : 'text-meta')}>{formatSize(size)}</p>}
             </div>
-            <svg className={cn('w-4 h-4 flex-shrink-0', isMine ? 'text-[#1A1208]/70' : 'text-gray-400')} fill="none"
+            <svg className={cn('w-4 h-4 flex-shrink-0', isMine ? 'text-meta' : 'text-[#4A3F2E]')} fill="none"
                  stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round"
                       d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -328,8 +328,8 @@ export function MessageBubble({message, isMine, senderName, showAvatar = true, o
         return (
             <div className={cn('flex items-end gap-2', isMine ? 'flex-row-reverse' : 'flex-row')}>
                 {showAvatar && !isMine && <div
-                    className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-400 flex-shrink-0 profile-photo-border">{senderName?.charAt(0).toUpperCase() ?? '?'}</div>}
-                <div className="italic text-xs text-gray-400 px-3 py-2">This message was deleted</div>
+                    className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-[#4A3F2E] flex-shrink-0 profile-photo-border">{senderName?.charAt(0).toUpperCase() ?? '?'}</div>}
+                <div className="italic text-xs text-[#4A3F2E] px-3 py-2">This message was deleted</div>
             </div>
         );
     }
@@ -385,8 +385,8 @@ export function MessageBubble({message, isMine, senderName, showAvatar = true, o
                 {message.reply_to && (
                     <div
                         className={cn('text-xs px-3 pt-2.5 pb-1.5 border-l-2 mb-1 rounded-t', isMine ? 'border-white/40 bg-black/10' : 'border-[#FFCF00] bg-gray-50')}>
-                        <span className={cn('font-semibold', isMine ? 'text-[#1A1208]/70' : 'text-[#1A1208]')}>Reply</span>
-                        <p className={cn('truncate', isMine ? 'text-[#1A1208]/70' : 'text-gray-500')}>{message.reply_to.body ?? '[media]'}</p>
+                        <span className={cn('font-semibold', isMine ? 'text-meta' : 'text-[#1A1208]')}>Reply</span>
+                        <p className={cn('truncate', isMine ? 'text-meta' : 'text-meta')}>{message.reply_to.body ?? '[media]'}</p>
                     </div>
                 )}
 
@@ -430,7 +430,7 @@ export function MessageBubble({message, isMine, senderName, showAvatar = true, o
 
                 {/* Timestamp + status */}
                 <div
-                    className={cn('flex items-center justify-end gap-1 mt-1', isMedia ? 'px-3 pb-2' : '', isMine ? 'text-[#1A1208]/70' : 'text-gray-400')}>
+                    className={cn('flex items-center justify-end gap-1 mt-1', isMedia ? 'px-3 pb-2' : '', isMine ? 'text-meta' : 'text-[#4A3F2E]')}>
                     <span className="text-[10px]">{formatTime(message.created_at)}</span>
                     {isMine && <span className="text-[10px]"><StatusIcon status={message.status}/></span>}
                 </div>

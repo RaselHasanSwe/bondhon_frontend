@@ -57,7 +57,7 @@ const TYPE_ICONS: Record<AppNotification['type'], ComponentType<IconProps>> = {
 const TYPE_ICON_COLORS: Record<AppNotification['type'], string> = {
     interest_received: 'bg-pink-100 text-pink-600',
     interest_accepted: 'bg-green-100 text-green-600',
-    interest_expired: 'bg-gray-100 text-gray-500',
+    interest_expired: 'bg-gray-100 text-meta',
     profile_viewed: 'bg-blue-100 text-blue-600',
     new_message: 'bg-indigo-100 text-indigo-600',
     match_suggestion: 'bg-purple-100 text-purple-600',
@@ -72,7 +72,7 @@ const TYPE_ICON_COLORS: Record<AppNotification['type'], string> = {
     account_disable_request_submitted: 'bg-yellow-100 text-yellow-600',
     account_disable_request_disabled: 'bg-red-100 text-red-600',
     account_disable_request_banned: 'bg-red-100 text-red-600',
-    account_disable_request_dismissed: 'bg-gray-100 text-gray-600',
+    account_disable_request_dismissed: 'bg-gray-100 text-[#3D3220]',
     account_disable_request_reactivated: 'bg-green-100 text-green-600',
     admin_account_disabled: 'bg-red-100 text-red-600',
     admin_account_banned: 'bg-red-100 text-red-600',

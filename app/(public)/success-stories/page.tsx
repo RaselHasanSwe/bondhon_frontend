@@ -154,7 +154,7 @@ export default async function SuccessStoriesPage() {
                         3,500+ Couples Found Their
                         <span className="text-[#FFCF00]"> Perfect Match</span>
                     </h1>
-                    <p className="text-gray-400 text-lg max-w-2xl mx-auto mt-4 leading-relaxed animate-fade-in-up"
+                    <p className="text-[#4A3F2E] text-lg max-w-2xl mx-auto mt-4 leading-relaxed animate-fade-in-up"
                         style={{ animationDelay: '100ms' }}>
                         These are real stories from real families who trusted {settings.site_name} to guide them to their life partner.
                     </p>
@@ -169,7 +169,7 @@ export default async function SuccessStoriesPage() {
                         ].map((s) => (
                             <div key={s.label} className="text-center">
                                 <p className="text-xl md:text-2xl font-black" style={{ color: '#FFCF00' }}>{s.value}</p>
-                                <p className="text-gray-400 text-xs">{s.label}</p>
+                                <p className="text-[#4A3F2E] text-xs">{s.label}</p>
                             </div>
                         ))}
                     </div>
@@ -199,12 +199,12 @@ export default async function SuccessStoriesPage() {
                                                 <h3 className="font-bold text-gray-900 text-lg">{story.names}</h3>
                                                 <BadgeCheck size={16} className="text-[#1A1208]" />
                                             </div>
-                                            <p className="text-gray-500 text-sm">{story.occupation}</p>
+                                            <p className="text-meta text-sm">{story.occupation}</p>
                                             <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                                                <span className="flex items-center gap-1 text-xs text-gray-400">
+                                                <span className="flex items-center gap-1 text-xs text-[#4A3F2E]">
                                                     <MapPin size={10} /> {story.location}
                                                 </span>
-                                                <span className="text-xs text-gray-400">· {story.year}</span>
+                                                <span className="text-xs text-[#4A3F2E]">· {story.year}</span>
                                                 <span className="flex gap-0.5">
                                                     {Array.from({ length: 5 }).map((_, i) => (
                                                         <Star key={i} size={11} fill="#FFCF00" style={{ color: '#FFCF00' }} />
@@ -216,7 +216,7 @@ export default async function SuccessStoriesPage() {
 
                                     <Quote size={22} style={{ color: '#1A1208', opacity: 0.35 }} />
 
-                                    <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{story.text}</p>
+                                    <p className="text-[#3D3220] text-sm leading-relaxed whitespace-pre-line">{story.text}</p>
 
                                     <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
                                         {story.tags.map((tag) => (
@@ -248,7 +248,7 @@ export default async function SuccessStoriesPage() {
                                     className="testimonial-card bg-white rounded-2xl p-6 border border-gray-100 flex flex-col gap-4"
                                     style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
                                     <Quote size={24} style={{ color: '#1A1208', opacity: 0.35 }} />
-                                    <p className="text-gray-600 text-sm leading-relaxed flex-1 line-clamp-5">
+                                    <p className="text-[#3D3220] text-sm leading-relaxed flex-1 line-clamp-5">
                                         {story.text}
                                     </p>
                                     <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
@@ -258,8 +258,8 @@ export default async function SuccessStoriesPage() {
                                         </div>
                                         <div className="flex-1">
                                             <p className="font-bold text-gray-800 text-sm">{story.names}</p>
-                                            <p className="text-xs text-gray-400">{story.occupation}</p>
-                                            <p className="text-gray-400 text-xs flex items-center gap-1 mt-0.5">
+                                            <p className="text-xs text-[#4A3F2E]">{story.occupation}</p>
+                                            <p className="text-[#4A3F2E] text-xs flex items-center gap-1 mt-0.5">
                                                 <MapPin size={9} /> {story.location} · {story.year}
                                             </p>
                                         </div>
@@ -269,7 +269,7 @@ export default async function SuccessStoriesPage() {
                                                     <Star key={i} size={10} fill="#FFCF00" style={{ color: '#FFCF00' }} />
                                                 ))}
                                             </div>
-                                            <span className="text-xs text-gray-400">Verified</span>
+                                            <span className="text-xs text-[#4A3F2E]">Verified</span>
                                         </div>
                                     </div>
                                     <div className="flex flex-wrap gap-1.5">
@@ -299,7 +299,7 @@ export default async function SuccessStoriesPage() {
                         <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
                             Write Your Own Success Story
                         </h2>
-                        <p className="text-gray-400 text-base mb-8 max-w-md mx-auto leading-relaxed">
+                        <p className="text-[#4A3F2E] text-base mb-8 max-w-md mx-auto leading-relaxed">
                             Thousands of couples have found love on {settings.site_name}. Your perfect match may just be one click away.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
@@ -313,7 +313,7 @@ export default async function SuccessStoriesPage() {
                                 Browse Profiles <ArrowRight size={16} />
                             </Link>
                         </div>
-                        <div className="flex flex-wrap justify-center gap-6 text-gray-400 text-xs">
+                        <div className="flex flex-wrap justify-center gap-6 text-[#4A3F2E] text-xs">
                             <span className="flex items-center gap-1.5"><CheckCircle size={12} style={{ color: '#FFCF00' }} /> Free to Join</span>
                             <span className="flex items-center gap-1.5"><BadgeCheck size={12} style={{ color: '#FFCF00' }} /> NID Verified Profiles</span>
                             <span className="flex items-center gap-1.5"><Heart size={12} style={{ color: '#FFCF00' }} /> 3,500+ Success Stories</span>

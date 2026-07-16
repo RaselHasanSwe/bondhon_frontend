@@ -93,12 +93,12 @@ export function CallLogBubble({callLog, currentUserId}: CallLogBubbleProps) {
                         {label}
                     </span>
                     {duration && (
-                        <span className="text-[10px] text-gray-400 leading-tight">{duration}</span>
+                        <span className="text-[10px] text-[#4A3F2E] leading-tight">{duration}</span>
                     )}
                 </div>
 
                 {/* Timestamp */}
-                <span className="text-[10px] text-gray-400 flex-shrink-0 ml-auto pl-1">
+                <span className="text-[10px] text-[#4A3F2E] flex-shrink-0 ml-auto pl-1">
                     {formatTime(callLog.created_at)}
                 </span>
             </div>

@@ -58,8 +58,8 @@ export function ChatList({
         return (
             <div className="flex flex-col items-center justify-center h-48 text-center px-6">
                 <svg className="w-10 h-10 text-gray-200 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                <p className="text-sm font-medium text-gray-600">No conversations yet</p>
-                <p className="text-xs text-gray-400 mt-1">Accept an interest to start chatting</p>
+                <p className="text-sm font-medium text-[#3D3220]">No conversations yet</p>
+                <p className="text-xs text-[#4A3F2E] mt-1">Accept an interest to start chatting</p>
             </div>
         );
     }
@@ -111,7 +111,7 @@ export function ChatList({
                 >
                   {participant.name}
                 </span>
-                                <span className="text-[10px] text-gray-400 flex-shrink-0 ml-1">
+                                <span className="text-[10px] text-[#4A3F2E] flex-shrink-0 ml-1">
                   {conv.last_message_at ? formatRelativeTime(conv.last_message_at) : ''}
                 </span>
                             </div>
@@ -120,7 +120,7 @@ export function ChatList({
                                 <p
                                     className={cn(
                                         'text-xs truncate',
-                                        hasUnread ? 'text-[#1F2937] font-medium' : 'text-gray-400'
+                                        hasUnread ? 'text-[#1F2937] font-medium' : 'text-[#4A3F2E]'
                                     )}
                                 >
                                     {conv.last_message?.is_deleted

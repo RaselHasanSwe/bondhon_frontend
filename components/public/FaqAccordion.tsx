@@ -17,7 +17,7 @@ export default function FaqAccordion({ items }: FaqAccordionProps) {
 
   if (items.length === 0) {
     return (
-      <p className="text-gray-500 text-center py-8">No FAQ items available.</p>
+      <p className="text-meta text-center py-8">No FAQ items available.</p>
     );
   }
 
@@ -46,7 +46,7 @@ export default function FaqAccordion({ items }: FaqAccordionProps) {
           {openIndex === i && (
             <div className="px-6 pb-5">
               <div
-                className="prose prose-sm max-w-none text-gray-600 border-t pt-4"
+                className="prose prose-sm max-w-none text-[#3D3220] border-t pt-4"
                 style={{ borderColor: '#f3f4f6' }}
                 dangerouslySetInnerHTML={{ __html: item.answer }}
               />

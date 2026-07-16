@@ -60,7 +60,7 @@ export default function ProfileGalleryPage() {
                                     style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
                                     {profile.name}&apos;s Gallery
                                 </h1>
-                                <p className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'system-ui, sans-serif' }}>
+                                <p className="text-sm text-meta mt-1" style={{ fontFamily: 'system-ui, sans-serif' }}>
                                     {photoCount} {photoCount === 1 ? 'photo' : 'photos'} · Tap any image to preview
                                 </p>
                             </div>

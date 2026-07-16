@@ -156,8 +156,8 @@ function SidebarNav({
                             active
                                 ? 'text-[#1A1208]'
                                 : isUpgrade
-                                    ? 'text-[#1A1208]/90 hover:text-[#1A1208]'
-                                    : 'text-[#1A1208]/75 hover:text-[#1A1208]',
+                                    ? 'text-[#1A1208] hover:text-[#1A1208]'
+                                    : 'text-meta hover:text-[#1A1208]',
                         )}
                     >
                         <item.Icon size={18} strokeWidth={active ? 2.2 : 1.8}/>
@@ -257,7 +257,7 @@ function MobileBottomNav({
                         href={item.href}
                         className={cn(
                             'relative z-10 flex flex-col items-center gap-0.5 px-1 sm:px-2 py-1 rounded-lg text-[10px] sm:text-xs transition-colors min-w-0',
-                            active ? 'text-[#1A1208] font-bold' : 'text-[#1A1208]/60 font-medium',
+                            active ? 'text-[#1A1208] font-bold' : 'text-subtle font-medium',
                         )}
                     >
                         <item.Icon size={20} strokeWidth={active ? 2.2 : 1.8}/>
@@ -269,7 +269,7 @@ function MobileBottomNav({
             <button
                 type="button"
                 onClick={onMoreClick}
-                className="relative z-10 flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] text-[#1A1208]/60 font-medium transition-colors"
+                className="relative z-10 flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] text-subtle font-medium transition-colors"
             >
                 <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
@@ -395,7 +395,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                         <div className="flex items-center gap-2.5">
                             <a href="/" className="group">
                                 <h1 className="text-xl font-bold leading-none text-[#1A1208] group-hover:underline decoration-[#FFCF00] decoration-2 underline-offset-4">{settings.site_name}</h1>
-                                <p className="text-[10px] text-[#1A1208]/60 tracking-widest uppercase mt-2 font-semibold">{settings.site_slogan}</p>
+                                <p className="text-[10px] text-subtle tracking-widest uppercase mt-2 font-semibold">{settings.site_slogan}</p>
                             </a>
                         </div>
                     </div>
@@ -410,7 +410,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                     {user.role === 'admin' && (
                         <Link
                             href="/admin/dashboard"
-                            className="mt-2 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors duration-200 text-[#1A1208]/80 border border-[#FFCF00]/25 bg-[#FFCF00]/5 hover:bg-[#FFCF00]/15 hover:text-[#1A1208]"
+                            className="mt-2 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors duration-200 text-meta border border-[#FFCF00]/25 bg-[#FFCF00]/5 hover:bg-[#FFCF00]/15 hover:text-[#1A1208]"
                         >
                             <span className="text-base">⚙️</span>
                             Admin Panel
@@ -430,7 +430,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs font-semibold text-[#1A1208] truncate">{user.name}</p>
-                                <span className="text-[11px] text-[#1A1208]/60 truncate">{user.email}</span>
+                                <span className="text-[11px] text-subtle truncate">{user.email}</span>
                             </div>
                             <NotificationBell placement="sidebar"/>
                         </div>
@@ -474,7 +474,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                             >
                                 {/* Handle */}
                                 <div className="w-9 h-1 bg-[#FFCF00]/40 rounded-full mx-auto mt-3 mb-1" />
-                                <p className="text-[10px] text-[#1A1208]/60 uppercase tracking-widest px-4 py-2 font-bold">More options</p>
+                                <p className="text-[10px] text-subtle uppercase tracking-widest px-4 py-2 font-bold">More options</p>
 
                                 {/* Grid of remaining nav items */}
                                 <div className="grid grid-cols-3 gap-1.5 px-3 pb-2">
@@ -492,7 +492,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                                                         ? 'bg-[#FFCF00] text-[#1A1208] border-[#1A1208]/10 shadow-sm'
                                                         : active
                                                             ? 'bg-[#FFCF00] text-[#1A1208] border-[#1A1208]/10 shadow-sm'
-                                                            : 'text-[#1A1208]/75 border-[#FFCF00]/25 bg-[#FFCF00]/8 hover:bg-[#FFCF00]/20',
+                                                            : 'text-meta border-[#FFCF00]/25 bg-[#FFCF00]/8 hover:bg-[#FFCF00]/20',
                                                 )}
                                             >
                                                 <span className="relative">

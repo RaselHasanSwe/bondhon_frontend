@@ -120,7 +120,7 @@ function InterestCard({
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                                <UserIcon size={24} className="text-[#1A1208]/60" strokeWidth={1.5}/>
+                                <UserIcon size={24} className="text-subtle" strokeWidth={1.5}/>
                             </div>
                         )}
                     </div>

@@ -254,7 +254,7 @@ export default function ProfileViewPage() {
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-                                            <UserIcon size={80} className="text-gray-600" strokeWidth={1}/>
+                                            <UserIcon size={80} className="text-[#3D3220]" strokeWidth={1}/>
                                         </div>
                                     )}
                                     {/* Verified badge — shown only when face scan is approved */}
@@ -516,7 +516,7 @@ export default function ProfileViewPage() {
                             {p.profile.profile_completion_percentage != null && (
                                 <div className="mt-5">
                                     <div className="flex items-center justify-between mb-1">
-                                        <span className="text-xs text-gray-500" style={{fontFamily: 'system-ui, sans-serif'}}>{p.name}'s profile is {p.profile.profile_completion_percentage}% complete</span>
+                                        <span className="text-xs text-meta" style={{fontFamily: 'system-ui, sans-serif'}}>{p.name}'s profile is {p.profile.profile_completion_percentage}% complete</span>
                                         <span className="text-xs font-bold text-[#1A1208]" style={{fontFamily: 'system-ui, sans-serif'}}>{p.profile.profile_completion_percentage}%</span>
                                     </div>
                                     <div className="h-1.5 bg-[#FFCF00]/15 rounded-full overflow-hidden">
@@ -709,7 +709,7 @@ export default function ProfileViewPage() {
                 {/* Footer ornament */}
                 <div className="flex flex-col items-center py-4 gap-2 opacity-40">
                     <OrnamentDivider/>
-                    <p className="text-[10px] tracking-[0.3em] uppercase text-gray-400"
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-[#4A3F2E]"
                        style={{fontFamily: 'system-ui, sans-serif'}}>End of Profile</p>
                 </div>
             </div>
@@ -738,7 +738,7 @@ export default function ProfileViewPage() {
                                style={{fontFamily: "'Playfair Display', Georgia, serif"}}>
                                 Block {p.name}?
                             </p>
-                            <p className="text-gray-500 text-sm mt-2 max-w-xs leading-relaxed"
+                            <p className="text-meta text-sm mt-2 max-w-xs leading-relaxed"
                                style={{fontFamily: 'system-ui, sans-serif'}}>
                                 They will no longer be able to view your profile or contact you. You won&apos;t see them in search or matches either.
                             </p>
@@ -748,7 +748,7 @@ export default function ProfileViewPage() {
                                 variant="outline"
                                 onClick={() => setBlockOpen(false)}
                                 disabled={blockMutation.isPending}
-                                className="rounded-full border-gray-200 text-gray-600 text-sm"
+                                className="rounded-full border-gray-200 text-[#3D3220] text-sm"
                                 style={{fontFamily: 'system-ui, sans-serif'}}
                             >
                                 Cancel
@@ -804,7 +804,7 @@ export default function ProfileViewPage() {
                         </div>
                         <div className="flex gap-2 justify-end pt-1">
                             <Button variant="outline" onClick={() => setReportOpen(false)}
-                                    className="rounded-full border-gray-200 text-gray-600 text-sm"
+                                    className="rounded-full border-gray-200 text-[#3D3220] text-sm"
                                     style={{fontFamily: 'system-ui, sans-serif'}}>Cancel</Button>
                             <Button
                                 onClick={() => reportMutation.mutate({
@@ -868,7 +868,7 @@ function Row({label, value}: {label: string; value?: string | null}) {
     if (!value) return null;
     return (
         <div className="flex justify-between items-start py-2 gap-4">
-            <span className="text-gray-400 text-xs shrink-0 pt-0.5 tracking-wide"
+            <span className="text-[#4A3F2E] text-xs shrink-0 pt-0.5 tracking-wide"
                   style={{fontFamily: 'system-ui, sans-serif'}}>{label}</span>
             <span className="text-[#1F2937] text-xs font-medium capitalize text-right leading-relaxed"
                   style={{fontFamily: 'system-ui, sans-serif'}}>{value}</span>
@@ -904,7 +904,7 @@ function ProfileViewsUsageBanner({usage}: {usage: ProfileAccess['profile_views_p
                 <p className="text-sm font-semibold text-[#1F2937]" style={{fontFamily: 'system-ui, sans-serif'}}>
                     {label}
                 </p>
-                <p className="text-xs text-gray-500 mt-0.5" style={{fontFamily: 'system-ui, sans-serif'}}>
+                <p className="text-xs text-meta mt-0.5" style={{fontFamily: 'system-ui, sans-serif'}}>
                     Profile Views per Day from your subscription
                 </p>
             </div>

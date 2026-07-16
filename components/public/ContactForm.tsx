@@ -55,7 +55,7 @@ export default function ContactForm() {
       <div className="text-center py-10">
         <CheckCircle size={48} className="mx-auto mb-4" style={{ color: '#FFCF00' }} />
         <h3 className="text-xl font-bold text-gray-800 mb-2">Message Received!</h3>
-        <p className="text-gray-500">Thank you for reaching out. We&apos;ll get back to you within 24 hours.</p>
+        <p className="text-meta">Thank you for reaching out. We&apos;ll get back to you within 24 hours.</p>
         <button
           className="mt-6 text-sm font-medium px-4 py-2 rounded-lg border transition-colors"
           style={{ borderColor: '#FFCF00', color: '#FFCF00' }}

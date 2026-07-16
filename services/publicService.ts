@@ -20,7 +20,7 @@ const CACHE_MAX_AGE = 86_400;
 
 /** Shorter cache for frequently changing homepage member previews. */
 const RECENT_MEMBERS_CACHE_SECONDS = 60;
-const RECENT_MEMBERS_LIMIT = 6;
+const RECENT_MEMBERS_LIMIT = 8;
 
 interface ApiResponse<T> {
     success: boolean;

@@ -199,7 +199,7 @@ type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
 
 // ─── UI Helpers ───────────────────────────────────────────────────────────────
 function SaveStatus({saved,saving}:{saved:boolean;saving:boolean}) {
-    if (saving) return <span className="text-xs text-gray-400">Saving…</span>;
+    if (saving) return <span className="text-xs text-[#4A3F2E]">Saving…</span>;
     if (saved) return <span className="text-xs text-green-600 flex items-center gap-1"><svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Saved</span>;
     return null;
 }
@@ -208,7 +208,7 @@ function FieldRow({label,hint,required,children}:{label:string;hint?:string;requ
     return (
         <div className="space-y-1.5">
             <Label className="text-sm font-medium">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</Label>
-            {hint && <p className="text-xs text-gray-400">{hint}</p>}
+            {hint && <p className="text-xs text-[#4A3F2E]">{hint}</p>}
             {children}
         </div>
     );
@@ -1101,8 +1101,8 @@ function ProfileEditInner() {
                                 <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 mx-auto text-gray-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/>
                                 </svg>
-                                <p className="text-gray-500 font-medium text-sm">No photos yet</p>
-                                <p className="text-xs text-gray-400 mt-1">Upload your first photo to attract more matches</p>
+                                <p className="text-meta font-medium text-sm">No photos yet</p>
+                                <p className="text-xs text-[#4A3F2E] mt-1">Upload your first photo to attract more matches</p>
                             </div>
                         )}
                     </div>

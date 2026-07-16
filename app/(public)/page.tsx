@@ -92,7 +92,7 @@ const steps = [
     {
         step: '04',
         icon: Heart,
-        title: 'Find Your Match',
+        title: 'Connect',
         desc: 'With families connected and hearts aligned, your Enorsia begins — and ours is just the beginning.'
     },
 ];
@@ -245,14 +245,14 @@ export default async function HomePage() {
                     className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-15 pb-10 md:pt-15 md:pb-14 text-center">
 
                     {/* Badge */}
-                    <div
-                        className="animate-fade-in inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-7"
-                        style={{
-                            background: 'rgba(255,207,0,0.15)',
-                            color: '#FFCF00',
-                            border: '1px solid rgba(255,207,0,0.35)'
-                        }}>{heroBadge}
-                    </div>
+                    {/*<div*/}
+                    {/*    className="animate-fade-in inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-7"*/}
+                    {/*    style={{*/}
+                    {/*        background: 'rgba(255,207,0,0.15)',*/}
+                    {/*        color: '#FFCF00',*/}
+                    {/*        border: '1px solid rgba(255,207,0,0.35)'*/}
+                    {/*    }}>{heroBadge}*/}
+                    {/*</div>*/}
 
                     {/* H1 */}
                     <h1 className="animate-fade-in-up text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.08] mb-6 tracking-tight"
@@ -428,7 +428,7 @@ export default async function HomePage() {
                             <h2 className="text-2xl md:text-4xl font-bold text-[#1A1208]">
                                 Why Families Choose {settings.site_name}
                             </h2>
-                            <p className="text-[#1A1208]/80 font-semibold mt-4 max-w-xl mx-auto text-base leading-relaxed">
+                            <p className="text-meta font-semibold mt-4 max-w-xl mx-auto text-base leading-relaxed">
                                 We combine traditional values with modern technology — giving families a safe, private,
                                 intelligent matchmaking platform.
                             </p>
@@ -446,7 +446,7 @@ export default async function HomePage() {
                                             <Icon size={26} className="text-[#1A1208]" strokeWidth={2.25}/>
                                         </div>
                                         <h3 className="font-bold text-[#1A1208] mb-3 text-lg">{f.title}</h3>
-                                        <p className="text-[#1A1208]/85 font-medium text-base leading-relaxed">{f.desc}</p>
+                                        <p className="text-[#1A1208] font-medium text-base leading-relaxed">{f.desc}</p>
                                         <div
                                             className="absolute bottom-0 left-0 h-1 w-0 group-hover:w-full transition-all duration-500 ease-out"
                                             style={{background: '#FFCF00'}}/>
@@ -535,7 +535,7 @@ export default async function HomePage() {
                                             <Icon size={26} className="text-[#1A1208]" strokeWidth={2.25}/>
                                         </div>
                                         <p className="font-bold text-[#1A1208] text-base">{item.title}</p>
-                                        <p className="text-[#1A1208]/75 font-medium text-sm mt-1">{item.desc}</p>
+                                        <p className="text-meta font-medium text-sm mt-1">{item.desc}</p>
                                     </div>
                                 );
                             })}
@@ -558,7 +558,7 @@ export default async function HomePage() {
                             <Heart size={36} className="text-[#1A1208]" fill="#1A1208"/>
                         </div>
                         <h2 className="text-3xl md:text-4xl font-bold text-[#1A1208] mb-4">Begin Your Journey Today</h2>
-                        <p className="text-[#1A1208]/85 font-semibold text-base mb-10 max-w-md mx-auto leading-relaxed">
+                        <p className="text-[#1A1208] font-semibold text-base mb-10 max-w-md mx-auto leading-relaxed">
                             Join {settings.site_name} — registration is completely free. Thousands of verified families
                             are waiting to find the right match.
                         </p>
