@@ -15,11 +15,11 @@ import NewMembersPreview from '@/components/public/NewMembersPreview';
 export async function generateMetadata(): Promise<Metadata> {
     const settings = await getSettings();
     return {
-        title: settings.meta_title ?? 'Enorsia — Premium Matrimony Platform',
+        title: settings.meta_title ?? 'Enorsia — Find Your Perfect Life Partner',
         description: settings.meta_description ?? 'Find your perfect life partner on Enorsia.',
         keywords: settings.meta_keywords ?? 'matrimony, marriage, Bangladesh, bride, groom, matchmaking',
         openGraph: {
-            title: settings.meta_title ?? 'Enorsia — Premium Matrimony',
+            title: settings.meta_title ?? 'Enorsia — Matrimony',
             description: settings.meta_description ?? '',
             type: 'website',
         },
@@ -194,7 +194,7 @@ export default async function HomePage() {
     }
 
     const heroTitle = 'Find Your Perfect Life Partner';
-    const heroBadge = "Premium Matrimony Platform";
+    const heroBadge = "Find Your Perfect Life Partner";
     const heroSubtitle = heroPage?.meta_description ?? settings.meta_description
         ?? `Join thousands of verified profiles. Let ${settings.site_name}'s smart algorithm find your ideal match.`;
     const heroContent = "Connect with genuine and verified profiles through a secure matrimony platform designed to help individuals and families build meaningful relationships.";

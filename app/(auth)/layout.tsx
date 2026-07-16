@@ -63,7 +63,7 @@ export default async function AuthLayout({children}: { children: React.ReactNode
                     <div className="relative z-10 px-10 py-8">
                         <div className="mb-8">
                             <span className="text-[#C9A227]/80 text-xs font-semibold tracking-widest uppercase mb-3 block">
-                                Premium Matrimony Platform
+                                Find Your Perfect Life Partner
                             </span>
                             <h2 className="text-4xl font-bold text-white leading-tight mb-4"
                                 style={{fontFamily: 'var(--font-heading)'}}>
