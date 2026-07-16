@@ -2,12 +2,21 @@ import Swal from 'sweetalert2';
 
 export type AlertType = 'success' | 'error' | 'warning' | 'info';
 
+const SWAL_CONFIRM_COLOR = '#FFCF00';
+
 interface ToastOptions {
     title?: string;
     message: string;
     type: AlertType;
     duration?: number;
 }
+
+const toastIconColor: Record<AlertType, string> = {
+    success: '#1A1208',
+    error: '#fca5a5',
+    warning: '#1A1208',
+    info: '#FFCF00',
+};
 
 /**
  * Show a toast notification at the top-right corner
@@ -21,7 +30,7 @@ export const showToast = ({
     const Toast = Swal.mixin({
         toast: true,
         position: 'top-right',
-        iconColor: 'white',
+        iconColor: toastIconColor[type],
         customClass: {
             popup: 'colored-toast',
         },
@@ -40,6 +49,19 @@ export const showToast = ({
         showConfirmButton: false,
     });
 };
+
+/** Shared modal defaults for Holud-themed SweetAlert dialogs */
+export const swalDefaults = {
+    confirmButtonColor: SWAL_CONFIRM_COLOR,
+    background: '#FFFFFF',
+    color: '#1A1208',
+    customClass: {
+        popup: 'rounded-2xl',
+        title: 'text-[#1A1208]',
+        htmlContainer: 'text-[#5C4F3A]',
+        confirmButton: 'font-semibold',
+    },
+} as const;
 
 /**
  * Show an error toast

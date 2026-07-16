@@ -120,7 +120,7 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
                 <div className="flex items-center gap-2">
                     {unreadCount > 0 && (
                         <button onClick={() => markAllRead()}
-                                className="text-[11px] text-[#C9A227] hover:underline font-medium">
+                                className="text-[11px] text-[#1A1208] hover:underline font-medium">
                             Mark all read
                         </button>
                     )}
@@ -156,7 +156,7 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
                                 <p className="text-[11px] text-gray-500 mt-0.5 leading-snug line-clamp-2">{n.body}</p>
                                 <p className="text-[10px] text-gray-400 mt-1">{formatRelativeTime(n.created_at)}</p>
                             </div>
-                            {!n.is_read && <span className="w-2 h-2 rounded-full bg-[#C9A227] shrink-0 mt-1.5"/>}
+                            {!n.is_read && <span className="w-2 h-2 rounded-full bg-[#FFCF00] shrink-0 mt-1.5"/>}
                         </button>
                     ))
                 )}
@@ -167,7 +167,7 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
                     <button onClick={() => {
                         setOpen(false);
                         router.push('/notifications');
-                    }} className="text-xs text-[#C9A227] hover:underline font-medium">
+                    }} className="text-xs text-[#1A1208] hover:underline font-medium">
                         See all {notifications.length} notifications
                     </button>
                 </div>

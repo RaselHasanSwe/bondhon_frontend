@@ -143,7 +143,7 @@ export default function NotificationsPage() {
                 <div>
                     <h1 className="page-title flex items-center gap-2">
                         Notifications
-                        <BellIcon size={22} className="text-primary"/>
+                        <BellIcon size={22} className="text-[#1A1208]"/>
                     </h1>
                     <p className="text-sm text-muted-foreground mt-1">
                         {isLoading
@@ -154,7 +154,7 @@ export default function NotificationsPage() {
                 {unreadCount > 0 && (
                     <button
                         onClick={handleMarkAllRead}
-                        className="text-sm text-primary font-semibold hover:opacity-75 transition-opacity"
+                        className="text-sm text-[#1A1208] font-semibold hover:opacity-75 transition-opacity"
                     >
                         Mark all as read
                     </button>
@@ -230,7 +230,7 @@ export default function NotificationsPage() {
                                         <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">
                                             {n.body}
                                         </p>
-                                        <p className="text-[11px] text-primary mt-1.5 font-medium">
+                                        <p className="text-[11px] text-[#1A1208] mt-1.5 font-medium">
                                             Tap to open →
                                         </p>
                                     </div>

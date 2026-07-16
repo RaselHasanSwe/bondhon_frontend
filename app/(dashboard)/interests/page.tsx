@@ -109,7 +109,7 @@ function InterestCard({
         <div className="card-premium p-3 sm:p-4 hover:shadow-md transition-all duration-200 hover:border-[var(--primary)]/20 group">
             <div className="flex items-start gap-3 sm:gap-4">
                 <Link href={profileUrl} className="flex-shrink-0">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-[var(--gold-50)] border-2 border-transparent group-hover:border-[var(--primary)]/30 transition-colors">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-[var(--gold-50)] profile-photo-border">
                         {resolvePhotoUrl(profile.primary_photo) ? (
                             <Image
                                 src={resolvePhotoUrl(profile.primary_photo)!}
@@ -120,7 +120,7 @@ function InterestCard({
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                                <UserIcon size={24} className="text-[var(--gold-300)]" strokeWidth={1.5}/>
+                                <UserIcon size={24} className="text-[#1A1208]/60" strokeWidth={1.5}/>
                             </div>
                         )}
                     </div>
@@ -132,7 +132,7 @@ function InterestCard({
                             <div className="flex items-center gap-2 flex-wrap">
                                 <Link
                                     href={profileUrl}
-                                    className="font-semibold text-foreground truncate group-hover:text-[var(--primary)] transition-colors"
+                                    className="font-semibold text-foreground truncate group-hover:text-[#8A7000] transition-colors"
                                     style={{fontFamily: 'var(--font-heading)'}}
                                 >
                                     {profile.name}
@@ -357,7 +357,7 @@ function InterestsPageInner() {
                             : <CheckCircleIcon size={14} strokeWidth={2}/>}
                         {TAB_CONFIG[t].label}
                         {total > 0 && tab === t && (
-                            <span className="ml-1.5 bg-[var(--primary)] text-white text-xs rounded-full px-1.5 py-0.5 leading-none">{total}</span>
+                            <span className="ml-1.5 bg-[var(--primary)] text-[#1A1208] text-xs rounded-full px-1.5 py-0.5 leading-none">{total}</span>
                         )}
                     </button>
                 ))}

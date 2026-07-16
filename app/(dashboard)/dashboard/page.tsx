@@ -92,7 +92,7 @@ function StatCard({
                 <p className={`text-2xl font-bold ${valueClassName}`}>{value}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
                 {sublabel && (
-                    <p className="text-[11px] text-muted-foreground/80 mt-1">{sublabel}</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">{sublabel}</p>
                 )}
             </div>
         </Link>
@@ -278,7 +278,7 @@ export default function DashboardPage() {
             <div className="animate-fade-in-up">
                 <h1 className="page-title flex items-center gap-2 flex-wrap">
                     {greeting},{' '}
-                    <span className="text-gold-gradient">{user?.name?.split(' ')[0]}</span>!
+                    <span className="text-[#1A1208]">{user?.name?.split(' ')[0]}</span>!
                 </h1>
                 <p className="text-muted-foreground text-sm mt-1">
                     Here&apos;s your matrimony overview at a glance
@@ -293,8 +293,8 @@ export default function DashboardPage() {
                     Icon={MailIcon}
                     href="/interests"
                     iconBg="bg-[var(--gold-50)]"
-                    iconColor="text-[var(--primary)]"
-                    valueClassName={stats.pending_interests > 0 ? 'text-[var(--primary)]' : 'text-foreground'}
+                    iconColor="text-[#1A1208]"
+                    valueClassName={stats.pending_interests > 0 ? 'text-[#1A1208]' : 'text-foreground'}
                 />
                 <StatCard
                     label="Profile Viewers"
@@ -336,7 +336,7 @@ export default function DashboardPage() {
                         href={href}
                         className="inline-flex items-center gap-1.5 flex-shrink-0 px-3.5 py-2 rounded-full text-xs font-semibold border border-[var(--border)] bg-white hover:border-[var(--primary)]/30 hover:bg-[var(--accent)] transition-colors"
                     >
-                        <Icon size={14} strokeWidth={1.8} className="text-[var(--primary)]" />
+                        <Icon size={14} strokeWidth={1.8} className="text-[#1A1208]" />
                         {label}
                     </Link>
                 ))}
@@ -356,7 +356,7 @@ export default function DashboardPage() {
                     </div>
                     <Link
                         href="/matches"
-                        className="text-sm text-[var(--primary)] hover:text-[var(--gold-600)] font-medium transition-colors flex-shrink-0"
+                        className="text-sm text-[#1A1208] hover:text-[#8A7000] font-medium transition-colors flex-shrink-0"
                     >
                         View all →
                     </Link>

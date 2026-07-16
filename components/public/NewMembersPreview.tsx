@@ -58,13 +58,13 @@ function MemberCard({ member, onClick }: { member: PublicProfileCard; onClick: (
         <button
             type="button"
             onClick={onClick}
-            className="group bg-white rounded-2xl p-4 border border-gray-100 text-center hover:border-[#C9A227] hover:shadow-lg hover:-translate-y-1.5 transition-all duration-200 animate-fade-in-up w-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A227]/50"
+            className="group bg-white rounded-2xl p-4 border border-gray-100 text-center hover:border-[#FFCF00] hover:shadow-lg hover:-translate-y-1.5 transition-all duration-200 animate-fade-in-up w-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFCF00]/50"
             style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}
         >
             <div className="relative mx-auto mb-3 inline-block">
                 <div
-                    className="h-16 w-16 rounded-2xl overflow-hidden flex items-center justify-center transition-transform group-hover:scale-110 duration-300"
-                    style={{background: 'linear-gradient(135deg,#FDF3CC,#FAE495)'}}
+                    className="h-16 w-16 rounded-2xl overflow-hidden flex items-center justify-center transition-transform group-hover:scale-110 duration-300 profile-photo-border"
+                    style={{background: 'linear-gradient(135deg, #FFF9CC, #FFEB70)'}}
                 >
                     {photoUrl ? (
                         <img
@@ -74,22 +74,22 @@ function MemberCard({ member, onClick }: { member: PublicProfileCard; onClick: (
                             loading="lazy"
                         />
                     ) : (
-                        <UserIcon size={28} className="text-[#C9A227]" strokeWidth={1.5}/>
+                        <UserIcon size={28} className="text-[#1A1208]" strokeWidth={1.75}/>
                     )}
                 </div>
                 {member.is_verified && (
                     <div
                         className="absolute -top-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center"
-                        style={{background: 'linear-gradient(135deg,#C9A227,#D4AF37)'}}
+                        style={{background: '#FFCF00'}}
                     >
-                        <BadgeCheck size={11} className="text-white"/>
+                        <BadgeCheck size={11} className="text-[#1A1208]"/>
                     </div>
                 )}
             </div>
-            <p className="font-semibold text-gray-800 text-sm truncate">{member.name}</p>
-            {metaLine && <p className="text-gray-400 text-xs truncate">{metaLine}</p>}
+            <p className="font-semibold text-[#1A1208] text-sm truncate">{member.name}</p>
+            {metaLine && <p className="text-[#1A1208]/70 font-medium text-xs truncate">{metaLine}</p>}
             {profession && (
-                <p className="text-xs mt-0.5 font-medium truncate" style={{color: '#C9A227'}}>
+                <p className="text-xs mt-0.5 font-semibold truncate text-[#1A1208]/85">
                     {profession}
                 </p>
             )}
@@ -159,13 +159,13 @@ export default function NewMembersPreview({members: initialMembers}: NewMembersP
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-4">
                         <div>
-                            <p className="text-xs font-bold uppercase tracking-widest mb-1"
-                               style={{color: '#C9A227'}}>New Registrations</p>
-                            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Newly Joined Members</h2>
+                            <p className="text-sm font-bold uppercase tracking-widest mb-1 text-[#1A1208]">
+                                New Registrations
+                            </p>
+                            <h2 className="text-2xl md:text-3xl font-bold text-[#1A1208]">Newly Joined Members</h2>
                         </div>
                         <Link href="/search?sort=latest"
-                              className="inline-flex items-center gap-1.5 text-sm font-semibold shrink-0"
-                              style={{color: '#C9A227'}}>
+                              className="inline-flex items-center gap-1.5 text-sm font-bold shrink-0 text-[#1A1208] hover:text-[#1A1208]/80 transition-colors">
                             View All Profiles <ArrowRight size={14}/>
                         </Link>
                     </div>

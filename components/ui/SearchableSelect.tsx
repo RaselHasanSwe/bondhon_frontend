@@ -28,7 +28,7 @@ function cssVar(name: string, fallback: string): string {
     return val || fallback;
 }
 
-const PRIMARY = '#C9A227';
+const PRIMARY = '#FFCF00';
 
 function buildStyles(isMulti = false): StylesConfig<SelectOption, boolean, GroupBase<SelectOption>> {
     // Resolved at call-time so dark/light mode changes are picked up

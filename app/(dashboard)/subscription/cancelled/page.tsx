@@ -36,7 +36,7 @@ function SubscriptionCancelledContent() {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Link
                         href="/subscription"
-                        className="px-6 py-2.5 rounded-xl font-semibold text-sm bg-[#C9A227] hover:bg-[#a8891e] text-white transition-colors"
+                        className="px-6 py-2.5 rounded-xl font-semibold text-sm bg-[#FFCF00] hover:bg-[#a8891e] text-[#1A1208] transition-colors"
                     >
                         Try Again
                     </Link>

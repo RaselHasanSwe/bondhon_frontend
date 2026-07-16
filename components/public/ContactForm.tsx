@@ -53,12 +53,12 @@ export default function ContactForm() {
   if (sent) {
     return (
       <div className="text-center py-10">
-        <CheckCircle size={48} className="mx-auto mb-4" style={{ color: '#C9A227' }} />
+        <CheckCircle size={48} className="mx-auto mb-4" style={{ color: '#FFCF00' }} />
         <h3 className="text-xl font-bold text-gray-800 mb-2">Message Received!</h3>
         <p className="text-gray-500">Thank you for reaching out. We&apos;ll get back to you within 24 hours.</p>
         <button
           className="mt-6 text-sm font-medium px-4 py-2 rounded-lg border transition-colors"
-          style={{ borderColor: '#C9A227', color: '#C9A227' }}
+          style={{ borderColor: '#FFCF00', color: '#FFCF00' }}
           onClick={() => setSent(false)}
         >
           Send another message
@@ -79,7 +79,7 @@ export default function ContactForm() {
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-colors"
             style={{ borderColor: '#e5e7eb' }}
-            onFocus={(e) => (e.target.style.borderColor = '#C9A227')}
+            onFocus={(e) => (e.target.style.borderColor = '#FFCF00')}
             onBlur={(e) => (e.target.style.borderColor = '#e5e7eb')}
             placeholder="Your name"
           />
@@ -93,7 +93,7 @@ export default function ContactForm() {
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-colors"
             style={{ borderColor: '#e5e7eb' }}
-            onFocus={(e) => (e.target.style.borderColor = '#C9A227')}
+            onFocus={(e) => (e.target.style.borderColor = '#FFCF00')}
             onBlur={(e) => (e.target.style.borderColor = '#e5e7eb')}
             placeholder="your@email.com"
           />
@@ -108,7 +108,7 @@ export default function ContactForm() {
           onChange={(e) => setForm({ ...form, subject: e.target.value })}
           className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-colors"
           style={{ borderColor: '#e5e7eb' }}
-          onFocus={(e) => (e.target.style.borderColor = '#C9A227')}
+          onFocus={(e) => (e.target.style.borderColor = '#FFCF00')}
           onBlur={(e) => (e.target.style.borderColor = '#e5e7eb')}
           placeholder="How can we help you?"
         />
@@ -122,7 +122,7 @@ export default function ContactForm() {
           onChange={(e) => setForm({ ...form, message: e.target.value })}
           className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-colors resize-none"
           style={{ borderColor: '#e5e7eb' }}
-          onFocus={(e) => (e.target.style.borderColor = '#C9A227')}
+          onFocus={(e) => (e.target.style.borderColor = '#FFCF00')}
           onBlur={(e) => (e.target.style.borderColor = '#e5e7eb')}
           placeholder="Write your message here…"
         />
@@ -135,8 +135,8 @@ export default function ContactForm() {
       <button
         type="submit"
         disabled={loading}
-        className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-white text-sm transition-opacity disabled:opacity-70"
-        style={{ background: 'linear-gradient(135deg, #C9A227, #D4AF37)' }}
+        className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-[#1A1208] text-sm transition-opacity disabled:opacity-70"
+        style={{ background: 'linear-gradient(135deg, #FFCF00, #FFE033)' }}
       >
         {loading ? (
           <>

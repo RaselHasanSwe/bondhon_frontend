@@ -286,7 +286,7 @@ function OtpVerification() {
                     type="button"
                     onClick={handleResend}
                     disabled={resending}
-                    className="text-[var(--primary)] hover:text-[var(--gold-600)] font-medium transition-colors disabled:opacity-60"
+                    className="text-[#1A1208] hover:text-[#8A7000] font-medium transition-colors disabled:opacity-60"
                 >
                     {resending ? 'sending…' : 'resend code'}
                 </button>
@@ -304,8 +304,8 @@ function VerifyEmailContent() {
 export default function VerifyEmailPage() {
     return (
         <div className="bg-card rounded-2xl overflow-hidden animate-fade-in-up"
-             style={{boxShadow: '0 4px 40px rgba(201,162,39,0.12), 0 1px 8px rgba(0,0,0,0.06)'}}>
-            <div className="h-1.5 w-full" style={{background: 'linear-gradient(90deg, #C9A227, #E8C547, #C9A227)'}}/>
+             style={{boxShadow: '0 4px 40px rgba(255,207,0,0.12), 0 1px 8px rgba(0,0,0,0.06)'}}>
+            <div className="h-1.5 w-full" style={{background: 'linear-gradient(90deg, #FFCF00, #FFE033, #FFCF00)'}}/>
             <Suspense
                 fallback={
                     <div className="p-8 text-center text-sm text-muted-foreground">

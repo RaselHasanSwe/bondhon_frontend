@@ -35,7 +35,7 @@ export default function ProfileGalleryPage() {
                 <div className="min-h-[60vh] flex items-center justify-center px-4 bg-[#FDFAF4]">
                     <div className="text-center space-y-4">
                         <p className="font-serif text-xl text-gray-700">Profile Not Found</p>
-                        <Button onClick={() => router.back()} variant="outline" className="rounded-full border-[#C9A227] text-[#C9A227] hover:bg-[#C9A227]/5">
+                        <Button onClick={() => router.back()} variant="outline" className="rounded-full border-[#FFCF00] text-[#1A1208] hover:bg-[#FFCF00]/5">
                             Go Back
                         </Button>
                     </div>
@@ -48,7 +48,7 @@ export default function ProfileGalleryPage() {
                             <div>
                                 <Link
                                     href={`/profile/${params.id}`}
-                                    className="inline-flex items-center gap-1.5 text-xs text-[#C9A227] hover:text-[#a8841f] transition-colors mb-2"
+                                    className="inline-flex items-center gap-1.5 text-xs text-[#1A1208] hover:text-[#8A7000] transition-colors mb-2"
                                     style={{ fontFamily: 'system-ui, sans-serif' }}
                                 >
                                     <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -65,7 +65,7 @@ export default function ProfileGalleryPage() {
                                 </p>
                             </div>
                             {profile.profile?.profile_id && (
-                                <span className="font-mono text-[10px] bg-[#C9A227]/10 border border-[#C9A227]/25 text-[#7a5d10] px-2.5 py-1 rounded tracking-widest shrink-0">
+                                <span className="font-mono text-[10px] bg-[#FFCF00]/10 border border-[#FFCF00]/25 text-[#1A1208] px-2.5 py-1 rounded tracking-widest shrink-0">
                                     {profile.profile.profile_id}
                                 </span>
                             )}

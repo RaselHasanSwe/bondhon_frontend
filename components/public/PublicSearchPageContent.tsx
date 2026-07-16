@@ -106,7 +106,7 @@ function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) 
 
     const sec = (title: string, children: React.ReactNode) => (
         <div className="space-y-2">
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 pt-1">{title}</h4>
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pt-1">{title}</h4>
             {children}
             <div className="border-b border-[var(--border)]/50" />
         </div>
@@ -142,7 +142,7 @@ function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) 
                             onClick={() => onUpdate('gender', filters.gender === g ? undefined : g)}
                             className={`flex-1 py-1.5 rounded-xl border text-sm capitalize transition-all ${
                                 filters.gender === g
-                                    ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--accent)] font-semibold'
+                                    ? 'border-[var(--primary)] text-[#1A1208] bg-[var(--accent)] font-semibold'
                                     : 'border-[var(--border)] text-muted-foreground hover:border-[var(--primary)]/50'
                             }`}
                         >
@@ -489,7 +489,7 @@ function ActiveBadges({
             {entries.map(([key, val]) => (
                 <span
                     key={key}
-                    className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border border-[var(--primary)]/40 bg-[var(--accent)] text-[var(--primary)] font-medium"
+                    className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border border-[var(--primary)]/40 bg-[var(--accent)] text-[#1A1208] font-medium"
                 >
                     {FILTER_LABELS[key] ?? String(key)}: <span className="font-semibold">{String(val)}</span>
                     <button onClick={() => onRemove(key)} className="ml-0.5 hover:text-red-400 transition-colors">
@@ -624,7 +624,7 @@ export default function PublicSearchPageContent() {
                         >
                             <FilterIcon size={14} strokeWidth={2} /> Filters
                             {activeCount > 0 && (
-                                <span className="absolute -top-1.5 -right-1.5 min-w-[1.1rem] h-[1.1rem] rounded-full bg-[var(--primary)] text-white text-[10px] font-bold flex items-center justify-center px-0.5">
+                                <span className="absolute -top-1.5 -right-1.5 min-w-[1.1rem] h-[1.1rem] rounded-full bg-[var(--primary)] text-[#1A1208] text-[10px] font-bold flex items-center justify-center px-0.5">
                                     {activeCount}
                                 </span>
                             )}
@@ -662,7 +662,7 @@ export default function PublicSearchPageContent() {
                                 <h2 className="font-semibold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
                                     Filters
                                     {activeCount > 0 && (
-                                        <span className="ml-2 text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--primary)] text-white">
+                                        <span className="ml-2 text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--primary)] text-[#1A1208]">
                                             {activeCount}
                                         </span>
                                     )}
@@ -685,7 +685,7 @@ export default function PublicSearchPageContent() {
                                     <h2 className="font-semibold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
                                         Filters{' '}
                                         {activeCount > 0 && (
-                                            <span className="ml-1.5 text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--primary)] text-white">
+                                            <span className="ml-1.5 text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--primary)] text-[#1A1208]">
                                                 {activeCount}
                                             </span>
                                         )}

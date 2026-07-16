@@ -1000,7 +1000,7 @@ export default function FaceScanPage() {
                             {!cameraReady && (
                                 <button
                                     type="button" onClick={startCamera} disabled={loadingModels}
-                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,#C9A227,#E8C547)] px-5 py-3 font-semibold text-white shadow-md disabled:opacity-60 transition-opacity"
+                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,#FFCF00,#FFE033)] px-5 py-3 font-semibold text-white shadow-md disabled:opacity-60 transition-opacity"
                                 >
                                     {loadingModels && (
                                         <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">

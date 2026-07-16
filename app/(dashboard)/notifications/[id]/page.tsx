@@ -209,7 +209,7 @@ export default function NotificationDetailPage() {
                                     {typeLabel}
                                 </span>
                                 {!notification.is_read && (
-                                    <span className="ml-2 inline-flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                                    <span className="ml-2 inline-flex items-center gap-1 text-[10px] font-bold text-[#1A1208] bg-primary/10 px-2 py-0.5 rounded-full">
                                         <span className="w-1.5 h-1.5 rounded-full bg-primary"/>
                                         Unread
                                     </span>
@@ -254,7 +254,7 @@ export default function NotificationDetailPage() {
                         {notification.action_url && (
                             <button
                                 onClick={() => router.push(notification.action_url!)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/15 transition-colors shrink-0"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#1A1208] bg-primary/10 hover:bg-primary/15 transition-colors shrink-0"
                             >
                                 {actionLabel}
                                 <ExternalLinkIcon size={13} strokeWidth={2}/>

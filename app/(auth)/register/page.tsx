@@ -57,9 +57,9 @@ export default function RegisterPage() {
 
     return (
         <div className="bg-card rounded-2xl overflow-hidden animate-fade-in-up"
-             style={{boxShadow: '0 4px 40px rgba(201,162,39,0.12), 0 1px 8px rgba(0,0,0,0.06)'}}>
+             style={{boxShadow: '0 4px 40px rgba(255,207,0,0.12), 0 1px 8px rgba(0,0,0,0.06)'}}>
             {/* Header accent */}
-            <div className="h-1.5 w-full" style={{background: 'linear-gradient(90deg, #C9A227, #E8C547, #C9A227)'}}/>
+            <div className="h-1.5 w-full" style={{background: 'linear-gradient(90deg, #FFCF00, #FFE033, #FFCF00)'}}/>
 
             <div className="p-8">
                 <div className="mb-7">
@@ -104,7 +104,7 @@ export default function RegisterPage() {
                                     key={g}
                                     className={`border-2 rounded-xl p-3 text-center cursor-pointer transition-all capitalize ${
                                         watch('gender') === g
-                                            ? 'border-[var(--primary)] bg-[var(--accent)] text-[var(--primary)] font-semibold shadow-sm'
+                                            ? 'border-[var(--primary)] bg-[var(--accent)] text-[#1A1208] font-semibold shadow-sm'
                                             : 'border-[var(--border)] text-muted-foreground hover:border-[var(--primary)]/50 hover:bg-[var(--accent)]/50'
                                     }`}
                                 >

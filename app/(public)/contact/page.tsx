@@ -113,16 +113,16 @@ export default async function ContactPage() {
                 >
                   <div
                     className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: 'rgba(201,162,39,0.1)' }}
+                    style={{ background: 'rgba(255,207,0,0.1)' }}
                   >
-                    <Icon size={18} style={{ color: '#C9A227' }} />
+                    <Icon size={18} style={{ color: '#FFCF00' }} />
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-0.5">{item.label}</p>
                     {item.href ? (
                       <a
                         href={item.href}
-                        className="text-sm font-medium text-gray-800 hover:text-[#C9A227] transition-colors"
+                        className="text-sm font-medium text-gray-800 hover:text-[#FFCF00] transition-colors"
                       >
                         {item.value}
                       </a>

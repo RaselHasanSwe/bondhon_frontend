@@ -66,13 +66,13 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
                     className="absolute inset-0 opacity-[0.35]"
                     style={{
                         backgroundImage:
-                            'radial-gradient(circle at 20% 20%, rgba(201,162,39,0.25) 0%, transparent 45%), radial-gradient(circle at 80% 10%, rgba(124,58,237,0.15) 0%, transparent 40%)',
+                            'radial-gradient(circle at 20% 20%, rgba(255,207,0,0.25) 0%, transparent 45%), radial-gradient(circle at 80% 10%, rgba(124,58,237,0.15) 0%, transparent 40%)',
                     }}
                 />
 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-14 sm:pt-10 sm:pb-16 text-center">
                     <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium text-amber-200/90 backdrop-blur-sm mb-4">
-                        <Sparkles size={12} className="text-[#C9A227]" />
+                        <Sparkles size={12} className="text-[#1A1208]" />
                         Membership plans
                     </div>
 
@@ -83,7 +83,7 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
                         Choose the plan that fits your{' '}
                         <span
                             className="bg-clip-text text-transparent"
-                            style={{ backgroundImage: 'linear-gradient(135deg, #E8C547, #C9A227, #D4AF37)' }}
+                            style={{ backgroundImage: 'linear-gradient(135deg, #FFE033, #FFCF00, #FFE033)' }}
                         >
                             journey to forever
                         </span>
@@ -149,7 +149,7 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
             {/*        <section className="py-20 md:py-28 bg-white border-y border-gray-100">*/}
             {/*            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">*/}
             {/*                <div className="text-center mb-14">*/}
-            {/*                    <p className="text-xs font-bold uppercase tracking-widest text-[#C9A227] mb-3">*/}
+            {/*                    <p className="text-xs font-bold uppercase tracking-widest text-[#FFCF00] mb-3">*/}
             {/*                        Compare plans*/}
             {/*                    </p>*/}
             {/*                    <h2*/}
@@ -291,9 +291,9 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
                                 >
                                     <div
                                         className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl"
-                                        style={{ background: 'rgba(201,162,39,0.1)' }}
+                                        style={{ background: 'rgba(255,207,0,0.1)' }}
                                     >
-                                        <Icon size={22} className="text-[#C9A227]" />
+                                        <Icon size={22} className="text-[#1A1208]" />
                                     </div>
                                     <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
                                     <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
@@ -321,10 +321,10 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
                     </p>
                     <Link
                         href="/register"
-                        className="inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-sm font-bold text-white transition-all hover:scale-[1.03] active:scale-[0.98]"
+                        className="inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-sm font-bold text-[#1A1208] transition-all hover:scale-[1.03] active:scale-[0.98]"
                         style={{
-                            background: 'linear-gradient(135deg, #C9A227, #D4AF37)',
-                            boxShadow: '0 8px 32px rgba(201,162,39,0.35)',
+                            background: 'linear-gradient(135deg, #FFCF00, #FFE033)',
+                            boxShadow: '0 8px 32px rgba(255,207,0,0.35)',
                         }}
                     >
                         Create Free Profile
@@ -360,15 +360,15 @@ function PlanCard({
         <div
             className={`relative flex flex-col rounded-3xl border bg-gradient-to-b p-6 sm:p-8 transition-all duration-300 h-full ${className} ${
                 isPopular
-                    ? 'border-[#C9A227]/60 shadow-2xl shadow-amber-500/10 md:scale-[1.02] z-10 bg-white'
+                    ? 'border-[#FFCF00]/60 shadow-2xl shadow-amber-500/10 md:scale-[1.02] z-10 bg-white'
                     : `bg-white/95 shadow-xl hover:shadow-2xl md:hover:-translate-y-1 ${grad}`
             }`}
         >
             {isPopular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
                     <span
-                        className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold text-white shadow-lg"
-                        style={{ background: 'linear-gradient(135deg, #C9A227, #D4AF37)' }}
+                        className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold text-[#1A1208] shadow-lg"
+                        style={{ background: 'linear-gradient(135deg, #FFCF00, #FFE033)' }}
                     >
                         <Crown size={12} />
                         Most Popular
@@ -419,9 +419,9 @@ function PlanCard({
                         <li key={key} className="flex items-start gap-3 text-sm text-gray-700">
                             <span
                                 className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
-                                style={{ background: 'rgba(201,162,39,0.12)' }}
+                                style={{ background: 'rgba(255,207,0,0.12)' }}
                             >
-                                <Check size={12} className="text-[#A07810]" strokeWidth={3} />
+                                <Check size={12} className="text-[#8A7000]" strokeWidth={3} />
                             </span>
                             <span>
                                 {label}
@@ -437,7 +437,7 @@ function PlanCard({
             <div
                 className={
                     isPopular
-                        ? '[&>a]:bg-gradient-to-r [&>a]:from-[#C9A227] [&>a]:to-[#D4AF37] [&>a]:text-white [&>a]:shadow-lg [&>a]:shadow-amber-500/25 [&>a]:hover:shadow-xl [&>a]:hover:scale-[1.02]'
+                        ? '[&>a]:bg-gradient-to-r [&>a]:from-[#FFCF00] [&>a]:to-[#FFE033] [&>a]:text-[#1A1208] [&>a]:shadow-lg [&>a]:shadow-amber-500/25 [&>a]:hover:shadow-xl [&>a]:hover:scale-[1.02]'
                         : isFree
                           ? '[&>a]:bg-emerald-600 [&>a]:text-white [&>a]:hover:bg-emerald-700'
                           : '[&>a]:bg-gray-900 [&>a]:text-white [&>a]:hover:bg-gray-800'

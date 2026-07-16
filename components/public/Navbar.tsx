@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import {useState, useEffect, useRef} from 'react';
+import {useState, useEffect, useRef, useLayoutEffect, useCallback} from 'react';
 import {usePathname} from 'next/navigation';
 import {
     Menu,
@@ -24,6 +24,195 @@ interface NavbarProps {
     siteSlogan: string | null;
     logoUrl: string | null;
     navLinks: NavLink[];
+}
+
+function useActiveNavIndex(navLinks: NavLink[], pathname: string) {
+    return navLinks.findIndex((link) => isNavLinkActive(pathname, link.href));
+}
+
+function DesktopNavMenu({navLinks, pathname}: { navLinks: NavLink[]; pathname: string }) {
+    const navRef = useRef<HTMLElement>(null);
+    const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+    const [pill, setPill] = useState({left: 0, width: 0, opacity: 0});
+    const activeIndex = useActiveNavIndex(navLinks, pathname);
+
+    const updatePill = useCallback(() => {
+        const navEl = navRef.current;
+        const activeEl = activeIndex >= 0 ? linkRefs.current[activeIndex] : null;
+
+        if (!navEl || !activeEl) {
+            setPill((prev) => ({...prev, opacity: 0}));
+            return;
+        }
+
+        const navRect = navEl.getBoundingClientRect();
+        const elRect = activeEl.getBoundingClientRect();
+
+        setPill({
+            left: elRect.left - navRect.left,
+            width: elRect.width,
+            opacity: 1,
+        });
+    }, [activeIndex]);
+
+    useLayoutEffect(() => {
+        updatePill();
+    }, [updatePill, navLinks]);
+
+    useEffect(() => {
+        const navEl = navRef.current;
+        if (!navEl) return;
+
+        const observer = new ResizeObserver(() => updatePill());
+        observer.observe(navEl);
+        linkRefs.current.forEach((el) => {
+            if (el) observer.observe(el);
+        });
+
+        window.addEventListener('resize', updatePill);
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('resize', updatePill);
+        };
+    }, [updatePill, navLinks]);
+
+    return (
+        <nav
+            ref={navRef}
+            aria-label="Main navigation"
+            className="relative hidden lg:flex items-center gap-0.5 xl:gap-1 flex-1 justify-center px-2 xl:px-4 min-w-0 overflow-x-auto scrollbar-none rounded-full border border-[#FFCF00]/35 bg-[#FFCF00]/10 py-1 max-w-fit mx-auto"
+        >
+            <span
+                aria-hidden
+                className="absolute top-1 bottom-1 rounded-full bg-[#FFCF00] shadow-sm ring-1 ring-[#1A1208]/10 pointer-events-none transition-[left,width,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                style={{
+                    left: pill.left,
+                    width: pill.width,
+                    opacity: pill.opacity,
+                }}
+            />
+
+            {navLinks.map((link, index) => {
+                const active = isNavLinkActive(pathname, link.href);
+
+                return (
+                    <Link
+                        key={`${link.href}-${link.label}`}
+                        ref={(el) => {
+                            linkRefs.current[index] = el;
+                        }}
+                        href={link.href}
+                        className={cn(
+                            'relative z-10 px-2.5 xl:px-3.5 py-2 text-[0.75rem] xl:text-[0.8125rem] font-bold tracking-wide rounded-full transition-colors duration-200 whitespace-nowrap shrink-0',
+                            active
+                                ? 'text-[#1A1208]'
+                                : 'text-[#1A1208]/85 hover:text-[#1A1208]',
+                        )}
+                    >
+                        {link.label}
+                    </Link>
+                );
+            })}
+        </nav>
+    );
+}
+
+function MobileNavMenu({
+    navLinks,
+    pathname,
+    onNavigate,
+}: {
+    navLinks: NavLink[];
+    pathname: string;
+    onNavigate: () => void;
+}) {
+    const navRef = useRef<HTMLElement>(null);
+    const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+    const [pill, setPill] = useState({top: 0, height: 0, opacity: 0});
+    const activeIndex = useActiveNavIndex(navLinks, pathname);
+
+    const updatePill = useCallback(() => {
+        const navEl = navRef.current;
+        const activeEl = activeIndex >= 0 ? linkRefs.current[activeIndex] : null;
+
+        if (!navEl || !activeEl) {
+            setPill((prev) => ({...prev, opacity: 0}));
+            return;
+        }
+
+        const navRect = navEl.getBoundingClientRect();
+        const elRect = activeEl.getBoundingClientRect();
+
+        setPill({
+            top: elRect.top - navRect.top,
+            height: elRect.height,
+            opacity: 1,
+        });
+    }, [activeIndex]);
+
+    useLayoutEffect(() => {
+        updatePill();
+        const frame = requestAnimationFrame(updatePill);
+        return () => cancelAnimationFrame(frame);
+    }, [updatePill, navLinks]);
+
+    useEffect(() => {
+        const navEl = navRef.current;
+        if (!navEl) return;
+
+        const observer = new ResizeObserver(() => updatePill());
+        observer.observe(navEl);
+        linkRefs.current.forEach((el) => {
+            if (el) observer.observe(el);
+        });
+
+        window.addEventListener('resize', updatePill);
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('resize', updatePill);
+        };
+    }, [updatePill, navLinks]);
+
+    return (
+        <nav
+            ref={navRef}
+            aria-label="Main navigation"
+            className="relative px-4 sm:px-6 py-4 sm:py-5 space-y-1.5"
+        >
+            <span
+                aria-hidden
+                className="absolute left-4 right-4 sm:left-6 sm:right-6 rounded-xl bg-[#FFCF00] border border-[#1A1208]/15 shadow-sm pointer-events-none transition-[top,height,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                style={{
+                    top: pill.top,
+                    height: pill.height,
+                    opacity: pill.opacity,
+                }}
+            />
+
+            {navLinks.map((link, index) => {
+                const active = isNavLinkActive(pathname, link.href);
+
+                return (
+                    <Link
+                        key={`${link.href}-${link.label}`}
+                        ref={(el) => {
+                            linkRefs.current[index] = el;
+                        }}
+                        href={link.href}
+                        className={cn(
+                            'relative z-10 flex items-center px-4 py-3 rounded-xl text-sm font-bold transition-colors border border-transparent',
+                            active
+                                ? 'text-[#1A1208]'
+                                : 'text-[#1A1208] hover:text-[#1A1208]',
+                        )}
+                        onClick={onNavigate}
+                    >
+                        {link.label}
+                    </Link>
+                );
+            })}
+        </nav>
+    );
 }
 
 function UserAvatar({
@@ -52,7 +241,7 @@ function UserAvatar({
         <div
             className={cn(
                 dim,
-                'rounded-full flex items-center justify-center text-white font-semibold shrink-0 shadow-sm ring-2 ring-white',
+                'rounded-full flex items-center justify-center text-[#1A1208] font-semibold shrink-0 shadow-sm ring-2 ring-white',
             )}
             style={{background: 'var(--gradient-gold-btn)'}}
         >
@@ -95,8 +284,8 @@ function UserMenuDropdown({
                 <div className="flex items-center gap-3">
                     <UserAvatar name={user.name} photoUrl={photoUrl}/>
                     <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
-                        <p className="text-[11px] text-gray-500 truncate">{user.email}</p>
+                        <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
                     </div>
                 </div>
             </div>
@@ -106,18 +295,18 @@ function UserMenuDropdown({
                     href="/dashboard"
                     role="menuitem"
                     onClick={onClose}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-[#FDF8ED] hover:text-[#A07810] transition-colors"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[#1A1208] hover:bg-[#FFCF00]/15 hover:text-[#1A1208] transition-colors"
                 >
-                    <LayoutDashboard size={16} className="text-[#C9A227] shrink-0"/>
+                    <LayoutDashboard size={16} className="text-[#1A1208] shrink-0"/>
                     Dashboard
                 </Link>
                 <Link
                     href="/profile/edit"
                     role="menuitem"
                     onClick={onClose}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-[#FDF8ED] hover:text-[#A07810] transition-colors"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[#1A1208] hover:bg-[#FFCF00]/15 hover:text-[#1A1208] transition-colors"
                 >
-                    <User size={16} className="text-[#C9A227] shrink-0"/>
+                    <User size={16} className="text-[#1A1208] shrink-0"/>
                     My Profile
                 </Link>
             </div>
@@ -186,22 +375,22 @@ function UserMenuTrigger({
                     'flex items-center gap-2 rounded-full border transition-all duration-200 max-w-full',
                     compact ? 'pl-1 pr-2 py-1' : 'pl-1.5 pr-3 py-1.5 gap-2.5',
                     open
-                        ? 'border-[#C9A227]/40 bg-[#FDF8ED] shadow-sm'
-                        : 'border-[#E8DFCC] bg-white/70 hover:bg-[#FDF8ED]/60 hover:border-[#C9A227]/30',
+                        ? 'border-[#FFCF00] bg-[#FFCF00]/15 shadow-sm'
+                        : 'border-[#E8DFCC] bg-white hover:bg-[#FFCF00]/10 hover:border-[#FFCF00]/50',
                 )}
             >
                 <UserAvatar name={user.name} photoUrl={photoUrl} size="sm"/>
                 {compact ? (
                     <span
-                        className="text-xs sm:text-[0.8125rem] font-semibold text-gray-800 truncate max-w-[4.5rem] sm:max-w-[6rem]">
+                        className="text-xs sm:text-[0.8125rem] font-semibold text-foreground truncate max-w-[4.5rem] sm:max-w-[6rem]">
             {firstName}
           </span>
                 ) : (
                     <div className="text-left min-w-0 hidden sm:block">
-                        <p className="text-[0.8125rem] font-semibold text-gray-900 leading-tight truncate max-w-[6.5rem] md:max-w-[7.5rem] lg:max-w-[8.5rem]">
+                        <p className="text-[0.8125rem] font-semibold text-foreground leading-tight truncate max-w-[6.5rem] md:max-w-[7.5rem] lg:max-w-[8.5rem]">
                             {firstName}
                         </p>
-                        <p className="text-[10px] text-gray-500 leading-tight truncate max-w-[6.5rem] md:max-w-[7.5rem] lg:max-w-[8.5rem] hidden md:block">
+                        <p className="text-[10px] text-muted-foreground leading-tight truncate max-w-[6.5rem] md:max-w-[7.5rem] lg:max-w-[8.5rem] hidden md:block">
                             {user.email}
                         </p>
                     </div>
@@ -209,7 +398,7 @@ function UserMenuTrigger({
                 <ChevronDown
                     size={14}
                     className={cn(
-                        'text-gray-400 shrink-0 transition-transform duration-200',
+                        'text-[#1A1208]/70 shrink-0 transition-transform duration-200',
                         open && 'rotate-180',
                     )}
                 />
@@ -278,11 +467,9 @@ export default function Navbar({siteName, siteSlogan, logoUrl, navLinks}: Navbar
 
     return (
         <header
-            className="sticky top-0 z-50 border-b border-[#E8DFCC]/80"
+            className="sticky top-0 z-50 border-b-2 border-[#FFCF00]"
             style={{
-                background: 'rgba(255, 255, 255, 0.82)',
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
+                background: 'rgba(255, 255, 255, 0.98)',
                 boxShadow: 'var(--shadow-nav)',
             }}
         >
@@ -292,46 +479,20 @@ export default function Navbar({siteName, siteSlogan, logoUrl, navLinks}: Navbar
                     <Link href="/" className="flex items-center gap-2.5 sm:gap-3 shrink-0 min-w-0 group max-w-[10rem] sm:max-w-[15rem] lg:max-w-[17rem]">
                         <div className="min-w-0 leading-tight">
                             <p
-                                className="text-sm sm:text-[0.9375rem] lg:text-base font-bold text-gray-900 truncate transition-colors group-hover:text-[#A07810]"
+                                className="text-sm sm:text-[0.9375rem] lg:text-base font-bold text-[#1A1208] truncate transition-colors group-hover:text-[#1A1208] group-hover:underline decoration-[#FFCF00] decoration-2 underline-offset-4"
                                 style={{fontFamily: 'var(--font-heading, serif)'}}
                             >
                                 {siteName}
                             </p>
                             {siteSlogan && (
-                                <p className="text-[10px] sm:text-[11px] text-gray-500 truncate mt-0.5 tracking-wide">
+                                <p className="text-[10px] sm:text-[11px] text-[#1A1208]/65 font-semibold truncate mt-0.5 tracking-wide">
                                     {siteSlogan}
                                 </p>
                             )}
                         </div>
                     </Link>
 
-                    {/* Desktop Nav */}
-                    <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 flex-1 justify-center px-2 xl:px-4 min-w-0 overflow-x-auto scrollbar-none">
-                        {navLinks.map((link) => {
-                            const active = isNavLinkActive(pathname, link.href);
-
-                            return (
-                                <Link
-                                    key={`${link.href}-${link.label}`}
-                                    href={link.href}
-                                    className={cn(
-                                        'relative px-2 xl:px-3 py-2 text-[0.75rem] xl:text-[0.8125rem] font-medium tracking-wide rounded-lg transition-all duration-200 whitespace-nowrap shrink-0',
-                                        active
-                                            ? 'text-[#A07810]'
-                                            : 'text-gray-600 hover:text-gray-900 hover:bg-[#FDF8ED]/80',
-                                    )}
-                                >
-                                    {link.label}
-                                    {active && (
-                                        <span
-                                            className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full"
-                                            style={{background: 'var(--gradient-gold-btn)'}}
-                                        />
-                                    )}
-                                </Link>
-                            );
-                        })}
-                    </nav>
+                    <DesktopNavMenu navLinks={navLinks} pathname={pathname} />
 
                     {/* Desktop Auth */}
                     <div className="hidden lg:flex items-center gap-2.5 shrink-0">
@@ -339,13 +500,13 @@ export default function Navbar({siteName, siteSlogan, logoUrl, navLinks}: Navbar
                             <>
                                 <Link
                                     href="/login"
-                                    className="px-3 xl:px-4 py-2 text-[0.8125rem] font-medium text-gray-600 hover:text-gray-900 rounded-lg transition-colors duration-200 whitespace-nowrap"
+                                    className="px-3 xl:px-4 py-2 text-[0.8125rem] font-semibold text-[#1A1208]/80 hover:text-[#1A1208] hover:bg-[#FFCF00]/15 rounded-lg transition-colors duration-200 whitespace-nowrap"
                                 >
                                     Sign in
                                 </Link>
                                 <Link
                                     href="/register"
-                                    className="group inline-flex items-center gap-2 px-4 xl:px-5 py-2.5 rounded-full text-[0.8125rem] font-semibold text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap"
+                                    className="group inline-flex items-center gap-2 px-4 xl:px-5 py-2.5 rounded-full text-[0.8125rem] font-semibold text-[#1A1208] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap"
                                     style={{
                                         background: 'var(--gradient-gold-btn)',
                                         boxShadow: 'var(--shadow-btn)',
@@ -382,7 +543,7 @@ export default function Navbar({siteName, siteSlogan, logoUrl, navLinks}: Navbar
 
                         <button
                             type="button"
-                            className="p-2 sm:p-2.5 rounded-xl text-gray-600 hover:text-[#A07810] hover:bg-[#FDF8ED] transition-colors shrink-0"
+                            className="p-2 sm:p-2.5 rounded-xl text-[#1A1208] hover:text-[#1A1208] hover:bg-[#FFCF00]/20 transition-colors shrink-0"
                             onClick={() => setOpen(!open)}
                             aria-expanded={open}
                             aria-label="Toggle menu"
@@ -396,42 +557,28 @@ export default function Navbar({siteName, siteSlogan, logoUrl, navLinks}: Navbar
             {/* Mobile / Tablet drawer */}
             {open && (
                 <div
-                    className="lg:hidden border-t border-[#E8DFCC]/80 max-h-[calc(100dvh-3.5rem)] sm:max-h-[calc(100dvh-4.25rem)] overflow-y-auto overscroll-contain"
+                    className="lg:hidden border-t-2 border-[#FFCF00] max-h-[calc(100dvh-3.5rem)] sm:max-h-[calc(100dvh-4.25rem)] overflow-y-auto overscroll-contain"
                     style={{background: 'rgba(255, 255, 255, 0.98)'}}
                 >
-                    <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-1">
-                        {navLinks.map((link) => {
-                            const active = isNavLinkActive(pathname, link.href);
+                    <MobileNavMenu
+                        navLinks={navLinks}
+                        pathname={pathname}
+                        onNavigate={() => setOpen(false)}
+                    />
 
-                            return (
-                                <Link
-                                    key={`${link.href}-${link.label}`}
-                                    href={link.href}
-                                    className={cn(
-                                        'flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-colors',
-                                        active
-                                            ? 'bg-[#FDF8ED] text-[#A07810]'
-                                            : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900',
-                                    )}
-                                    onClick={() => setOpen(false)}
-                                >
-                                    {link.label}
-                                </Link>
-                            );
-                        })}
-
-                        {showGuest && (
-                            <div className="pt-4 mt-2 border-t border-[#F0EAD9] space-y-2">
+                    {showGuest && (
+                        <div className="px-4 sm:px-6 pb-4 sm:pb-5">
+                            <div className="pt-4 border-t border-[#FFCF00]/25 space-y-2">
                                 <Link
                                     href="/login"
-                                    className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-medium text-gray-700 border border-[#E8DFCC] bg-white hover:bg-gray-50 transition-colors"
+                                    className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-semibold text-[#1A1208] border border-[#FFCF00]/40 bg-white hover:bg-[#FFCF00]/10 transition-colors"
                                     onClick={() => setOpen(false)}
                                 >
                                     Sign in
                                 </Link>
                                 <Link
                                     href="/register"
-                                    className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold text-white transition-all active:scale-[0.98]"
+                                    className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold text-[#1A1208] transition-all active:scale-[0.98]"
                                     style={{background: 'var(--gradient-gold-btn)', boxShadow: 'var(--shadow-btn)'}}
                                     onClick={() => setOpen(false)}
                                 >
@@ -439,8 +586,8 @@ export default function Navbar({siteName, siteSlogan, logoUrl, navLinks}: Navbar
                                     <ArrowRight size={15}/>
                                 </Link>
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             )}
         </header>

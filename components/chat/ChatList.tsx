@@ -84,14 +84,14 @@ export function ChatList({
                         className={cn(
                             'flex items-center gap-3 px-4 py-3.5 cursor-pointer transition-all duration-150 border-b border-gray-50',
                             isActive
-                                ? 'bg-[#FBF6E8] border-l-2 border-l-[#C9A227]'
+                                ? 'bg-[#FBF6E8] border-l-2 border-l-[#FFCF00]'
                                 : 'hover:bg-gray-50'
                         )}
                     >
                         {/* Avatar with online dot */}
                         <div className="relative flex-shrink-0">
                             <div
-                                className="w-12 h-12 rounded-full bg-gradient-to-br from-[#C9A227] to-[#D4AF37] flex items-center justify-center text-white font-bold text-sm">
+                                className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FFCF00] to-[#FFE033] flex items-center justify-center text-[#1A1208] font-bold text-sm profile-photo-border">
                                 {initials}
                             </div>
                             {participant.is_online && (
@@ -129,7 +129,7 @@ export function ChatList({
                                 </p>
                                 {hasUnread && (
                                     <span
-                                        className="ml-1 flex-shrink-0 w-5 h-5 rounded-full bg-[#C9A227] text-white text-[10px] font-bold flex items-center justify-center">
+                                        className="ml-1 flex-shrink-0 w-5 h-5 rounded-full bg-[#FFCF00] text-[#1A1208] text-[10px] font-bold flex items-center justify-center">
                     {conv.unread_count > 9 ? '9+' : conv.unread_count}
                   </span>
                                 )}

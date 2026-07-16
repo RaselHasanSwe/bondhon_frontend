@@ -430,7 +430,7 @@ function InvoiceModal({item, onClose, currencySymbol}: {
                 <div className="px-6 py-5 space-y-4">
                     <div className="flex justify-between items-start">
                         <div>
-                            <div className="text-xl font-black text-[#C9A227]">💍 Enorsia</div>
+                            <div className="text-xl font-black text-[#1A1208]">💍 Enorsia</div>
                             <div className="text-xs text-gray-400">Matrimony Platform</div>
                         </div>
                         <div className="text-right text-xs text-gray-500">

@@ -229,7 +229,7 @@ export default function MatchesPage() {
         <div className="max-w-4xl mx-auto space-y-6 pb-20 md:pb-6 animate-fade-in">
             <div className="animate-fade-in-up">
                 <h1 className="page-title flex items-center gap-2">
-                    <HeartIcon size={22} className="text-[var(--primary)]" strokeWidth={1.8} />
+                    <HeartIcon size={22} className="text-[#1A1208]" strokeWidth={1.8} />
                     Your Matches
                 </h1>
                 {!isLoading && !isError && (

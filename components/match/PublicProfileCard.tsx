@@ -19,9 +19,9 @@ export function PublicProfileCard({ profile, onClick }: PublicProfileCardProps) 
         <button
             type="button"
             onClick={onClick}
-            className="card-premium overflow-hidden animate-fade-in flex flex-col h-full w-full text-left cursor-pointer transition-all duration-200 hover:border-[#C9A227]/40 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+            className="card-premium overflow-hidden animate-fade-in flex flex-col h-full w-full text-left cursor-pointer transition-all duration-200 hover:border-[#FFCF00]/40 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
         >
-            <div className="relative w-full aspect-[3/4] shrink-0 overflow-hidden bg-[var(--gold-50)]">
+            <div className="relative w-full aspect-[3/4] shrink-0 overflow-hidden bg-[var(--gold-50)] profile-photo-border">
                 {photoUrl ? (
                     <img
                         src={photoUrl}
@@ -30,7 +30,7 @@ export function PublicProfileCard({ profile, onClick }: PublicProfileCardProps) 
                     />
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <UserIcon size={48} className="text-[var(--gold-200)]" strokeWidth={1.2} />
+                        <UserIcon size={48} className="text-[#1A1208]/60" strokeWidth={1.2} />
                     </div>
                 )}
             </div>
@@ -48,7 +48,7 @@ export function PublicProfileCard({ profile, onClick }: PublicProfileCardProps) 
                         {formatAge(profile.profile?.dob)} • {formatHeight(profile.profile?.height_cm)}
                     </p>
                     {location && (
-                        <p className="text-xs text-muted-foreground/70 flex items-center gap-1 truncate">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
                             <MapPinIcon size={12} strokeWidth={1.8} />
                             {location}
                         </p>

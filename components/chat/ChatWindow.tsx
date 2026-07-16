@@ -651,10 +651,10 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                     {participant.avatar ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={cfImageUrl(participant.avatar) ?? ''} alt={participant.name}
-                             className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover"/>
+                             className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover profile-photo-border"/>
                     ) : (
                         <div
-                            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-linear-to-br from-[#C9A227] to-[#D4AF37] flex items-center justify-center text-white font-bold text-sm">
+                            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-linear-to-br from-[#FFCF00] to-[#FFE033] flex items-center justify-center text-[#1A1208] font-bold text-sm profile-photo-border">
                             {initials}
                         </div>
                     )}
@@ -725,7 +725,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                 {isLoadingMore && (
                     <div className="flex justify-center py-2">
                         <span
-                            className="w-5 h-5 border-2 border-[#C9A227]/30 border-t-[#C9A227] rounded-full animate-spin"/>
+                            className="w-5 h-5 border-2 border-[#FFCF00]/30 border-t-[#FFCF00] rounded-full animate-spin"/>
                     </div>
                 )}
                 {!hasMore && messages.length > 0 && (
@@ -802,7 +802,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                                 {pendingImages.length < MAX_IMAGES && (
                                     <button
                                         onClick={() => imageRef.current?.click()}
-                                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl border-2 border-dashed border-[#C9A227]/40 flex items-center justify-center text-[#C9A227] hover:border-[#C9A227] hover:bg-[#C9A227]/5 transition-colors shrink-0"
+                                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl border-2 border-dashed border-[#FFCF00]/40 flex items-center justify-center text-[#1A1208] hover:border-[#FFCF00] hover:bg-[#FFCF00]/5 transition-colors shrink-0"
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                              strokeWidth={2}>
@@ -822,7 +822,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                                 <div key={i}
                                      className="flex items-center gap-2 bg-gray-50 rounded-xl px-2 sm:px-3 py-1.5">
                                     <div
-                                        className="w-7 h-7 rounded-lg bg-[#C9A227]/10 flex items-center justify-center text-[#C9A227] shrink-0">
+                                        className="w-7 h-7 rounded-lg bg-[#FFCF00]/10 flex items-center justify-center text-[#1A1208] shrink-0">
                                         <span
                                             className="text-[10px] font-bold">{(f.name.split('.').pop() ?? 'DOC').toUpperCase().slice(0, 3)}</span>
                                     </div>
@@ -838,7 +838,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                             ))}
                             {pendingDocs.length < MAX_FILES && (
                                 <button onClick={() => fileRef.current?.click()}
-                                        className="text-xs text-[#C9A227] hover:underline text-left pl-1">+ Add file
+                                        className="text-xs text-[#1A1208] hover:underline text-left pl-1">+ Add file
                                     (PDF/DOC, max {MAX_FILES}, 2 MB each)</button>
                             )}
                         </div>
@@ -852,7 +852,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                             onChange={(e) => setMediaLabel(e.target.value)}
                             placeholder="Add a label / caption… (optional)"
                             maxLength={500}
-                            className="flex-1 text-xs rounded-xl bg-[#F8F9FB] border border-gray-200 px-2.5 py-1.5 text-[#1F2937] placeholder-gray-400 focus:outline-none focus:border-[#C9A227] focus:ring-1 focus:ring-[#C9A227]/30 transition-all min-w-0"
+                            className="flex-1 text-xs rounded-xl bg-[#F8F9FB] border border-gray-200 px-2.5 py-1.5 text-[#1F2937] placeholder-gray-400 focus:outline-none focus:border-[#FFCF00] focus:ring-1 focus:ring-[#FFCF00]/30 transition-all min-w-0"
                         />
                         <button onClick={clearPending}
                                 className="text-xs text-gray-400 hover:text-red-500 transition-colors whitespace-nowrap px-1 shrink-0">Cancel
@@ -885,7 +885,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                                 if (!pendingKind || pendingKind === 'images') imageRef.current?.click();
                             }}
                             disabled={!!pendingKind && pendingKind !== 'images'}
-                            className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:text-[#C9A227] hover:bg-[#C9A227]/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:text-[#1A1208] hover:bg-[#FFCF00]/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             title={`Send photos (max ${MAX_IMAGES}, 2 MB each)`}
                         >
                             <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -899,7 +899,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                                 if (!pendingKind || pendingKind === 'docs') fileRef.current?.click();
                             }}
                             disabled={!!pendingKind && pendingKind !== 'docs'}
-                            className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:text-[#C9A227] hover:bg-[#C9A227]/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:text-[#1A1208] hover:bg-[#FFCF00]/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             title={`Send PDF/DOC files (max ${MAX_FILES}, 2 MB each)`}
                         >
                             <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -917,14 +917,14 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                         onKeyDown={handleKeyDown}
                         placeholder={hasPending ? 'Add a caption…' : 'Type a message…'}
                         rows={1}
-                        className="flex-1 min-w-0 resize-none rounded-2xl bg-[#F8F9FB] border border-gray-200 px-3 sm:px-4 py-2 sm:py-2.5 text-sm text-[#1F2937] placeholder-gray-400 focus:outline-none focus:border-[#C9A227] focus:ring-2 focus:ring-[#C9A227]/20 transition-all max-h-24 sm:max-h-28 overflow-y-auto"
+                        className="flex-1 min-w-0 resize-none rounded-2xl bg-[#F8F9FB] border border-gray-200 px-3 sm:px-4 py-2 sm:py-2.5 text-sm text-[#1F2937] placeholder-gray-400 focus:outline-none focus:border-[#FFCF00] focus:ring-2 focus:ring-[#FFCF00]/20 transition-all max-h-24 sm:max-h-28 overflow-y-auto"
                         style={{lineHeight: '1.5'}}
                     />
 
                     <button
                         onClick={handleSend}
                         disabled={(!text.trim() && !hasPending) || isSending}
-                        className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-[#C9A227] text-white hover:bg-[#b8911f] disabled:opacity-40 disabled:cursor-not-allowed transition-all shrink-0 self-end"
+                        className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-[#FFCF00] text-[#1A1208] hover:bg-[#E6BA00] disabled:opacity-40 disabled:cursor-not-allowed transition-all shrink-0 self-end"
                         aria-label="Send"
                     >
                         {isSending ? (

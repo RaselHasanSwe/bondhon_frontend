@@ -30,7 +30,7 @@ export default function HeroSearchForm() {
             className="w-full max-w-3xl mx-auto rounded-2xl p-2"
             style={{
                 background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(201,162,39,0.2)',
+                border: '1px solid rgba(255,207,0,0.2)',
                 backdropFilter: 'blur(12px)',
             }}
         >
@@ -45,7 +45,7 @@ export default function HeroSearchForm() {
                         className="flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 capitalize"
                         style={
                             lookingFor === opt
-                                ? { background: 'linear-gradient(135deg, #C9A227, #D4AF37)', color: '#fff' }
+                                ? { background: 'linear-gradient(135deg, #FFCF00, #FFE033)', color: '#1A1208' }
                                 : { color: 'rgba(255,255,255,0.5)' }
                         }
                     >
@@ -94,8 +94,8 @@ export default function HeroSearchForm() {
                 <div className="flex items-end px-2">
                     <button
                         type="submit"
-                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg font-bold text-white text-sm transition-all hover:brightness-110 hover:scale-[1.02]"
-                        style={{ background: 'linear-gradient(135deg, #C9A227, #D4AF37)', boxShadow: '0 4px 16px rgba(201,162,39,0.4)' }}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg font-bold text-[#1A1208] text-sm transition-all hover:brightness-110 hover:scale-[1.02]"
+                        style={{ background: 'linear-gradient(135deg, #FFCF00, #FFE033)', boxShadow: '0 4px 16px rgba(255,207,0,0.4)' }}
                     >
                         <Search size={15} /> Search Profiles
                     </button>

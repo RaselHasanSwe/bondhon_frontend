@@ -124,7 +124,7 @@ const plans = [
         name: 'Gold',
         price: '৳999',
         period: '/month',
-        color: '#C9A227',
+        color: '#FFCF00',
         bg: 'linear-gradient(160deg,#fffbeb,#fef9e0)',
         features: ['Everything in Silver', '50 interests / day', 'Voice & Video calls', '30 contact views / mo', 'See who liked you'],
         cta: 'Choose Gold',
@@ -232,9 +232,9 @@ export default async function HomePage() {
                          style={{background: 'linear-gradient(135deg,rgba(6,8,18,0.93) 0%,rgba(12,18,36,0.88) 50%,rgba(18,26,55,0.84) 100%)'}}/>
                     {/* Gold accent glows */}
                     <div className="hero-blob absolute -top-40 -left-40 h-125 w-125 rounded-full opacity-[0.12]"
-                         style={{background: 'radial-gradient(circle,#C9A227 0%,transparent 70%)'}}/>
+                         style={{background: 'radial-gradient(circle,#FFCF00 0%,transparent 70%)'}}/>
                     <div className="absolute top-1/4 right-0 h-96 w-96 rounded-full opacity-[0.08]"
-                         style={{background: 'radial-gradient(circle,#D4AF37 0%,transparent 70%)'}}/>
+                         style={{background: 'radial-gradient(circle,#FFE033 0%,transparent 70%)'}}/>
                     {/* Bottom fade to site bg */}
                     <div className="absolute bottom-0 left-0 w-full h-32"
                          style={{background: 'linear-gradient(to top,#1f1f1fc4,transparent)'}}/>
@@ -246,11 +246,11 @@ export default async function HomePage() {
 
                     {/* Badge */}
                     <div
-                        className="animate-fade-in inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-7"
+                        className="animate-fade-in inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-7"
                         style={{
-                            background: 'rgba(201,162,39,0.12)',
-                            color: '#D4AF37',
-                            border: '1px solid rgba(201,162,39,0.3)'
+                            background: 'rgba(255,207,0,0.15)',
+                            color: '#FFCF00',
+                            border: '1px solid rgba(255,207,0,0.35)'
                         }}>{heroBadge}
                     </div>
 
@@ -260,7 +260,7 @@ export default async function HomePage() {
                         {heroTitle.includes('Life Partner') ? (
                             <>
                                 {heroTitle.split('Life Partner')[0]}
-                                <span className="text-gold-gradient"> Life Partner</span>
+                                <span className="text-[#FFCF00]"> Life Partner</span>
                                 {heroTitle.split('Life Partner')[1]}
                             </>
                         ) : heroTitle}
@@ -268,7 +268,7 @@ export default async function HomePage() {
 
                     {heroContent && (
                         <div
-                            className="animate-fade-in prose prose-invert prose-sm max-w-2xl mx-auto mb-8 text-gray-300 [&_strong]:text-[#C9A227]"
+                            className="animate-fade-in prose prose-invert prose-sm max-w-2xl mx-auto mb-8 text-gray-200 font-medium [&_strong]:text-[#FFCF00]"
                             dangerouslySetInnerHTML={{__html: heroContent}}
                             style={{animationDelay: '160ms'}}
                         />
@@ -285,13 +285,13 @@ export default async function HomePage() {
                         ].map((item) => (
                             <div
                                 key={item.label}
-                                className="inline-flex items-center gap-2.5 px-4 py-2.5 sm:px-5 sm:py-3 rounded-full text-sm font-medium text-gray-200 transition-all duration-200 hover:border-[#C9A227]/50 hover:bg-white/[0.08]"
+                                className="inline-flex items-center gap-2.5 px-4 py-2.5 sm:px-5 sm:py-3 rounded-full text-sm font-medium text-gray-200 transition-all duration-200 hover:border-[#FFCF00]/50 hover:bg-white/[0.08]"
                                 style={{
                                     background: 'rgba(255,255,255,0.05)',
-                                    border: '1px solid rgba(201,162,39,0.2)',
+                                    border: '1px solid rgba(255,207,0,0.2)',
                                     boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
                                 }}>
-                                <CheckCircle size={15} className="shrink-0" style={{color: '#C9A227'}}/>
+                                <CheckCircle size={15} className="shrink-0" style={{color: '#FFCF00'}}/>
                                 {item.label}
                             </div>
                         ))}
@@ -309,7 +309,7 @@ export default async function HomePage() {
                         className="animate-fade-in-up flex flex-col sm:flex-row items-center justify-center gap-4 mb-10"
                         style={{animationDelay: '280ms'}}>
                         <Link href="/register"
-                              className="btn-gold hover-shimmer inline-flex items-center justify-center gap-2 px-9 py-4 rounded-xl font-bold text-white text-base min-h-[3.25rem] min-w-[220px] sm:min-w-0"
+                              className="btn-gold hover-shimmer inline-flex items-center justify-center gap-2 px-9 py-4 rounded-xl font-bold text-[#1A1208] text-base min-h-[3.25rem] min-w-[220px] sm:min-w-0"
                               style={{height: 'auto'}}>
                             <Sparkles size={17}/> Create Free Profile
                         </Link>
@@ -328,7 +328,7 @@ export default async function HomePage() {
                             className="rounded-2xl px-6 py-8 sm:px-10 sm:py-10 text-center"
                             style={{
                                 background: 'rgba(255,255,255,0.06)',
-                                border: '1px solid rgba(201,162,39,0.22)',
+                                border: '1px solid rgba(255,207,0,0.22)',
                                 backdropFilter: 'blur(12px)',
                                 boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
                             }}>
@@ -340,7 +340,7 @@ export default async function HomePage() {
                             <p className="text-base sm:text-lg font-medium text-gray-200 mb-3">
                                 Looking for a Bride or Groom?
                             </p>
-                            <p className="text-sm sm:text-base text-gray-400 leading-relaxed mb-8 max-w-xl mx-auto">
+                            <p className="text-sm sm:text-base text-gray-200 font-medium leading-relaxed mb-8 max-w-xl mx-auto">
                                 Browse verified profiles based on age, religion, education, profession, and location to find compatible matches.
                             </p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
@@ -348,13 +348,13 @@ export default async function HomePage() {
                                     href="/search?gender=female"
                                     className="group flex flex-col items-center gap-3 rounded-xl px-6 py-5 transition-all duration-200 hover:-translate-y-1"
                                     style={{
-                                        background: 'linear-gradient(135deg, rgba(201,162,39,0.18) 0%, rgba(212,175,55,0.08) 100%)',
-                                        border: '1px solid rgba(201,162,39,0.35)',
-                                        boxShadow: '0 4px 20px rgba(201,162,39,0.12)',
+                                        background: 'linear-gradient(135deg, rgba(255,207,0,0.22) 0%, rgba(255,207,0,0.10) 100%)',
+                                        border: '1px solid rgba(255,207,0,0.45)',
+                                        boxShadow: '0 4px 20px rgba(255,207,0,0.15)',
                                     }}>
                                     <span
-                                        className="flex h-14 w-14 items-center justify-center rounded-2xl text-2xl transition-transform duration-200 group-hover:scale-110"
-                                        style={{background: 'rgba(201,162,39,0.15)'}}>
+                                        className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-2xl text-4xl transition-transform duration-200 group-hover:scale-110"
+                                        style={{background: 'rgba(255,207,0,0.2)'}}>
                                         👰
                                     </span>
                                     <span className="font-bold text-white text-base">Browse Bride Profiles</span>
@@ -368,7 +368,7 @@ export default async function HomePage() {
                                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
                                     }}>
                                     <span
-                                        className="flex h-14 w-14 items-center justify-center rounded-2xl text-2xl transition-transform duration-200 group-hover:scale-110"
+                                        className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-2xl text-4xl transition-transform duration-200 group-hover:scale-110"
                                         style={{background: 'rgba(255,255,255,0.08)'}}>
                                         🤵
                                     </span>
@@ -389,25 +389,25 @@ export default async function HomePage() {
             </section>
 
             {/* ══════════════════════════════════════════════════════════════════
-                PLATFORM FEATURES
+                VERIFIED MEMBER PROFILES / PLATFORM FEATURES
             ══════════════════════════════════════════════════════════════════ */}
             <AnimateSection>
-                <section style={{background: 'linear-gradient(135deg,#C9A227 0%,#D4AF37 50%,#B8931F 100%)'}}>
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+                <section style={{background: '#FFCF00'}}>
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 stagger">
                             {platformFeatures.map((f) => {
                                 const Icon = f.icon;
                                 return (
                                     <div
                                         key={f.label}
-                                        className="flex items-center gap-3 rounded-xl px-5 py-4 animate-fade-in-up transition-all duration-200 hover:bg-white/20"
+                                        className="flex items-center gap-3.5 rounded-xl px-5 py-4 animate-fade-in-up transition-all duration-200"
                                         style={{
-                                            background: 'rgba(255,255,255,0.12)',
-                                            border: '1px solid rgba(255,255,255,0.22)',
+                                            background: 'rgba(255,255,255,0.35)',
+                                            border: '1px solid rgba(26,18,8,0.12)',
                                         }}>
-                                        <CheckCircle size={18} className="shrink-0 text-white opacity-90"/>
-                                        <Icon size={17} className="shrink-0 text-white opacity-75"/>
-                                        <span className="text-sm sm:text-base font-semibold text-white leading-snug">
+                                        <CheckCircle size={20} className="shrink-0 text-[#1A1208]" strokeWidth={2.5}/>
+                                        <Icon size={19} className="shrink-0 text-[#1A1208]" strokeWidth={2.25}/>
+                                        <span className="text-base sm:text-lg font-bold text-[#1A1208] leading-snug">
                                             {f.label}
                                         </span>
                                     </div>
@@ -422,12 +422,13 @@ export default async function HomePage() {
                 <section className="py-16 md:py-24 bg-white">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="text-center mb-14">
-                            <p className="text-xs font-bold uppercase tracking-widest mb-3"
-                               style={{color: '#C9A227'}}>Platform Benefits</p>
-                            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+                            <p className="text-sm font-bold uppercase tracking-widest mb-3 text-[#1A1208]">
+                                Platform Benefits
+                            </p>
+                            <h2 className="text-2xl md:text-4xl font-bold text-[#1A1208]">
                                 Why Families Choose {settings.site_name}
                             </h2>
-                            <p className="text-gray-500 mt-3 max-w-xl mx-auto text-sm leading-relaxed">
+                            <p className="text-[#1A1208]/80 font-semibold mt-4 max-w-xl mx-auto text-base leading-relaxed">
                                 We combine traditional values with modern technology — giving families a safe, private,
                                 intelligent matchmaking platform.
                             </p>
@@ -437,18 +438,18 @@ export default async function HomePage() {
                                 const Icon = f.icon;
                                 return (
                                     <div key={f.title}
-                                         className="group relative bg-white rounded-2xl p-7 border border-gray-100 hover:border-[#C9A227] hover:shadow-xl transition-all duration-250 animate-fade-in-up"
-                                         style={{boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
+                                         className="group relative overflow-hidden bg-white rounded-2xl p-8 border-2 border-[#FFCF00] shadow-md transition-all duration-250 animate-fade-in-up hover:shadow-xl"
+                                         style={{boxShadow: '0 4px 16px rgba(255,207,0,0.12)'}}>
                                         <div
-                                            className="h-12 w-12 rounded-xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110"
-                                            style={{background: 'rgba(201,162,39,0.1)'}}>
-                                            <Icon size={22} style={{color: '#C9A227'}}/>
+                                            className="h-14 w-14 rounded-xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110"
+                                            style={{background: 'rgba(255,207,0,0.15)'}}>
+                                            <Icon size={26} className="text-[#1A1208]" strokeWidth={2.25}/>
                                         </div>
-                                        <h3 className="font-bold text-gray-800 mb-2 text-base">{f.title}</h3>
-                                        <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
+                                        <h3 className="font-bold text-[#1A1208] mb-3 text-lg">{f.title}</h3>
+                                        <p className="text-[#1A1208]/85 font-medium text-base leading-relaxed">{f.desc}</p>
                                         <div
-                                            className="absolute bottom-0 left-0 h-0.5 w-0 group-hover:w-full rounded-b-2xl transition-all duration-500"
-                                            style={{background: 'linear-gradient(to right,#C9A227,#D4AF37)'}}/>
+                                            className="absolute bottom-0 left-0 h-1 w-0 group-hover:w-full transition-all duration-500 ease-out"
+                                            style={{background: '#FFCF00'}}/>
                                     </div>
                                 );
                             })}
@@ -466,10 +467,9 @@ export default async function HomePage() {
                 <section className="py-16 md:py-24" style={{background: 'linear-gradient(135deg,#0d1117,#161b27)'}}>
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="text-center mb-14">
-                            <p className="text-xs font-bold uppercase tracking-widest mb-3"
-                               style={{color: '#C9A227'}}>Simple Process</p>
+                            <p className="text-sm font-bold uppercase tracking-widest mb-3 text-[#FFCF00]">Simple Process</p>
                             <h2 className="text-2xl md:text-3xl font-bold text-white">Your Journey to a Perfect Match</h2>
-                            <p className="text-gray-400 mt-3 max-w-lg mx-auto text-sm">
+                            <p className="text-gray-300 font-medium mt-3 max-w-lg mx-auto text-base">
                                 Four steps — from sign-up to finding the one — guided entirely by our secure, smart platform.
                             </p>
                         </div>
@@ -481,21 +481,21 @@ export default async function HomePage() {
                                         {i < steps.length - 1 && (
                                             <div
                                                 className="hidden lg:block absolute top-10 left-full w-full h-px z-0 pointer-events-none"
-                                                style={{background: 'linear-gradient(to right,rgba(201,162,39,0.4),transparent)'}}/>
+                                                style={{background: 'linear-gradient(to right,rgba(255,207,0,0.4),transparent)'}}/>
                                         )}
                                         <div className="step-card relative z-10 rounded-2xl p-6 h-full border"
                                              style={{
                                                  background: 'rgba(255,255,255,0.04)',
-                                                 borderColor: 'rgba(201,162,39,0.15)'
+                                                 borderColor: 'rgba(255,207,0,0.15)'
                                              }}>
                                             <div
-                                                className="h-14 w-14 rounded-2xl flex items-center justify-center mb-5 font-black text-white text-lg"
-                                                style={{background: 'linear-gradient(135deg,#C9A227,#D4AF37)'}}>
+                                                className="h-14 w-14 rounded-2xl flex items-center justify-center mb-5 font-black text-[#1A1208] text-lg"
+                                                style={{background: '#FFCF00'}}>
                                                 {s.step}
                                             </div>
-                                            <Icon size={20} style={{color: '#C9A227'}} className="mb-3"/>
-                                            <h3 className="font-bold text-white mb-2 text-sm">{s.title}</h3>
-                                            <p className="text-gray-400 text-xs leading-relaxed">{s.desc}</p>
+                                            <Icon size={22} className="text-[#FFCF00] mb-3" strokeWidth={2.25}/>
+                                            <h3 className="font-bold text-white mb-2 text-base">{s.title}</h3>
+                                            <p className="text-gray-300 font-medium text-sm leading-relaxed">{s.desc}</p>
                                         </div>
                                     </div>
                                 );
@@ -503,7 +503,7 @@ export default async function HomePage() {
                         </div>
                         <div className="text-center mt-12">
                             <Link href="/register"
-                                  className="btn-gold hover-shimmer inline-flex items-center gap-2 px-9 py-4 rounded-xl font-bold text-white text-base"
+                                  className="btn-gold hover-shimmer inline-flex items-center gap-2 px-9 py-4 rounded-xl font-bold text-[#1A1208] text-base"
                                   style={{height: 'auto'}}>
                                 Start for Free — It takes 2 minutes <ArrowRight size={16}/>
                             </Link>
@@ -519,9 +519,10 @@ export default async function HomePage() {
                 <section className="py-14 bg-white border-y border-gray-100">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="text-center mb-10">
-                            <p className="text-xs font-bold uppercase tracking-widest mb-2"
-                               style={{color: '#C9A227'}}>Safety First</p>
-                            <h2 className="text-xl md:text-2xl font-bold text-gray-900">Your Safety is Our Priority</h2>
+                            <p className="text-sm font-bold uppercase tracking-widest mb-2 text-[#1A1208]">
+                                Safety First
+                            </p>
+                            <h2 className="text-xl md:text-2xl font-bold text-[#1A1208]">Your Safety is Our Priority</h2>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 stagger">
                             {trustItems.map((item) => {
@@ -530,11 +531,11 @@ export default async function HomePage() {
                                     <div key={item.title} className="text-center group animate-fade-in-up">
                                         <div
                                             className="h-16 w-16 rounded-2xl flex items-center justify-center mx-auto mb-3 ring-pulse transition-transform duration-300 group-hover:scale-110"
-                                            style={{background: 'rgba(201,162,39,0.1)'}}>
-                                            <Icon size={26} style={{color: '#C9A227'}}/>
+                                            style={{background: 'rgba(255,207,0,0.15)'}}>
+                                            <Icon size={26} className="text-[#1A1208]" strokeWidth={2.25}/>
                                         </div>
-                                        <p className="font-semibold text-gray-800 text-sm">{item.title}</p>
-                                        <p className="text-gray-400 text-xs mt-1">{item.desc}</p>
+                                        <p className="font-bold text-[#1A1208] text-base">{item.title}</p>
+                                        <p className="text-[#1A1208]/75 font-medium text-sm mt-1">{item.desc}</p>
                                     </div>
                                 );
                             })}
@@ -547,37 +548,36 @@ export default async function HomePage() {
                 FINAL CTA BANNER
             ══════════════════════════════════════════════════════════════════ */}
             <AnimateSection>
-                <section className="relative overflow-hidden py-24"
-                         style={{background: 'linear-gradient(135deg,#C9A227 0%,#D4AF37 55%,#B8931F 100%)'}}>
+                <section className="relative overflow-hidden py-24" style={{background: '#FFCF00'}}>
                     <div className="absolute inset-0 pointer-events-none opacity-10"
                          style={{backgroundImage: 'radial-gradient(circle at 10% 50%,#fff 0%,transparent 55%),radial-gradient(circle at 90% 20%,#fff 0%,transparent 45%)'}}/>
                     <div className="relative max-w-3xl mx-auto px-4 text-center">
                         <div
                             className="h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-6 animate-float"
-                            style={{background: 'rgba(255,255,255,0.2)'}}>
-                            <Heart size={36} className="text-white" fill="white"/>
+                            style={{background: 'rgba(26,18,8,0.12)'}}>
+                            <Heart size={36} className="text-[#1A1208]" fill="#1A1208"/>
                         </div>
-                        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Begin Your Journey Today</h2>
-                        <p className="text-yellow-100 text-base mb-10 max-w-md mx-auto leading-relaxed">
+                        <h2 className="text-3xl md:text-4xl font-bold text-[#1A1208] mb-4">Begin Your Journey Today</h2>
+                        <p className="text-[#1A1208]/85 font-semibold text-base mb-10 max-w-md mx-auto leading-relaxed">
                             Join {settings.site_name} — registration is completely free. Thousands of verified families
                             are waiting to find the right match.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
                             <Link href="/register"
-                                  className="hover-shimmer inline-flex items-center gap-2 px-10 py-4 rounded-xl font-bold bg-white text-base transition-all hover:scale-[1.02]"
-                                  style={{color: '#C9A227', boxShadow: '0 6px 24px rgba(0,0,0,0.18)'}}>
+                                  className="hover-shimmer inline-flex items-center gap-2 px-10 py-4 rounded-xl font-bold bg-[#1A1208] text-[#FFCF00] text-base transition-all hover:scale-[1.02]"
+                                  style={{boxShadow: '0 6px 24px rgba(0,0,0,0.18)'}}>
                                 <Sparkles size={17}/> Get Started — It&apos;s Free
                             </Link>
                             <Link href="/about"
-                                  className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white text-base border border-white/40 hover:bg-white/10 transition-colors">
+                                  className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-[#1A1208] text-base border-2 border-[#1A1208]/30 hover:bg-[#1A1208]/10 transition-colors">
                                 Learn More <ArrowRight size={16}/>
                             </Link>
                         </div>
-                        <div className="flex flex-wrap items-center justify-center gap-6 text-yellow-100 text-xs">
-                            <span className="flex items-center gap-1.5"><CheckCircle size={13} className="opacity-80"/> Free Registration</span>
-                            <span className="flex items-center gap-1.5"><Shield size={13} className="opacity-80"/> 100% Verified Profiles</span>
-                            <span className="flex items-center gap-1.5"><Lock size={13} className="opacity-80"/> Secure & Private</span>
-                            <span className="flex items-center gap-1.5"><HandHeart size={13} className="opacity-80"/> Family-Friendly</span>
+                        <div className="flex flex-wrap items-center justify-center gap-6 text-[#1A1208] font-semibold text-sm">
+                            <span className="flex items-center gap-1.5"><CheckCircle size={14}/> Free Registration</span>
+                            <span className="flex items-center gap-1.5"><Shield size={14}/> 100% Verified Profiles</span>
+                            <span className="flex items-center gap-1.5"><Lock size={14}/> Secure & Private</span>
+                            <span className="flex items-center gap-1.5"><HandHeart size={14}/> Family-Friendly</span>
                         </div>
                     </div>
                 </section>

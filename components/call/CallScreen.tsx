@@ -2,6 +2,7 @@
 
 import {useEffect, useRef, useCallback, useState, type RefObject, type SyntheticEvent} from 'react';
 import Swal from 'sweetalert2';
+import { swalDefaults } from '@/lib/toast';
 import {useCallStore} from '@/store/callStore';
 import {callService} from '@/services/callService';
 import {WebRTCManager} from '@/lib/webrtc';
@@ -261,11 +262,10 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                     }
 
                     await Swal.fire({
+                        ...swalDefaults,
                         title: isDeviceError ? 'Device Not Found' : isPermission ? 'Permission Required' : 'Call Error',
                         text: err.message,
                         icon: 'error',
-                        confirmButtonColor: '#C9A227',
-                        customClass: {popup: 'rounded-2xl'},
                     });
 
                     if (isPermission) handleEnd();
@@ -300,13 +300,13 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                 destroyManager();
                 endCall();
                 Swal.fire({
+                    ...swalDefaults,
                     title: 'Call Ended',
                     text: 'The other party has ended the call.',
                     icon: 'info',
                     timer: 2500,
                     timerProgressBar: true,
                     showConfirmButton: false,
-                    customClass: {popup: 'rounded-2xl'},
                 });
             });
 
@@ -316,13 +316,13 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                 destroyManager();
                 endCall();
                 Swal.fire({
+                    ...swalDefaults,
                     title: 'Call Declined',
                     text: 'The other party declined the call.',
                     icon: 'info',
                     timer: 2500,
                     timerProgressBar: true,
                     showConfirmButton: false,
-                    customClass: {popup: 'rounded-2xl'},
                 });
             });
 
@@ -418,8 +418,8 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                     <div className="relative mb-6 sm:mb-8">
                         {status === 'active' && (
                             <>
-                                <div className="absolute inset-0 rounded-full bg-[#C9A227]/20 animate-ping"/>
-                                <div className="absolute -inset-3 rounded-full bg-[#C9A227]/10 animate-ping" style={{animationDelay: '0.4s'}}/>
+                                <div className="absolute inset-0 rounded-full bg-[#FFCF00]/20 animate-ping"/>
+                                <div className="absolute -inset-3 rounded-full bg-[#FFCF00]/10 animate-ping" style={{animationDelay: '0.4s'}}/>
                             </>
                         )}
                         {remoteParticipant.avatar ? (
@@ -427,7 +427,7 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                             <img src={cfImageUrl(remoteParticipant.avatar) ?? ''} alt={remoteParticipant.name}
                                  className="relative z-10 w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full object-cover border-2 border-white/20"/>
                         ) : (
-                            <div className="relative z-10 w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-linear-to-br from-[#C9A227] to-[#D4AF37] flex items-center justify-center">
+                            <div className="relative z-10 w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-linear-to-br from-[#FFCF00] to-[#FFE033] flex items-center justify-center">
                                 <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">{initials}</span>
                             </div>
                         )}
@@ -499,7 +499,7 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                             <img src={cfImageUrl(remoteParticipant.avatar) ?? ''} alt={remoteParticipant.name}
                                  className="w-20 h-20 sm:w-28 sm:h-28 rounded-full object-cover border-2 border-white/20 mb-4"/>
                         ) : (
-                            <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-linear-to-br from-[#C9A227] to-[#D4AF37] flex items-center justify-center mb-4">
+                            <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-linear-to-br from-[#FFCF00] to-[#FFE033] flex items-center justify-center mb-4">
                                 <span className="text-3xl sm:text-4xl font-bold text-white">{initials}</span>
                             </div>
                         )}
@@ -516,7 +516,7 @@ export function CallScreen({currentUserId}: CallScreenProps) {
                             <img src={cfImageUrl(remoteParticipant.avatar) ?? ''} alt={remoteParticipant.name}
                                  className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-2 border-white/20 mb-3"/>
                         ) : (
-                            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-linear-to-br from-[#C9A227] to-[#D4AF37] flex items-center justify-center mb-3">
+                            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-linear-to-br from-[#FFCF00] to-[#FFE033] flex items-center justify-center mb-3">
                                 <span className="text-3xl sm:text-4xl font-bold text-white">{initials}</span>
                             </div>
                         )}

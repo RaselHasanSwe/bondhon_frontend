@@ -2,6 +2,7 @@
 
 import {useState, useCallback} from 'react';
 import Swal from 'sweetalert2';
+import { swalDefaults } from '@/lib/toast';
 import {useCallStore} from '@/store/callStore';
 import {callService} from '@/services/callService';
 import type {CallParticipant, CallType} from '@/types/call';
@@ -47,16 +48,11 @@ export function CallButton({receiverId, receiver, type, className = ''}: CallBut
             }
 
             await Swal.fire({
+                ...swalDefaults,
                 title: type === 'video' ? 'Video Call Failed' : 'Audio Call Failed',
                 text: msg ?? 'Unable to start the call. Please try again.',
                 icon: 'error',
                 confirmButtonText: 'OK',
-                confirmButtonColor: '#C9A227',
-                background: '#fff',
-                customClass: {
-                    popup: 'rounded-2xl',
-                    title: 'text-[#1F2937]',
-                },
             });
         } finally {
             setIsInitiating(false);
@@ -72,10 +68,10 @@ export function CallButton({receiverId, receiver, type, className = ''}: CallBut
             title={type === 'video' ? 'Video call' : 'Audio call'}
             aria-label={type === 'video' ? 'Start video call' : 'Start audio call'}
             className={`w-8 h-8 flex items-center justify-center rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed
-                text-gray-500 hover:text-[#C9A227] hover:bg-[#C9A227]/10 ${className}`}
+                text-gray-500 hover:text-[#1A1208] hover:bg-[#FFCF00]/10 ${className}`}
         >
             {isInitiating ? (
-                <span className="w-4 h-4 border-2 border-[#C9A227]/30 border-t-[#C9A227] rounded-full animate-spin"/>
+                <span className="w-4 h-4 border-2 border-[#FFCF00]/30 border-t-[#FFCF00] rounded-full animate-spin"/>
             ) : type === 'video' ? (
                 <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                     <path strokeLinecap="round" strokeLinejoin="round"

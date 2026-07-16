@@ -160,7 +160,7 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
 
     const shortlistButtonClass = `flex items-center justify-center rounded-full border shadow-md backdrop-blur-sm transition-all active:scale-95 ${
         shortlisted
-            ? 'border-[var(--primary)] text-[var(--primary)] bg-white/95'
+            ? 'border-[var(--primary)] text-[#1A1208] bg-white/95'
             : 'border-white/80 text-white bg-black/35 hover:bg-black/50'
     }`;
 
@@ -172,7 +172,7 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
         <div
             className="card-premium overflow-hidden group animate-fade-in flex flex-col h-full min-w-0">
             {/* Photo */}
-            <div className="relative aspect-[4/5] bg-[var(--gold-50)]">
+            <div className="relative aspect-[4/5] bg-[var(--gold-50)] profile-photo-border">
                 <Link href={profileUrl} className="block w-full h-full">
                     {resolvePhotoUrl(profile.primary_photo) ? (
                         <img
@@ -182,7 +182,7 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                            <UserIcon size={48} className="text-[var(--gold-200)]" strokeWidth={1.2}/>
+                            <UserIcon size={48} className="text-[#1A1208]/60" strokeWidth={1.2}/>
                         </div>
                     )}
 
@@ -224,7 +224,7 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                 {/* Profile Content - Takes up space */}
                 <div className="min-w-0">
                     <Link href={profileUrl}>
-                        <h3 className="font-semibold text-foreground truncate hover:text-[var(--primary)] transition-colors" style={{fontFamily:'var(--font-heading)'}}>
+                        <h3 className="font-semibold text-foreground truncate hover:text-[#8A7000] transition-colors" style={{fontFamily:'var(--font-heading)'}}>
                             {profile.name}
                         </h3>
                     </Link>
@@ -235,19 +235,19 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                             {formatHeight(profile.profile?.height_cm)}
                         </p>
                         {profile.profile?.city && (
-                            <p className="text-xs text-muted-foreground/70 flex items-center gap-1 truncate">
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
                                 <MapPinIcon size={12} strokeWidth={1.8}/>
                                 {profile.profile.city}{profile.profile.country ? `, ${profile.profile.country}` : ''}
                             </p>
                         )}
                         {profile.religion && (
-                            <p className="text-xs text-muted-foreground/70 flex items-center gap-1">
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
                                 <ReligionIcon size={12} strokeWidth={1.8}/>
                                 {profile.religion}
                             </p>
                         )}
                         {profile.education && (
-                            <p className="text-xs text-muted-foreground/70 flex items-center gap-1">
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
                                 <GraduationCapIcon size={12} strokeWidth={1.8}/>
                                 {profile.education}
                             </p>
@@ -271,7 +271,7 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                                         : interestStatus === 'ignored'
                                             ? 'bg-gray-50 text-gray-500 border border-gray-200'
                                             : canSendInterest
-                                                ? 'text-white shadow-sm active:scale-[0.98]'
+                                                ? 'text-[#1A1208] shadow-sm active:scale-[0.98]'
                                                 : 'bg-gray-50 text-gray-500 border border-gray-200'
                         }`}
                         style={canSendInterest && interestStatus !== 'accepted' && !(interestStatus === 'pending' && isInterestSender && !canSendInterest) && interestStatus !== 'declined' && interestStatus !== 'ignored'
@@ -305,8 +305,8 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                         aria-label={shortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
                         className={`hidden sm:flex shrink-0 w-9 h-9 items-center justify-center rounded-xl border transition-all active:scale-95 ${
                             shortlisted
-                                ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--accent)]'
-                                : 'border-[var(--border)] text-muted-foreground hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--accent)]'
+                                ? 'border-[var(--primary)] text-[#1A1208] bg-[var(--accent)]'
+                                : 'border-[var(--border)] text-muted-foreground hover:border-[var(--primary)] hover:text-[#1A1208] hover:bg-[var(--accent)]'
                         }`}
                     >
                         {shortlistIcon}

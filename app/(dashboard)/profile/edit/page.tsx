@@ -643,7 +643,7 @@ function ProfileEditInner() {
                             {value:'preferences',label:'Preferences'},{value:'security',label:'Security'},
                         ].map(tab=>(
                             <TabsTrigger key={tab.value} value={tab.value}
-                                className="rounded-lg px-3 py-2 text-xs font-medium whitespace-nowrap data-[state=active]:bg-card data-[state=active]:text-primary">
+                                className="rounded-lg px-3 py-2 text-xs font-medium whitespace-nowrap data-[state=active]:bg-card data-[state=active]:text-[#1A1208]">
                                 {tab.label}
                             </TabsTrigger>
                         ))}
@@ -1084,13 +1084,13 @@ function ProfileEditInner() {
                         {photos.length>0 ? (
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                 {photos.map(photo=>(
-                                    <div key={photo.id} className="relative group rounded-xl overflow-hidden border border-gray-100">
+                                    <div key={photo.id} className="relative group rounded-xl overflow-hidden profile-photo-border">
                                         <img src={resolveProfilePhotoUrl(photo) ?? ''} alt="Profile photo" className="w-full aspect-square object-cover"/>
-                                        {photo.is_primary && <span className="absolute top-2 left-2 bg-[#C9A227] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Primary</span>}
+                                        {photo.is_primary && <span className="absolute top-2 left-2 bg-[#FFCF00] text-[#1A1208] text-[10px] font-bold px-2 py-0.5 rounded-full">Primary</span>}
                                         {photo.moderation_status==='pending' && <span className="absolute top-2 right-2 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Pending</span>}
                                         {photo.moderation_status==='rejected' && <span className="absolute top-2 right-2 bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full">Rejected</span>}
                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-end gap-1 pb-2">
-                                             {!photo.is_primary && <button onClick={()=>handleSetPrimary(photo.id)} className="text-white text-xs bg-[#C9A227] rounded-full px-2.5 py-1 hover:bg-[#b8911f] transition-colors text-[11px]">Primary</button>}
+                                             {!photo.is_primary && <button onClick={()=>handleSetPrimary(photo.id)} className="text-[#1A1208] text-xs bg-[#FFCF00] rounded-full px-2.5 py-1 hover:bg-[#E6BA00] transition-colors text-[11px]">Primary</button>}
                                              <button onClick={()=>handleDeletePhoto(photo.id)} className="text-white text-xs bg-red-500 rounded-full px-2.5 py-1 hover:bg-red-600 transition-colors text-[11px]">Delete</button>
                                          </div>
                                     </div>

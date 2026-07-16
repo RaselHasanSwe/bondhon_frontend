@@ -27,7 +27,7 @@ export default function FaqAccordion({ items }: FaqAccordionProps) {
         <div
           key={i}
           className="bg-white rounded-xl border overflow-hidden transition-all duration-200"
-          style={{ borderColor: openIndex === i ? '#C9A227' : '#e5e7eb' }}
+          style={{ borderColor: openIndex === i ? '#FFCF00' : '#e5e7eb' }}
         >
           <button
             className="w-full flex items-center justify-between px-6 py-4 text-left gap-4"
@@ -38,7 +38,7 @@ export default function FaqAccordion({ items }: FaqAccordionProps) {
               size={18}
               className="shrink-0 transition-transform duration-200"
               style={{
-                color: '#C9A227',
+                color: '#FFCF00',
                 transform: openIndex === i ? 'rotate(180deg)' : 'rotate(0deg)',
               }}
             />
