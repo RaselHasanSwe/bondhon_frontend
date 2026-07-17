@@ -79,7 +79,7 @@ export default async function Footer({settings}: FooterProps) {
                             )}
                         </div>
                         {settings.site_slogan && (
-                            <p className="text-gray-300 font-medium text-sm leading-relaxed max-w-xs">
+                            <p className="text-white font-medium text-sm leading-relaxed max-w-xs">
                                 {settings.site_slogan}
                             </p>
                         )}
@@ -91,7 +91,7 @@ export default async function Footer({settings}: FooterProps) {
                                         href={settings[key]!}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-gray-300 font-medium hover:text-[#FFCF00] transition-colors"
+                                        className="text-white hover:text-[#FFCF00] transition-colors"
                                         aria-label={key.replace('_url', '')}
                                     >
                                         <Icon/>
@@ -112,7 +112,7 @@ export default async function Footer({settings}: FooterProps) {
                                     <li key={page.id}>
                                         <Link
                                             href={pageSlugToHref(page.slug)}
-                                            className="text-gray-300 font-medium text-sm hover:text-[#FFCF00] transition-colors"
+                                            className="text-white font-medium text-sm hover:text-[#FFCF00] transition-colors"
                                         >
                                             {page.title}
                                         </Link>
@@ -131,25 +131,25 @@ export default async function Footer({settings}: FooterProps) {
                         </h4>
                         <ul className="space-y-3">
                             {settings.contact_email && (
-                                <li className="flex items-center gap-2 text-gray-300 font-medium text-sm">
+                                <li className="flex items-center gap-2 text-white font-medium text-sm">
                                     <Mail size={15} className="shrink-0" style={{color: '#FFCF00'}}/>
                                     <a href={`mailto:${settings.contact_email}`}
-                                       className="hover:text-white transition-colors">
+                                       className="hover:text-[#FFCF00] transition-colors">
                                         {settings.contact_email}
                                     </a>
                                 </li>
                             )}
                             {settings.contact_phone && (
-                                <li className="flex items-center gap-2 text-gray-300 font-medium text-sm">
+                                <li className="flex items-center gap-2 text-white font-medium text-sm">
                                     <Phone size={15} className="shrink-0" style={{color: '#FFCF00'}}/>
                                     <a href={`tel:${settings.contact_phone.replace(/\s/g, '')}`}
-                                       className="hover:text-white transition-colors">
+                                       className="hover:text-[#FFCF00] transition-colors">
                                         {settings.contact_phone}
                                     </a>
                                 </li>
                             )}
                             {settings.contact_address && (
-                                <li className="flex items-start gap-2 text-gray-300 font-medium text-sm">
+                                <li className="flex items-start gap-2 text-white font-medium text-sm">
                                     <MapPin size={15} className="shrink-0 mt-0.5" style={{color: '#FFCF00'}}/>
                                     <span>{settings.contact_address}</span>
                                 </li>

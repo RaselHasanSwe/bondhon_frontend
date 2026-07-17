@@ -43,7 +43,7 @@ export default async function PrivacyPolicyPage() {
             {page.title}
           </h1>
           {page.meta_description && (
-            <p className="text-[#4A3F2E] mt-3">{page.meta_description}</p>
+            <p className="text-[#FFFFFF] mt-3">{page.meta_description}</p>
           )}
         </div>
       </div>
