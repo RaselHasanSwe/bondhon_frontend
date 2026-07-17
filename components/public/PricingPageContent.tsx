@@ -89,7 +89,7 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
                         </span>
                     </h1>
 
-                    <p className="mt-3 text-sm text-[#4A3F2E] max-w-xl mx-auto">
+                    <p className="mt-3 text-sm text-[#ffffff] max-w-xl mx-auto">
                         Start free, upgrade anytime on {settings.site_name}.
                     </p>
                 </div>

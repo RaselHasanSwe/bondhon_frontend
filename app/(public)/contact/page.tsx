@@ -94,7 +94,7 @@ export default async function ContactPage() {
           >
             {contactPage?.title ?? 'Contact Us'}
           </h1>
-          <p className="text-[#4A3F2E] mt-3">
+          <p className="text-[#FFFFFF] mt-3">
             {contactPage?.meta_description ?? "We're here to help. Reach out anytime."}
           </p>
         </div>
