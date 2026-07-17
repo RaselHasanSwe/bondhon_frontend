@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import AnimateSection from '@/components/public/AnimateSection';
 import NewMembersPreview from '@/components/public/NewMembersPreview';
+import { HomeMissionSection } from '@/components/public/HomeMissionSection';
+import { HomeFeatureShowcase } from '@/components/public/HomeFeatureShowcase';
 
 export async function generateMetadata(): Promise<Metadata> {
     const settings = await getSettings();
@@ -416,6 +418,105 @@ export default async function HomePage() {
                     </div>
                 </section>
             </AnimateSection>
+
+            {/* ══════════════════════════════════════════════════════════════════
+                MISSION — We help find your life partner (Section 3)
+            ══════════════════════════════════════════════════════════════════ */}
+            <HomeMissionSection siteName={settings.site_name} />
+
+            {/* ══════════════════════════════════════════════════════════════════
+                CHAT FOR FREE (Section 4)
+            ══════════════════════════════════════════════════════════════════ */}
+            <HomeFeatureShowcase
+                eyebrow="Connect Instantly"
+                title="Chat for Free"
+                description="Explore profiles, express interest, and start meaningful conversations — all at no cost. Once there is mutual interest, unlock private chat and get to know your match in a safe, respectful space."
+                imageSrc="/images/home/chat-for-free.svg"
+                imageAlt="Free chat on Enorsia matrimony platform"
+                icon={MessageCircle}
+                bullets={[
+                    'Send interests and chat after mutual connection',
+                    'No spam — only approved conversations',
+                    'Family-friendly messaging environment',
+                ]}
+                cta={{ label: 'Browse Profiles', href: '/search' }}
+            />
+
+            {/* ══════════════════════════════════════════════════════════════════
+                HD VIDEO CALLING (Section 5)
+            ══════════════════════════════════════════════════════════════════ */}
+            <HomeFeatureShowcase
+                eyebrow="See Each Other Clearly"
+                title="HD Video Calling"
+                description="Chatting is a good start — but seeing each other brings you closer. Enjoy smooth, HD video calls directly through the platform, with no phone numbers needed. Private, secure, and face-to-face."
+                imageSrc="/images/home/hd-video-calling.svg"
+                imageAlt="HD video calling on Enorsia"
+                icon={Video}
+                reverse
+                variant="dark"
+                bullets={[
+                    'Encrypted voice and video inside the app',
+                    'No personal phone numbers shared',
+                    'Available for premium members',
+                ]}
+                cta={{ label: 'View Membership', href: '/plan' }}
+            />
+
+            {/* ══════════════════════════════════════════════════════════════════
+                COMPLETE PRIVACY (Section 7)
+            ══════════════════════════════════════════════════════════════════ */}
+            <HomeFeatureShowcase
+                eyebrow="Your Data, Your Control"
+                title="Complete Privacy"
+                description="Your profile, your rules. Keep your photos private and choose exactly who gets to see them. Contact details are never shared without your consent — total control, complete privacy."
+                imageSrc="/images/home/complete-privacy.svg"
+                imageAlt="Complete privacy controls on Enorsia"
+                icon={Lock}
+                variant="cream"
+                bullets={[
+                    'Control who views your photos and details',
+                    'Contact info shared only with consent',
+                    'Secure, encrypted platform infrastructure',
+                ]}
+                cta={{ label: 'Learn About Privacy', href: '/privacy-policy' }}
+            />
+
+            {/* ══════════════════════════════════════════════════════════════════
+                FACE VERIFICATION (Section 10)
+            ══════════════════════════════════════════════════════════════════ */}
+            <HomeFeatureShowcase
+                eyebrow="Trust & Safety"
+                title="Face Verification"
+                description={`${settings.site_name} cares about your safety. That is why we use live Face Verification to confirm each member's identity and stop fake profiles — so you can connect with confidence.`}
+                imageSrc="/images/home/face-verification.svg"
+                imageAlt="Face verification on Enorsia"
+                icon={Shield}
+                reverse
+                bullets={[
+                    'Live face scan matched to profile photos',
+                    'Reduces fake and misleading accounts',
+                    'Builds trust for families and matches',
+                ]}
+                cta={{ label: 'Create Verified Profile', href: '/register' }}
+            />
+
+            {/* ══════════════════════════════════════════════════════════════════
+                VERIFICATION BADGE (Section 12)
+            ══════════════════════════════════════════════════════════════════ */}
+            <HomeFeatureShowcase
+                eyebrow="Verified Members"
+                title="Verification Badge"
+                description="We award Verification Badges to members who complete face verification and more — so you can instantly spot genuine, trusted profiles."
+                imageSrc="/images/home/verification-badge.svg"
+                imageAlt="Verification badges on Enorsia profiles"
+                icon={BadgeCheck}
+                variant="dark"
+                bullets={[
+                    'Face scan verification badge',
+                    'Visible trust indicators on every profile',
+                ]}
+                cta={{ label: 'Get Verified', href: '/register' }}
+            />
 
             <AnimateSection>
                 <section className="py-16 md:py-24 bg-white">

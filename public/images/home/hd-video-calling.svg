@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0d1117"/>
+      <stop offset="1" stop-color="#161b27"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <rect x="250" y="150" width="700" height="500" rx="24" fill="#1A1208" opacity="0.5" stroke="#FFCF00" stroke-width="3"/>
+  <circle cx="600" cy="340" r="90" fill="#FFCF00" opacity="0.25"/>
+  <rect x="420" y="470" width="360" height="24" rx="12" fill="#FFCF00" opacity="0.5"/>
+  <rect x="470" y="520" width="260" height="18" rx="9" fill="#FFFFFF" opacity="0.2"/>
+  <text x="600" y="760" text-anchor="middle" font-family="Georgia, serif" font-size="40" font-weight="700" fill="#FFCF00">HD Video Calling</text>
+  <text x="600" y="810" text-anchor="middle" font-family="system-ui, sans-serif" font-size="20" fill="#D1D5DB">Replace: /images/home/hd-video-calling.svg</text>
+</svg>
