@@ -316,7 +316,7 @@ export default function PricingPageContent({ plans, settings, featureDefinitions
                     >
                         Ready to find your perfect match?
                     </h2>
-                    <p className="text-[#4A3F2E] mb-8 text-sm md:text-base">
+                    <p className="text-[#FFFFFF] mb-8 text-sm md:text-base">
                         Join thousands of verified members on {settings.site_name}. Create your free profile in under 5 minutes.
                     </p>
                     <Link
