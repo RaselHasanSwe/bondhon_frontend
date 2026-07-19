@@ -106,7 +106,7 @@ const plans = [
         period: 'Forever',
         color: '#6B7280',
         bg: '#fff',
-        features: ['10 profile views / day', '5 interests / day', 'Basic search filters', 'Chat on request only'],
+        features: ['10 profile views / day', '5 interests / day', 'Search & smart filters', 'Chat on request only'],
         cta: 'Get Started',
         href: '/register',
         highlight: false
@@ -117,7 +117,7 @@ const plans = [
         period: '/month',
         color: '#9CA3AF',
         bg: '#fff',
-        features: ['Unlimited profile views', '20 interests / day', 'Advanced search', 'Chat enabled', '10 contact views / mo'],
+        features: ['Unlimited profile views', '20 interests / day', 'Chat enabled', 'See profile visitors'],
         cta: 'Choose Silver',
         href: '/register',
         highlight: false
@@ -128,7 +128,7 @@ const plans = [
         period: '/month',
         color: '#FFCF00',
         bg: 'linear-gradient(160deg,#fffbeb,#fef9e0)',
-        features: ['Everything in Silver', '50 interests / day', 'Voice & Video calls', '30 contact views / mo', 'See who liked you'],
+        features: ['Everything in Silver', '50 interests / day', 'Voice & Video calls', 'Unlimited daily matches'],
         cta: 'Choose Gold',
         href: '/register',
         highlight: true
@@ -139,7 +139,7 @@ const plans = [
         period: '/month',
         color: '#7C3AED',
         bg: '#fff',
-        features: ['Everything in Gold', 'Unlimited interests', 'Unlimited contacts', 'Profile boost (top listing)', 'Priority support'],
+        features: ['Everything in Gold', 'Unlimited interests', 'More photo uploads', 'Priority support'],
         cta: 'Choose Platinum',
         href: '/register',
         highlight: false

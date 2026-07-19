@@ -3,16 +3,15 @@ import type { FeatureDefinitions, PlanFeatures, SubscriptionPlan } from '@/types
 /** Fallback labels when API definitions are unavailable (e.g. offline). */
 const FALLBACK_FEATURE_LABELS: Record<string, { label: string; type: 'bool' | 'qty' | 'enum'; period?: string }> = {
     daily_matches: { label: 'Daily Match Suggestions', type: 'qty', period: '/day' },
-    search_access: { label: 'Search Access', type: 'bool' },
     profile_views_per_day: { label: 'Profile Views per Day', type: 'qty', period: '/day' },
     send_interest_per_day: { label: 'Interests Sent per Day', type: 'qty', period: '/day' },
     chat_access: { label: 'Chat Access', type: 'bool' },
     audio_call_access: { label: 'Audio Calls', type: 'bool' },
     video_call_access: { label: 'Video Calls', type: 'bool' },
-    contact_info_views_per_month: { label: 'Contact Info Unlocks', type: 'qty', period: '/month' },
-    see_who_liked_me: { label: 'See Who Liked You', type: 'bool' },
+    see_who_viewed_profile: { label: 'See Profile Visitors', type: 'bool' },
     max_photos_upload: { label: 'Max Photos Upload', type: 'qty' },
-    priority_support: { label: 'Priority Support', type: 'bool' },
+    push_notifications: { label: 'Push Notifications', type: 'bool' },
+    email_digest_frequency: { label: 'Email Digest', type: 'enum' },
 };
 
 export interface PlanFeatureRow {
