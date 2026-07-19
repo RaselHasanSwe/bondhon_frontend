@@ -39,7 +39,7 @@ export async function getSettings(): Promise<SiteSettings> {
         // Return sensible defaults if the backend is unavailable
         return {
             site_name: APP_NAME,
-            site_slogan: 'Find Your Perfect Match',
+            site_slogan: 'Find Your Perfect Life Partner',
             site_logo: null,
             site_favicon: null,
             currency: 'BDT',
@@ -54,8 +54,8 @@ export async function getSettings(): Promise<SiteSettings> {
             instagram_url: null,
             linkedin_url: null,
             email_otp_expiry_minutes: null,
-            meta_title: `${APP_NAME} — Premium Matrimony`,
-            meta_description: `Find your perfect life partner on ${APP_NAME} — Bangladesh's most trusted matrimony platform.`,
+            meta_title: `${APP_NAME} — Find Your Perfect Life Partner`,
+            meta_description: `Find your perfect life partner on ${APP_NAME} — a trusted matrimony platform.`,
             meta_keywords: 'matrimony, marriage, Bangladesh',
         };
     }

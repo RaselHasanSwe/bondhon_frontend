@@ -5,7 +5,7 @@ export interface NavLink {
   label: string;
 }
 
-/** Always-visible header links (Home, Search Profile, Pricing). */
+/** Always-visible header links (Home, Search Profile, Membership). */
 export const STATIC_NAV_LINKS: NavLink[] = [
   { href: '/', label: 'Home' },
   { href: '/search', label: 'Search Profile' },

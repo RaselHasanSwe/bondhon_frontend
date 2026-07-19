@@ -176,7 +176,7 @@ const browseCategories = [
 
 const trustItems = [
     {icon: Shield, title: 'Face Verified', desc: 'Profiles verified with live face scan'},
-    {icon: BadgeCheck, title: 'Photo Moderated', desc: 'Admin-approved photos only'},
+    {icon: BadgeCheck, title: 'Photo Approved', desc: 'Admin-approved photos only'},
     {icon: Lock, title: 'Data Encrypted', desc: 'TLS encryption on all data'},
     {icon: PhoneCall, title: '24/7 Support', desc: 'Dedicated trust & safety team'},
 ];
