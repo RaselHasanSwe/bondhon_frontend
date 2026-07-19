@@ -451,6 +451,11 @@ button {
 /* ── Safe area for mobile ── */
 .safe-area-pb { padding-bottom: env(safe-area-inset-bottom, 0); }
 
+/* Clearance for fixed mobile dashboard bottom nav (nav height + safe area) */
+.mobile-bottom-nav-offset {
+  padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+}
+
 /* ── Additional Premium Utilities ─────────────────────────────────── */
 
 /* Stat card (extends card-premium, clickable) */
