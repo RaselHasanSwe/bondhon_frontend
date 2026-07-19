@@ -232,7 +232,7 @@ function MobileBottomNav({
         <nav
             ref={navRef}
             aria-label="Mobile dashboard navigation"
-            className="relative md:hidden fixed bottom-0 left-0 right-0 border-t-2 border-[#FFCF00] flex justify-around py-1.5 z-10 safe-area-pb backdrop-blur-sm"
+            className="md:hidden fixed bottom-0 inset-x-0 border-t-2 border-[#FFCF00] flex justify-around py-1.5 z-40 safe-area-pb backdrop-blur-sm"
             style={{background: 'rgba(255,255,255,0.98)'}}
         >
             <span
@@ -445,10 +445,10 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                 </aside>
 
                 {/* Main content */}
-                <main className="flex-1 md:ml-64 min-w-0">
+                <main className="flex-1 md:ml-64 min-w-0 flex flex-col min-h-screen">
                     {/* Mobile top bar */}
                     <div
-                        className="md:hidden border-b-2 border-[#FFCF00]/35 px-3 sm:px-4 py-3 flex items-center justify-between sticky top-0 z-10 backdrop-blur-sm"
+                        className="md:hidden border-b-2 border-[#FFCF00]/35 px-3 sm:px-4 py-3 flex items-center justify-between sticky top-0 z-30 backdrop-blur-sm"
                         style={{background: 'rgba(255,255,255,0.98)'}}>
                         <h1 className="text-base sm:text-lg font-bold text-[#1A1208]">{settings.site_name}</h1>
                         <div className="flex items-center gap-2">
@@ -457,19 +457,20 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                         </div>
                     </div>
 
-                    <div className="p-2 sm:p-4 lg:p-6 pb-20 md:pb-4">{children}</div>
+                    <div className="flex-1 p-2 sm:p-4 lg:p-6 mobile-bottom-nav-offset md:pb-4">{children}</div>
+                </main>
 
-                    <MobileBottomNav
-                        items={NAV_ITEMS.slice(0, 4)}
-                        pathname={pathname}
-                        onMoreClick={() => setDrawerOpen(true)}
-                    />
+                <MobileBottomNav
+                    items={NAV_ITEMS.slice(0, 4)}
+                    pathname={pathname}
+                    onMoreClick={() => setDrawerOpen(true)}
+                />
 
-                    {drawerOpen && (
+                {drawerOpen && (
                         <div className="md:hidden fixed inset-0 z-50" onClick={() => setDrawerOpen(false)}>
                             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
                             <div
-                                className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl border-t-2 border-[#FFCF00] pb-safe"
+                                className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl border-t-2 border-[#FFCF00] safe-area-pb"
                                 onClick={e => e.stopPropagation()}
                             >
                                 {/* Handle */}
@@ -525,7 +526,6 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                             </div>
                         </div>
                     )}
-                </main>
             </CallProvider>
         </div>
     );
