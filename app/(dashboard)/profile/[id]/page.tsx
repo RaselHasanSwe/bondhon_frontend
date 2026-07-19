@@ -236,7 +236,7 @@ export default function ProfileViewPage() {
                      style={{backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A227' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")"}}/>
 
                 <div className="relative max-w-5xl mx-auto px-4 md:px-8 py-10 md:py-14">
-                    <div className="md:flex md:gap-10 items-end">
+                    <div className="md:flex md:gap-10 md:items-start">
 
                         {/* ── Photo Column ── */}
                         <div className="md:w-72 lg:w-80 shrink-0">
@@ -272,7 +272,7 @@ export default function ProfileViewPage() {
                             {approvedPhotos.length > 0 && (
                                 <Link
                                     href={galleryHref}
-                                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#FFCF00]/35 bg-[#FFCF00]/10 px-4 py-2.5 text-xs font-semibold text-[#1A1208] hover:bg-[#FFCF00]/20 transition-colors"
+                                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#FFCF00]/35 bg-[#FFCF00]/10 px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#FFCF00]/20 transition-colors"
                                     style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 300 }}
                                 >
                                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -306,7 +306,7 @@ export default function ProfileViewPage() {
                             {/* Profile ID + location line */}
                             <div className="flex items-center gap-3 mt-3 flex-wrap">
                                 {p.profile?.profile_id && (
-                                    <span className="font-mono text-[10px] bg-white/10 border border-white/20 text-white/70 px-2.5 py-1 rounded tracking-widest">
+                                    <span className="font-mono text-[10px] bg-white/10 border border-white/20 text-white px-2.5 py-1 rounded tracking-widest">
                                         {p.profile.profile_id}
                                     </span>
                                 )}
@@ -435,8 +435,8 @@ export default function ProfileViewPage() {
                                              disabled={shortlistMutation.isPending}
                                              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs transition-all duration-200 border shrink-0 whitespace-nowrap
                                                  ${shortlisted
-                                                 ? 'border-[#FFCF00] text-[#1A1208] bg-[#FFCF00]/10'
-                                                 : 'border-white/20 text-white/70 hover:border-[#FFCF00]/60 hover:text-[#FFCF00]'
+                                                 ? 'border-white/20 text-white bg-[#FFCF00]/10'
+                                                 : 'border-white/20 text-white hover:border-[#FFCF00]/60 hover:text-[#FFCF00]'
                                              }`}
                                              style={{fontFamily: 'system-ui, sans-serif'}}>
                                              {shortlisted ? <StarFilledIcon size={12} strokeWidth={1.8}/> : <StarIcon size={12} strokeWidth={1.8}/>}
@@ -446,12 +446,12 @@ export default function ProfileViewPage() {
                                          {/* Secondary actions */}
                                          <div className="flex gap-1 ml-auto shrink-0">
                                              <button onClick={() => setReportOpen(true)}
-                                                     className="text-white/40 hover:text-white/70 text-xs px-2 py-1.5 rounded-full border border-white/10 hover:border-white/25 transition-colors whitespace-nowrap"
+                                                     className="text-white hover:text-white/70 text-xs px-2 py-1.5 rounded-full border border-white/20 hover:border-white/25 transition-colors whitespace-nowrap"
                                                      style={{fontFamily: 'system-ui, sans-serif'}}>
                                                  Report
                                              </button>
                                              <button onClick={() => setBlockOpen(true)}
-                                                     className="text-white/40 hover:text-red-400 text-xs px-2 py-1.5 rounded-full border border-white/10 hover:border-red-400/30 transition-colors whitespace-nowrap"
+                                                     className="text-white hover:text-red-400 text-xs px-2 py-1.5 rounded-full border border-white/20 hover:border-red-400/30 transition-colors whitespace-nowrap"
                                                      style={{fontFamily: 'system-ui, sans-serif'}}>
                                                  Block
                                              </button>
@@ -883,7 +883,7 @@ function GoldPill({label}: {label: string}) {
                   fontFamily: 'system-ui, sans-serif',
                   background: 'rgba(255,207,0,0.12)',
                   borderColor: 'rgba(255,207,0,0.35)',
-                  color: '#1A1208'
+                  color: '#FFFFFF'
               }}>
             {label}
         </span>
