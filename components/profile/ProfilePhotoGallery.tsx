@@ -20,10 +20,10 @@ export function ProfilePhotoGallery({ photos, subjectName, className }: ProfileP
     if (galleryImages.length === 0) {
         return (
             <div className={cn('rounded-2xl border border-[#e8d59a]/60 bg-white/80 p-12 text-center', className)}>
-                <div className="w-20 h-20 rounded-full bg-[#C9A227]/10 flex items-center justify-center mx-auto mb-4">
-                    <UserIcon size={40} className="text-[#C9A227]/40" strokeWidth={1.2} />
+                <div className="w-20 h-20 rounded-full bg-[#FFCF00]/10 flex items-center justify-center mx-auto mb-4 profile-photo-border">
+                    <UserIcon size={40} className="text-[#5C4F3A]" strokeWidth={1.2} />
                 </div>
-                <p className="text-gray-500 text-sm" style={{ fontFamily: 'system-ui, sans-serif' }}>
+                <p className="text-meta text-sm" style={{ fontFamily: 'system-ui, sans-serif' }}>
                     No photos available yet.
                 </p>
             </div>
@@ -38,7 +38,7 @@ export function ProfilePhotoGallery({ photos, subjectName, className }: ProfileP
                         key={`${image.src}-${index}`}
                         type="button"
                         onClick={() => setLightboxIndex(index)}
-                        className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-[#e8d59a]/50 bg-gray-100 shadow-sm hover:shadow-md hover:border-[#C9A227]/50 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A227]/50"
+                        className="group relative aspect-[3/4] rounded-xl overflow-hidden profile-photo-border bg-gray-100 shadow-sm hover:shadow-md transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFCF00]/50"
                         aria-label={`Open ${image.alt}`}
                     >
                         {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -13,7 +13,7 @@ export function MessageUnreadBadge({count, className = ''}: MessageUnreadBadgePr
 
     return (
         <span
-            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-[#C9A227] text-white text-[10px] font-bold leading-none tabular-nums shrink-0 ${className}`}
+            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-[#FFCF00] text-[#1A1208] text-[10px] font-bold leading-none tabular-nums shrink-0 ${className}`}
             aria-label={`${count} unread message${count === 1 ? '' : 's'}`}
         >
             {label}

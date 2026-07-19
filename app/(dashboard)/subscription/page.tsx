@@ -22,38 +22,15 @@ import type {
 // ---------------------------------------------------------------------------
 const FEATURE_LABELS: Record<string, { label: string; type: 'bool' | 'qty' | 'enum'; period?: string }> = {
     daily_matches: {label: 'Daily Match Suggestions', type: 'qty', period: '/day'},
-    search_access: {label: 'Search Access', type: 'bool'},
     profile_views_per_day: {label: 'Profile Views per Day', type: 'qty', period: '/day'},
-    search_filters_advanced: {label: 'Advanced Search Filters', type: 'bool'},
-    profile_id_search: {label: 'Search by Profile ID', type: 'bool'},
     send_interest_per_day: {label: 'Interests Sent per Day', type: 'qty', period: '/day'},
     chat_access: {label: 'Chat Access', type: 'bool'},
     audio_call_access: {label: 'Audio Calls', type: 'bool'},
     video_call_access: {label: 'Video Calls', type: 'bool'},
-    message_read_receipt: {label: 'Message Read Receipts', type: 'bool'},
-    voice_message_access: {label: 'Voice Messages', type: 'bool'},
-    contact_info_views_per_month: {label: 'Contact Info Unlocks', type: 'qty', period: '/month'},
-    see_who_liked_me: {label: 'See Who Liked You', type: 'bool'},
     see_who_viewed_profile: {label: 'See Profile Visitors', type: 'bool'},
-    profile_visitors_detailed: {label: 'Detailed Visitor List', type: 'bool'},
-    profile_boost_per_month: {label: 'Profile Boosts', type: 'qty', period: '/month'},
-    featured_profile: {label: 'Featured Profile Listing', type: 'bool'},
-    highlighted_in_search: {label: 'Highlighted in Search', type: 'bool'},
-    top_of_match_list: {label: 'Top of Daily Matches', type: 'bool'},
     max_photos_upload: {label: 'Max Photos Upload', type: 'qty'},
-    private_photo_access: {label: 'Private Photo Requests', type: 'bool'},
-    photo_request_per_day: {label: 'Photo Unlock Requests', type: 'qty', period: '/day'},
-    profile_visibility_control: {label: 'Profile Visibility Control', type: 'bool'},
-    verified_badge_eligible: {label: 'Verified Badge Eligible', type: 'bool'},
-    priority_verification: {label: 'Priority Verification', type: 'bool'},
-    compatibility_score_visible: {label: 'Compatibility Score', type: 'bool'},
-    profile_completion_tips: {label: 'AI Profile Tips', type: 'bool'},
-    match_report_monthly: {label: 'Monthly Match Report', type: 'bool'},
-    priority_support: {label: 'Priority Support', type: 'bool'},
-    relationship_advisor: {label: 'Matrimony Advisor Access', type: 'bool'},
     email_digest_frequency: {label: 'Email Digest', type: 'enum'},
     push_notifications: {label: 'Push Notifications', type: 'bool'},
-    sms_notifications: {label: 'SMS Alerts', type: 'bool'},
 };
 
 // ---------------------------------------------------------------------------
@@ -74,9 +51,9 @@ function statusColor(status: string) {
     return ({
         active: 'bg-green-100 text-green-700',
         pending: 'bg-yellow-100 text-yellow-700',
-        expired: 'bg-gray-100 text-gray-400',
+        expired: 'bg-gray-100 text-[#4A3F2E]',
         refunded: 'bg-red-100 text-red-600',
-    } as Record<string, string>)[status] ?? 'bg-gray-100 text-gray-500';
+    } as Record<string, string>)[status] ?? 'bg-gray-100 text-meta';
 }
 
 
@@ -143,7 +120,7 @@ function PlanCard({
                     </span>
                 </div>
                 <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
-                {plan.description && <p className="text-xs text-gray-500 mt-0.5">{plan.description}</p>}
+                {plan.description && <p className="text-xs text-meta mt-0.5">{plan.description}</p>}
             </div>
 
             <div className="mb-4">
@@ -152,14 +129,14 @@ function PlanCard({
                         <span className="text-green-600">Free</span>
                     ) : `${currencySymbol}${plan.price_bdt.toLocaleString()}`}
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-meta">
                     {plan.price_bdt === 0 ? 'Forever — no expiry' : `for ${formatDuration(plan)}`}
                 </div>
             </div>
 
             <ul className="flex-1 space-y-1.5 mb-6">
                 {features.length === 0 ? (
-                    <li className="text-xs text-gray-400">No special features</li>
+                    <li className="text-xs text-[#4A3F2E]">No special features</li>
                 ) : features.map(({key, label, value}) => {
                     const extra = renderFeatureExtra(key, value);
                     return (
@@ -246,7 +223,7 @@ function SwitchBanner({
                             <span
                                 className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-semibold ${badge}`}>{planLabel(sw.plan)}</span>
                             <span>{sw.subscription_plan?.name ?? planLabel(sw.plan)}</span>
-                            <span className="text-gray-400">· expires {formatDate(sw.expires_at)}</span>
+                            <span className="text-[#4A3F2E]">· expires {formatDate(sw.expires_at)}</span>
                             {isCurrent ? (
                                 <span className="ml-1 text-green-600 font-semibold">✓ Active</span>
                             ) : (
@@ -285,11 +262,11 @@ function CurrentPlanSnapshot({status, currencySymbol}: {
     if (!isActive) {
         return (
             <div
-                className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center text-gray-500">
+                className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center text-meta">
                 <div className="text-4xl mb-3">🆓</div>
                 <div className="font-semibold text-gray-700 mb-1">No Active Subscription</div>
-                <p className="text-xs text-gray-400 mb-2">You&apos;re currently on the <span
-                    className="font-semibold text-gray-600">Free (Basic)</span> tier.</p>
+                <p className="text-xs text-[#4A3F2E] mb-2">You&apos;re currently on the <span
+                    className="font-semibold text-[#3D3220]">Free (Basic)</span> tier.</p>
                 <p className="text-sm">Upgrade to Silver, Gold, or Platinum to unlock premium features like chat, calls,
                     and more.</p>
             </div>
@@ -314,15 +291,15 @@ function CurrentPlanSnapshot({status, currencySymbol}: {
                         <span
                             className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${badge}`}>{planLabel(status!.plan)}</span>
                     </div>
-                    {plan?.description && <p className="text-sm text-gray-500 mt-0.5">{plan.description}</p>}
+                    {plan?.description && <p className="text-sm text-meta mt-0.5">{plan.description}</p>}
                 </div>
                 <div className="text-right shrink-0">
-                    <div className="text-xs text-gray-500">{isFree ? 'Duration' : 'Expires'}</div>
+                    <div className="text-xs text-meta">{isFree ? 'Duration' : 'Expires'}</div>
                     <div className="text-base font-bold text-gray-900">
                         {isFree ? '∞ Forever' : formatDate(status!.expires_at)}
                     </div>
                     {plan && (
-                        <div className="text-xs text-gray-500 mt-0.5">
+                        <div className="text-xs text-meta mt-0.5">
                             {plan.price_bdt === 0
                                 ? 'Always Free'
                                 : `${currencySymbol}${plan.price_bdt.toLocaleString()} / ${formatDuration(plan)}`}
@@ -333,7 +310,7 @@ function CurrentPlanSnapshot({status, currencySymbol}: {
 
             {features.length > 0 && (
                 <>
-                    <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Your Features
+                    <div className="text-xs font-semibold text-[#3D3220] uppercase tracking-wide mb-2">Your Features
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5">
                         {features.map(({key, label, value}) => {
@@ -416,7 +393,7 @@ function InvoiceModal({item, onClose, currencySymbol}: {
                             {printing ? 'Loading…' : '🖨️ Print'}
                         </button>
                         <button onClick={onClose}
-                                className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">✕
+                                className="p-1.5 rounded-lg hover:bg-gray-100 text-meta transition-colors">✕
                         </button>
                     </div>
                 </div>
@@ -430,10 +407,10 @@ function InvoiceModal({item, onClose, currencySymbol}: {
                 <div className="px-6 py-5 space-y-4">
                     <div className="flex justify-between items-start">
                         <div>
-                            <div className="text-xl font-black text-[#C9A227]">💍 Enorsia</div>
-                            <div className="text-xs text-gray-400">Matrimony Platform</div>
+                            <div className="text-xl font-black text-[#1A1208]">💍 Enorsia</div>
+                            <div className="text-xs text-[#4A3F2E]">Matrimony Platform</div>
                         </div>
-                        <div className="text-right text-xs text-gray-500">
+                        <div className="text-right text-xs text-meta">
                             <div className="font-semibold text-sm text-gray-900">Invoice</div>
                             <div className="font-mono">#{item.transaction_id}</div>
                             <div>{formatDate(item.created_at)}</div>
@@ -455,18 +432,18 @@ function InvoiceModal({item, onClose, currencySymbol}: {
                             item.expires_at ? ['Valid Until', formatDate(item.expires_at)] : null,
                         ].filter(Boolean).map((row, i) => (
                             <tr key={i} className="border-b last:border-0">
-                                <td className="py-2 text-gray-500 w-36 font-medium">{(row as [string, React.ReactNode])[0]}</td>
+                                <td className="py-2 text-meta w-36 font-medium">{(row as [string, React.ReactNode])[0]}</td>
                                 <td className="py-2 font-medium">{(row as [string, React.ReactNode])[1]}</td>
                             </tr>
                         ))}
                         </tbody>
                     </table>
                     <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
-                        <span className="text-sm text-gray-600 font-medium">Total Paid</span>
+                        <span className="text-sm text-[#3D3220] font-medium">Total Paid</span>
                         <span
                             className="text-2xl font-extrabold text-gray-900">{currencySymbol}{item.amount_bdt.toLocaleString()}</span>
                     </div>
-                    <p className="text-xs text-gray-400 text-center">Thank you for subscribing to Enorsia Premium!
+                    <p className="text-xs text-[#4A3F2E] text-center">Thank you for subscribing to Enorsia Premium!
                         💍</p>
                 </div>
             </div>
@@ -600,7 +577,7 @@ export default function SubscriptionPage() {
                 {/* Header */}
                 <div className="mb-5">
                     <h1 className="text-2xl font-bold text-gray-900">Subscription</h1>
-                    <p className="text-sm text-gray-500 mt-1">Manage your plan, switch between purchased plans, and view
+                    <p className="text-sm text-meta mt-1">Manage your plan, switch between purchased plans, and view
                         invoices.</p>
                 </div>
 
@@ -649,7 +626,7 @@ export default function SubscriptionPage() {
                             key={t}
                             onClick={() => setTab(t)}
                             className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                                tab === t ? 'bg-white text-gray-900 shadow' : 'text-gray-500 hover:text-gray-700'
+                                tab === t ? 'bg-white text-gray-900 shadow' : 'text-meta hover:text-gray-700'
                             }`}
                         >
                             {t === 'plans' ? '📋 Plans' : '📜 History'}
@@ -663,7 +640,7 @@ export default function SubscriptionPage() {
                         {/* Duration filter */}
                         {!plansLoading && durationOptions.length > 1 && (
                             <div className="mb-4 flex items-center gap-3">
-                                <label className="text-sm font-medium text-gray-600 shrink-0">Filter by duration:</label>
+                                <label className="text-sm font-medium text-[#3D3220] shrink-0">Filter by duration:</label>
                                 <select
                                     value={durationFilter}
                                     onChange={e => setDurationFilter(e.target.value)}
@@ -683,7 +660,7 @@ export default function SubscriptionPage() {
                                                          className="bg-gray-100 rounded-2xl h-96 animate-pulse"/>)}
                             </div>
                         ) : filteredPlans.length === 0 ? (
-                            <div className="text-center py-16 text-gray-400">No plans available.</div>
+                            <div className="text-center py-16 text-[#4A3F2E]">No plans available.</div>
                         ) : (
                             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
                                 {filteredPlans.map(plan => (
@@ -699,7 +676,7 @@ export default function SubscriptionPage() {
                             </div>
                         )}
 
-                        <div className="mt-8 flex items-center justify-center gap-2 text-xs text-gray-400">
+                        <div className="mt-8 flex items-center justify-center gap-2 text-xs text-[#4A3F2E]">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                       d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -718,7 +695,7 @@ export default function SubscriptionPage() {
                                                          className="h-16 bg-gray-100 rounded-xl animate-pulse"/>)}
                             </div>
                         ) : history.length === 0 ? (
-                            <div className="text-center py-16 text-gray-400">
+                            <div className="text-center py-16 text-[#4A3F2E]">
                                 <div className="text-4xl mb-3">📭</div>
                                 <div>No payment history yet.</div>
                             </div>
@@ -726,7 +703,7 @@ export default function SubscriptionPage() {
                             <div className="overflow-x-auto rounded-2xl border border-gray-200">
                                 <table className="w-full text-sm">
                                     <thead>
-                                    <tr className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
+                                    <tr className="bg-gray-50 border-b text-xs text-meta uppercase tracking-wide">
                                         <th className="px-4 py-3 text-left">Plan</th>
                                         <th className="px-4 py-3 text-left">Amount</th>
                                         <th className="px-4 py-3 text-left hidden sm:table-cell">Method</th>
@@ -765,7 +742,7 @@ export default function SubscriptionPage() {
                                                     ? <span className="text-green-600 font-semibold">Free</span>
                                                     : `${currencySymbol}${item.amount_bdt.toLocaleString()}`}
                                             </td>
-                                            <td className="px-4 py-3 hidden sm:table-cell text-gray-500 capitalize text-xs">
+                                            <td className="px-4 py-3 hidden sm:table-cell text-meta capitalize text-xs">
                                                 {item.payment_method}
                                             </td>
                                             <td className="px-4 py-3">
@@ -774,10 +751,10 @@ export default function SubscriptionPage() {
                                                         {item.status}
                                                     </span>
                                             </td>
-                                            <td className="px-4 py-3 hidden md:table-cell text-gray-500 text-xs">
+                                            <td className="px-4 py-3 hidden md:table-cell text-meta text-xs">
                                                 {formatDate(item.created_at)}
                                             </td>
-                                            <td className="px-4 py-3 hidden md:table-cell text-gray-500 text-xs">
+                                            <td className="px-4 py-3 hidden md:table-cell text-meta text-xs">
                                                 {formatDate(item.expires_at)}
                                             </td>
                                             <td className="px-4 py-3 text-right">
@@ -811,7 +788,7 @@ export default function SubscriptionPage() {
 
                 {/* Footer note */}
                 {tab === 'history' && (
-                    <p className="text-xs text-gray-400 text-center mt-4">
+                    <p className="text-xs text-[#4A3F2E] text-center mt-4">
                         💡 Click <strong>⇄ Switch</strong> on any valid past plan to re-activate it for the remainder of
                         its subscription period.
                     </p>

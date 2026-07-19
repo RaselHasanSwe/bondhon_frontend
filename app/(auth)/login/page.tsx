@@ -89,9 +89,9 @@ function LoginForm() {
 
     return (
         <div className="bg-white rounded-2xl overflow-hidden"
-             style={{boxShadow: '0 4px 40px rgba(201,162,39,0.12), 0 1px 8px rgba(0,0,0,0.06)'}}>
+             style={{boxShadow: '0 4px 40px rgba(255,207,0,0.12), 0 1px 8px rgba(0,0,0,0.06)'}}>
             {/* Header accent */}
-            <div className="h-1.5 w-full" style={{background: 'linear-gradient(90deg, #C9A227, #E8C547, #C9A227)'}}/>
+            <div className="h-1.5 w-full" style={{background: 'linear-gradient(90deg, #FFCF00, #FFE033, #FFCF00)'}}/>
 
             <div className="p-8">
                 <div className="mb-7">
@@ -144,7 +144,7 @@ function LoginForm() {
                         <Input
                             id="email" type="email" autoComplete="email"
                             placeholder="you@example.com"
-                            className="h-11 rounded-xl border-[#E8DFCC] bg-[#FEFCF8] focus-visible:ring-[#C9A227] focus-visible:border-[#C9A227]"
+                            className="h-11 rounded-xl border-[#E8DFCC] bg-[#FEFCF8] focus-visible:ring-[#FFCF00] focus-visible:border-[#FFCF00]"
                             {...register('email')}
                         />
                         {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
@@ -153,14 +153,14 @@ function LoginForm() {
                     <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
                             <Label htmlFor="password" className="text-[#5A4A2A] font-medium text-sm">Password</Label>
-                            <Link href="/forgot-password" className="text-xs text-[#C9A227] hover:text-[#A07810] font-medium transition-colors">
+                            <Link href="/forgot-password" className="text-xs text-[#1A1208] hover:text-[#8A7000] font-medium transition-colors">
                                 Forgot password?
                             </Link>
                         </div>
                         <Input
                             id="password" type="password" autoComplete="current-password"
                             placeholder="••••••••"
-                            className="h-11 rounded-xl border-[#E8DFCC] bg-[#FEFCF8] focus-visible:ring-[#C9A227] focus-visible:border-[#C9A227]"
+                            className="h-11 rounded-xl border-[#E8DFCC] bg-[#FEFCF8] focus-visible:ring-[#FFCF00] focus-visible:border-[#FFCF00]"
                             {...register('password')}
                         />
                         {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
@@ -187,7 +187,7 @@ function LoginForm() {
                 <div className="mt-6 pt-5 border-t border-[#F0EAD9] text-center">
                     <p className="text-sm text-[#8A7A62]">
                         Don&apos;t have an account?{' '}
-                        <Link href="/register" className="text-[#C9A227] font-semibold hover:text-[#A07810] transition-colors">
+                        <Link href="/register" className="text-[#1A1208] font-semibold hover:text-[#8A7000] transition-colors">
                             Create one free
                         </Link>
                     </p>
@@ -202,7 +202,7 @@ export default function LoginPage() {
         <Suspense
             fallback={
                 <div className="bg-white rounded-2xl overflow-hidden p-8 text-center text-sm text-[#8A7A62]"
-                     style={{boxShadow: '0 4px 40px rgba(201,162,39,0.12), 0 1px 8px rgba(0,0,0,0.06)'}}>
+                     style={{boxShadow: '0 4px 40px rgba(255,207,0,0.12), 0 1px 8px rgba(0,0,0,0.06)'}}>
                     Loading…
                 </div>
             }

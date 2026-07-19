@@ -72,7 +72,7 @@ function ShortlistCard({
         <div className="card-premium p-4 hover:shadow-md transition-all duration-200 hover:border-[var(--primary)]/20 group">
             <div className="flex items-start gap-4">
                 <Link href={profileUrl} className="flex-shrink-0">
-                    <div className="w-14 h-14 rounded-full bg-[var(--gold-50)] overflow-hidden border-2 border-transparent group-hover:border-[var(--primary)]/30 transition-colors">
+                    <div className="w-14 h-14 rounded-full bg-[var(--gold-50)] overflow-hidden profile-photo-border">
                         {resolvePhotoUrl(profile.primary_photo) ? (
                             <img
                                 src={resolvePhotoUrl(profile.primary_photo)!}
@@ -81,7 +81,7 @@ function ShortlistCard({
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                                <UserIcon size={24} strokeWidth={1.5} className="text-[var(--gold-200)]" />
+                                <UserIcon size={24} strokeWidth={1.5} className="text-subtle" />
                             </div>
                         )}
                     </div>
@@ -93,7 +93,7 @@ function ShortlistCard({
                             <div className="flex items-center gap-2 flex-wrap">
                                 <Link
                                     href={profileUrl}
-                                    className="font-semibold text-foreground truncate group-hover:text-[var(--primary)] transition-colors"
+                                    className="font-semibold text-foreground truncate group-hover:text-[#8A7000] transition-colors"
                                     style={{ fontFamily: 'var(--font-heading)' }}
                                 >
                                     {profile.name}
@@ -306,7 +306,7 @@ export default function ShortlistPage() {
         <div className="max-w-4xl mx-auto space-y-6 pb-20 md:pb-6 animate-fade-in">
             <div className="animate-fade-in-up">
                 <h1 className="page-title flex items-center gap-2">
-                    <StarFilledIcon size={22} className="text-[var(--primary)]" />
+                    <StarFilledIcon size={22} className="text-[#1A1208]" />
                     Shortlist
                 </h1>
                 {!isLoading && !isError && (

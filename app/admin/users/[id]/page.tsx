@@ -36,7 +36,7 @@ export default function AdminUserDetailPage() {
   });
 
   if (isLoading) {
-    return <div className="p-8 text-center text-gray-500">Loading user details…</div>;
+    return <div className="p-8 text-center text-meta">Loading user details…</div>;
   }
 
   if (isError || !detail?.user) {
@@ -52,9 +52,9 @@ export default function AdminUserDetailPage() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <Link href="/admin/users" className="text-sm text-gray-500 hover:text-gray-700">← Back to users</Link>
+          <Link href="/admin/users" className="text-sm text-meta hover:text-gray-700">← Back to users</Link>
           <h1 className="text-2xl font-bold text-gray-900 mt-1">{user.name}</h1>
-          <p className="text-sm text-gray-500">Full review view for user and face captures</p>
+          <p className="text-sm text-meta">Full review view for user and face captures</p>
         </div>
         <div className="flex gap-2 flex-wrap justify-end">
           <button
@@ -97,12 +97,12 @@ export default function AdminUserDetailPage() {
             </div>
 
             <div className="grid md:grid-cols-2 gap-4 text-sm">
-              <div><span className="text-gray-500">Email:</span> <span className="font-medium">{user.email}</span></div>
-              <div><span className="text-gray-500">Gender:</span> <span className="font-medium capitalize">{user.gender}</span></div>
-              <div><span className="text-gray-500">Profile ID:</span> <span className="font-medium">{user.profile?.profile_id ?? '—'}</span></div>
-              <div><span className="text-gray-500">Plan:</span> <span className="font-medium capitalize">{user.subscription_plan}</span></div>
-              <div><span className="text-gray-500">Email verified:</span> <span className="font-medium">{user.email_verified_at ?? 'No'}</span></div>
-              <div><span className="text-gray-500">Joined:</span> <span className="font-medium">{user.created_at}</span></div>
+              <div><span className="text-meta">Email:</span> <span className="font-medium">{user.email}</span></div>
+              <div><span className="text-meta">Gender:</span> <span className="font-medium capitalize">{user.gender}</span></div>
+              <div><span className="text-meta">Profile ID:</span> <span className="font-medium">{user.profile?.profile_id ?? '—'}</span></div>
+              <div><span className="text-meta">Plan:</span> <span className="font-medium capitalize">{user.subscription_plan}</span></div>
+              <div><span className="text-meta">Email verified:</span> <span className="font-medium">{user.email_verified_at ?? 'No'}</span></div>
+              <div><span className="text-meta">Joined:</span> <span className="font-medium">{user.created_at}</span></div>
             </div>
           </div>
 
@@ -116,15 +116,15 @@ export default function AdminUserDetailPage() {
                     <div className="p-3 text-sm">
                       <div className="flex items-center justify-between gap-2 mb-1">
                         <span className="font-medium capitalize">{capture.capture_key.replace('-', ' ')}</span>
-                        <span className="text-gray-400 text-xs">{capture.captured_at ?? ''}</span>
+                        <span className="text-[#4A3F2E] text-xs">{capture.captured_at ?? ''}</span>
                       </div>
-                      <pre className="text-[11px] text-gray-500 whitespace-pre-wrap wrap-break-word">{JSON.stringify(capture.metadata ?? {}, null, 2)}</pre>
+                      <pre className="text-[11px] text-meta whitespace-pre-wrap wrap-break-word">{JSON.stringify(capture.metadata ?? {}, null, 2)}</pre>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500">No face captures available.</p>
+              <p className="text-sm text-meta">No face captures available.</p>
             )}
           </div>
         </div>
@@ -132,18 +132,18 @@ export default function AdminUserDetailPage() {
         <div className="space-y-6">
           <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
             <h2 className="font-semibold text-gray-900 mb-3">Face review summary</h2>
-            <div className="space-y-2 text-sm text-gray-600">
-              <div><span className="text-gray-500">Status:</span> {face_scan?.status ?? 'Not started'}</div>
-              <div><span className="text-gray-500">Completed:</span> {face_scan?.completed_at ?? '—'}</div>
-              <div><span className="text-gray-500">Reviewed:</span> {face_scan?.reviewed_at ?? '—'}</div>
-              <div><span className="text-gray-500">Reviewer:</span> {face_scan?.reviewed_by ?? '—'}</div>
+            <div className="space-y-2 text-sm text-[#3D3220]">
+              <div><span className="text-meta">Status:</span> {face_scan?.status ?? 'Not started'}</div>
+              <div><span className="text-meta">Completed:</span> {face_scan?.completed_at ?? '—'}</div>
+              <div><span className="text-meta">Reviewed:</span> {face_scan?.reviewed_at ?? '—'}</div>
+              <div><span className="text-meta">Reviewer:</span> {face_scan?.reviewed_by ?? '—'}</div>
             </div>
             {face_scan?.review_note && <div className="mt-4 rounded-xl bg-gray-50 border border-gray-100 p-3 text-sm text-gray-700">{face_scan.review_note}</div>}
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
             <h2 className="font-semibold text-gray-900 mb-3">Relations</h2>
-            <pre className="text-[11px] text-gray-600 whitespace-pre-wrap wrap-break-word">{JSON.stringify({
+            <pre className="text-[11px] text-[#3D3220] whitespace-pre-wrap wrap-break-word">{JSON.stringify({
               profile: user.profile,
               religious_detail: user.religious_detail,
               family_detail: user.family_detail,

@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {useEffect, useState, useRef, useLayoutEffect, useCallback} from 'react';
 import {useRouter, usePathname} from 'next/navigation';
 import Link from 'next/link';
 import {useAuthStore} from '@/store/authStore';
@@ -65,6 +65,221 @@ const NAV_ITEMS: { href: string; label: string; Icon: ComponentType<NavIconProps
     {href: '/subscription', label: 'Upgrade Plan', Icon: CrownIcon},
     {href: '/account-disable-request', label: 'Ac. Disable Request', Icon: AccountDisableIcon},
 ];
+
+function isNavItemActive(pathname: string, href: string) {
+    return pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+}
+
+function SidebarNav({
+    items,
+    pathname,
+    unreadMessageCount,
+}: {
+    items: typeof NAV_ITEMS;
+    pathname: string;
+    unreadMessageCount: number;
+}) {
+    const navRef = useRef<HTMLElement>(null);
+    const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+    const [pill, setPill] = useState({top: 0, height: 0, opacity: 0});
+    const activeIndex = items.findIndex((item) => isNavItemActive(pathname, item.href));
+
+    const updatePill = useCallback(() => {
+        const navEl = navRef.current;
+        const activeEl = activeIndex >= 0 ? linkRefs.current[activeIndex] : null;
+
+        if (!navEl || !activeEl) {
+            setPill((prev) => ({...prev, opacity: 0}));
+            return;
+        }
+
+        const navRect = navEl.getBoundingClientRect();
+        const elRect = activeEl.getBoundingClientRect();
+
+        setPill({
+            top: elRect.top - navRect.top,
+            height: elRect.height,
+            opacity: 1,
+        });
+    }, [activeIndex]);
+
+    useLayoutEffect(() => {
+        updatePill();
+    }, [updatePill, items, pathname]);
+
+    useEffect(() => {
+        const navEl = navRef.current;
+        if (!navEl) return;
+
+        const observer = new ResizeObserver(() => updatePill());
+        observer.observe(navEl);
+        linkRefs.current.forEach((el) => {
+            if (el) observer.observe(el);
+        });
+
+        window.addEventListener('resize', updatePill);
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('resize', updatePill);
+        };
+    }, [updatePill, items, pathname]);
+
+    return (
+        <nav
+            ref={navRef}
+            aria-label="Dashboard navigation"
+            className="relative flex-1 rounded-2xl border border-[#FFCF00]/30 bg-[#FFCF00]/8 p-1.5 space-y-0.5"
+        >
+            <span
+                aria-hidden
+                className="absolute left-1.5 right-1.5 rounded-xl bg-[#FFCF00] shadow-sm ring-1 ring-[#1A1208]/10 pointer-events-none transition-[top,height,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                style={{
+                    top: pill.top,
+                    height: pill.height,
+                    opacity: pill.opacity,
+                }}
+            />
+
+            {items.map((item, index) => {
+                const active = isNavItemActive(pathname, item.href);
+                const isUpgrade = item.href === '/subscription';
+
+                return (
+                    <Link
+                        key={item.href}
+                        ref={(el) => {
+                            linkRefs.current[index] = el;
+                        }}
+                        href={item.href}
+                        className={cn(
+                            'relative z-10 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors duration-200',
+                            active
+                                ? 'text-[#1A1208]'
+                                : isUpgrade
+                                    ? 'text-[#1A1208] hover:text-[#1A1208]'
+                                    : 'text-meta hover:text-[#1A1208]',
+                        )}
+                    >
+                        <item.Icon size={18} strokeWidth={active ? 2.2 : 1.8}/>
+                        <span className="flex-1 truncate">{item.label}</span>
+                        {item.href === '/chat' && (
+                            <MessageUnreadBadge count={unreadMessageCount} className="ml-auto"/>
+                        )}
+                    </Link>
+                );
+            })}
+        </nav>
+    );
+}
+
+function MobileBottomNav({
+    items,
+    pathname,
+    onMoreClick,
+}: {
+    items: typeof NAV_ITEMS;
+    pathname: string;
+    onMoreClick: () => void;
+}) {
+    const navRef = useRef<HTMLElement>(null);
+    const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+    const [pill, setPill] = useState({left: 0, width: 0, opacity: 0});
+    const activeIndex = items.findIndex((item) => isNavItemActive(pathname, item.href));
+
+    const updatePill = useCallback(() => {
+        const navEl = navRef.current;
+        const activeEl = activeIndex >= 0 ? linkRefs.current[activeIndex] : null;
+
+        if (!navEl || !activeEl) {
+            setPill((prev) => ({...prev, opacity: 0}));
+            return;
+        }
+
+        const navRect = navEl.getBoundingClientRect();
+        const elRect = activeEl.getBoundingClientRect();
+
+        setPill({
+            left: elRect.left - navRect.left,
+            width: elRect.width,
+            opacity: 1,
+        });
+    }, [activeIndex]);
+
+    useLayoutEffect(() => {
+        updatePill();
+        const frame = requestAnimationFrame(updatePill);
+        return () => cancelAnimationFrame(frame);
+    }, [updatePill, items, pathname]);
+
+    useEffect(() => {
+        const navEl = navRef.current;
+        if (!navEl) return;
+
+        const observer = new ResizeObserver(() => updatePill());
+        observer.observe(navEl);
+        linkRefs.current.forEach((el) => {
+            if (el) observer.observe(el);
+        });
+
+        window.addEventListener('resize', updatePill);
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('resize', updatePill);
+        };
+    }, [updatePill, items, pathname]);
+
+    return (
+        <nav
+            ref={navRef}
+            aria-label="Mobile dashboard navigation"
+            className="relative md:hidden fixed bottom-0 left-0 right-0 border-t-2 border-[#FFCF00] flex justify-around py-1.5 z-10 safe-area-pb backdrop-blur-sm"
+            style={{background: 'rgba(255,255,255,0.98)'}}
+        >
+            <span
+                aria-hidden
+                className="absolute top-1 bottom-1 rounded-xl bg-[#FFCF00]/25 pointer-events-none transition-[left,width,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                style={{
+                    left: pill.left,
+                    width: pill.width,
+                    opacity: pill.opacity,
+                }}
+            />
+
+            {items.map((item, index) => {
+                const active = isNavItemActive(pathname, item.href);
+
+                return (
+                    <Link
+                        key={item.href}
+                        ref={(el) => {
+                            linkRefs.current[index] = el;
+                        }}
+                        href={item.href}
+                        className={cn(
+                            'relative z-10 flex flex-col items-center gap-0.5 px-1 sm:px-2 py-1 rounded-lg text-[10px] sm:text-xs transition-colors min-w-0',
+                            active ? 'text-[#1A1208] font-bold' : 'text-subtle font-medium',
+                        )}
+                    >
+                        <item.Icon size={20} strokeWidth={active ? 2.2 : 1.8}/>
+                        <span className="truncate w-full text-center leading-tight">{item.label}</span>
+                    </Link>
+                );
+            })}
+
+            <button
+                type="button"
+                onClick={onMoreClick}
+                className="relative z-10 flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] text-subtle font-medium transition-colors"
+            >
+                <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+                </svg>
+                <span>More</span>
+            </button>
+        </nav>
+    );
+}
 
 export default function DashboardLayout({children}: { children: React.ReactNode }) {
     const router = useRouter();
@@ -161,7 +376,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"/>
+                    <div className="w-8 h-8 border-2 border-[#FFCF00] border-t-transparent rounded-full animate-spin"/>
                     <p className="text-sm text-muted-foreground">Loading your account…</p>
                 </div>
             </div>
@@ -173,67 +388,49 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
             <CallProvider>
                 {/* Sidebar */}
                 <aside
-                    className="hidden md:flex flex-col w-64 border-r border-[var(--sidebar-border)] px-3 lg:px-4 py-4 lg:py-6 fixed h-full z-10 overflow-y-auto"
-                    style={{background: 'var(--gradient-sidebar)'}}>
+                    className="hidden md:flex flex-col w-64 border-r-2 border-[#FFCF00]/35 px-3 lg:px-4 py-4 lg:py-6 fixed h-full z-10 overflow-y-auto bg-white"
+                >
                     {/* Logo */}
-                    <div className="mb-8 px-2">
+                    <div className="mb-6 px-2">
                         <div className="flex items-center gap-2.5">
-                            <a href="/">
-                                <h1 className="text-xl font-bold leading-none text-gold-gradient">{settings.site_name}</h1>
-                                <p className="text-[10px] text-muted-foreground/70 tracking-widest uppercase mt-2">{settings.site_slogan}</p>
+                            <a href="/" className="group">
+                                <h1 className="text-xl font-bold leading-none text-[#1A1208] group-hover:underline decoration-[#FFCF00] decoration-2 underline-offset-4">{settings.site_name}</h1>
+                                <p className="text-[10px] text-subtle tracking-widest uppercase mt-2 font-semibold">{settings.site_slogan}</p>
                             </a>
                         </div>
                     </div>
 
-                    {/* Navigation */}
-                    <nav className="flex-1 space-y-0.5">
-                        {NAV_ITEMS.map((item) => {
-                            const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
-                            return (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={cn(
-                                        'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
-                                        active
-                                            ? 'bg-[var(--sidebar-accent)] text-[var(--sidebar-primary)] border-l-2 border-[var(--primary)] pl-[10px]'
-                                            : 'text-[var(--sidebar-foreground)]/70 hover:bg-[var(--sidebar-accent)]/60 hover:text-[var(--sidebar-foreground)]'
-                                    )}
-                                >
-                                    <item.Icon size={18} strokeWidth={active ? 2.2 : 1.8}/>
-                                    <span className="flex-1 truncate">{item.label}</span>
-                                    {item.href === '/chat' && (
-                                        <MessageUnreadBadge count={unreadMessageCount} className="ml-auto"/>
-                                    )}
-                                </Link>
-                            );
-                        })}
-                        {/* Admin link — only visible to admins */}
-                        {user.role === 'admin' && (
-                            <Link
-                                href="/admin/dashboard"
-                                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 text-amber-600 hover:bg-amber-50"
-                            >
-                                <span className="text-base">⚙️</span>
-                                Admin Panel
-                            </Link>
-                        )}
-                    </nav>
+                    <SidebarNav
+                        items={NAV_ITEMS}
+                        pathname={pathname}
+                        unreadMessageCount={unreadMessageCount}
+                    />
+
+                    {/* Admin link — only visible to admins */}
+                    {user.role === 'admin' && (
+                        <Link
+                            href="/admin/dashboard"
+                            className="mt-2 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors duration-200 text-meta border border-[#FFCF00]/25 bg-[#FFCF00]/5 hover:bg-[#FFCF00]/15 hover:text-[#1A1208]"
+                        >
+                            <span className="text-base">⚙️</span>
+                            Admin Panel
+                        </Link>
+                    )}
 
                     {/* User section */}
-                    <div className="border-t border-[var(--sidebar-border)] pt-4 mt-4">
+                    <div className="border-t-2 border-[#FFCF00]/25 pt-4 mt-4">
                         <div className="flex items-center gap-3 px-2 mb-3">
                             <div
-                                className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
+                                className="w-9 h-9 rounded-full flex items-center justify-center text-[#1A1208] text-sm font-bold shrink-0"
                                 style={{
                                     background: 'var(--gradient-gold-btn)',
-                                    boxShadow: '0 2px 8px rgba(201,162,39,0.3)'
+                                    boxShadow: '0 2px 8px rgba(255,207,0,0.3)'
                                 }}>
                                 {user.name.charAt(0).toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-xs font-medium text-[var(--sidebar-foreground)] truncate">{user.name}</p>
-                                <span className="text-[11px] truncate">{user.email}</span>
+                                <p className="text-xs font-semibold text-[#1A1208] truncate">{user.name}</p>
+                                <span className="text-[11px] text-subtle truncate">{user.email}</span>
                             </div>
                             <NotificationBell placement="sidebar"/>
                         </div>
@@ -251,9 +448,9 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                 <main className="flex-1 md:ml-64 min-w-0">
                     {/* Mobile top bar */}
                     <div
-                        className="md:hidden border-b border-[var(--sidebar-border)] px-3 sm:px-4 py-3 flex items-center justify-between sticky top-0 z-10 backdrop-blur-sm"
-                        style={{background: 'rgba(255,255,255,0.95)'}}>
-                        <h1 className="text-base sm:text-lg font-bold text-gold-gradient">{settings.site_name}</h1>
+                        className="md:hidden border-b-2 border-[#FFCF00]/35 px-3 sm:px-4 py-3 flex items-center justify-between sticky top-0 z-10 backdrop-blur-sm"
+                        style={{background: 'rgba(255,255,255,0.98)'}}>
+                        <h1 className="text-base sm:text-lg font-bold text-[#1A1208]">{settings.site_name}</h1>
                         <div className="flex items-center gap-2">
                             <NotificationBell/>
                             <a href="/profile/edit" className="text-xs sm:text-sm text-muted-foreground truncate max-w-[120px]">{user.name}</a>
@@ -262,53 +459,27 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
 
                     <div className="p-2 sm:p-4 lg:p-6 pb-20 md:pb-4">{children}</div>
 
-                    {/* Mobile bottom nav */}
-                    <nav
-                        className="md:hidden fixed bottom-0 left-0 right-0 border-t border-[var(--sidebar-border)] flex justify-around py-1.5 z-10 safe-area-pb backdrop-blur-sm"
-                        style={{background: 'rgba(255,255,255,0.97)'}}>
-                        {NAV_ITEMS.slice(0, 4).map((item) => {
-                            const active = pathname === item.href;
-                            return (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={cn(
-                                        'flex flex-col items-center gap-0.5 px-1 sm:px-2 py-1 rounded-lg text-[10px] sm:text-xs transition-colors min-w-0',
-                                        active ? 'text-[var(--primary)]' : 'text-muted-foreground'
-                                    )}
-                                >
-                                    <item.Icon size={20} strokeWidth={active ? 2.2 : 1.8}/>
-                                    <span className="truncate w-full text-center leading-tight">{item.label}</span>
-                                </Link>
-                            );
-                        })}
-                        <button
-                            onClick={() => setDrawerOpen(true)}
-                            className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] text-muted-foreground transition-colors"
-                        >
-                            <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                                <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-                                <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-                            </svg>
-                            <span>More</span>
-                        </button>
-                    </nav>
+                    <MobileBottomNav
+                        items={NAV_ITEMS.slice(0, 4)}
+                        pathname={pathname}
+                        onMoreClick={() => setDrawerOpen(true)}
+                    />
 
                     {drawerOpen && (
                         <div className="md:hidden fixed inset-0 z-50" onClick={() => setDrawerOpen(false)}>
                             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
                             <div
-                                className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl border-t border-[var(--sidebar-border)] pb-safe"
+                                className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl border-t-2 border-[#FFCF00] pb-safe"
                                 onClick={e => e.stopPropagation()}
                             >
                                 {/* Handle */}
-                                <div className="w-9 h-1 bg-gray-200 rounded-full mx-auto mt-3 mb-1" />
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-widest px-4 py-2 font-medium">More options</p>
+                                <div className="w-9 h-1 bg-[#FFCF00]/40 rounded-full mx-auto mt-3 mb-1" />
+                                <p className="text-[10px] text-subtle uppercase tracking-widest px-4 py-2 font-bold">More options</p>
 
                                 {/* Grid of remaining nav items */}
-                                <div className="grid grid-cols-3 gap-1 px-3 pb-2">
+                                <div className="grid grid-cols-3 gap-1.5 px-3 pb-2">
                                     {NAV_ITEMS.slice(4).map((item) => {
-                                        const active = pathname === item.href || pathname.startsWith(item.href);
+                                        const active = isNavItemActive(pathname, item.href);
                                         const isUpgrade = item.href === '/subscription';
                                         return (
                                             <Link
@@ -316,18 +487,18 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                                                 href={item.href}
                                                 onClick={() => setDrawerOpen(false)}
                                                 className={cn(
-                                                    'relative flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl text-[11px] text-center transition-colors',
+                                                    'relative flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl text-[11px] text-center font-bold transition-colors border',
                                                     isUpgrade
-                                                        ? 'bg-amber-50 text-amber-600'
+                                                        ? 'bg-[#FFCF00] text-[#1A1208] border-[#1A1208]/10 shadow-sm'
                                                         : active
-                                                            ? 'bg-[var(--sidebar-accent)] text-[var(--primary)]'
-                                                            : 'text-muted-foreground hover:bg-gray-50'
+                                                            ? 'bg-[#FFCF00] text-[#1A1208] border-[#1A1208]/10 shadow-sm'
+                                                            : 'text-meta border-[#FFCF00]/25 bg-[#FFCF00]/8 hover:bg-[#FFCF00]/20',
                                                 )}
                                             >
                                                 <span className="relative">
                                                     <item.Icon size={22} strokeWidth={isUpgrade || active ? 2.1 : 1.8}/>
                                                     {item.href === '/chat' && unreadMessageCount > 0 && (
-                                                        <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#C9A227] text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                                                        <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#FFCF00] text-[#1A1208] text-[9px] font-bold flex items-center justify-center leading-none">
                                                             {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
                                                         </span>
                                                     )}
@@ -338,7 +509,7 @@ export default function DashboardLayout({children}: { children: React.ReactNode 
                                     })}
                                 </div>
 
-                                <div className="h-px bg-gray-100 mx-4 my-1" />
+                                <div className="h-px bg-[#FFCF00]/25 mx-4 my-1" />
 
                                 {/* Sign out */}
                                 <button

@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { publicSearchService, type PublicSearchFilters } from '@/services/publicSearchService';
 import { PublicProfileCard } from '@/components/match/PublicProfileCard';
 import { PublicProfileViewPromptModal } from '@/components/public/PublicProfileViewPromptModal';
@@ -20,6 +19,16 @@ import {
     SEARCH_FILTER_OPTION_GROUPS,
 } from '@/hooks/useSelectOptions';
 import { SearchIcon, FilterIcon, XIcon } from '@/components/ui/icons';
+import { cn } from '@/lib/utils';
+import {
+    Users,
+    Heart,
+    MapPin,
+    Briefcase,
+    Sparkles,
+    Leaf,
+    type LucideIcon,
+} from 'lucide-react';
 
 const INCOME_OPTIONS = [
     { value: '100000', label: '1 Lakh+' },
@@ -70,11 +79,162 @@ function parseUrlFilters(params: URLSearchParams): PublicSearchFilters {
 interface FilterPanelProps {
     filters: PublicSearchFilters;
     onUpdate: <K extends keyof PublicSearchFilters>(key: K, val: PublicSearchFilters[K]) => void;
-    onApply: () => void;
-    onClear: () => void;
 }
 
-function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) {
+function FilterSection({
+    title,
+    icon: Icon,
+    defaultOpen = false,
+    children,
+}: {
+    title: string;
+    icon: LucideIcon;
+    defaultOpen?: boolean;
+    children: React.ReactNode;
+}) {
+    const [open, setOpen] = useState(defaultOpen);
+
+    return (
+        <div
+            className={cn(
+                'rounded-xl border transition-all duration-200',
+                open
+                    ? 'border-[#FFCF00]/55 bg-gradient-to-b from-[#FFCF00]/10 via-[#FFCF00]/5 to-white shadow-sm'
+                    : 'border-[#E8DFCC] bg-white hover:border-[#FFCF00]/35 hover:shadow-sm',
+            )}
+        >
+            <button
+                type="button"
+                onClick={() => setOpen((value) => !value)}
+                className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left"
+            >
+                <span
+                    className={cn(
+                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors',
+                        open ? 'bg-[#FFCF00] text-[#1A1208] shadow-sm' : 'bg-[#FFCF00]/12 text-[#1A1208]',
+                    )}
+                >
+                    <Icon size={15} strokeWidth={2.2} />
+                </span>
+                <span className="flex-1 text-xs font-bold text-[#1A1208]">{title}</span>
+                <svg
+                    className={cn('h-4 w-4 shrink-0 text-subtle transition-transform duration-200', open && 'rotate-180')}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                >
+                    <path d="M6 9l6 6 6-6" />
+                </svg>
+            </button>
+            {open && (
+                <div className="space-y-2 border-t border-[#FFCF00]/15 px-3 pb-3 pt-2.5">
+                    {children}
+                </div>
+            )}
+        </div>
+    );
+}
+
+const compactInputClass =
+    'h-9 rounded-xl border-[#E8DFCC] bg-white text-xs focus-visible:border-[#FFCF00] focus-visible:ring-[#FFCF00]/25';
+
+function FilterActions({
+    onApply,
+    onClear,
+    className,
+    layout = 'vertical',
+}: {
+    onApply: () => void;
+    onClear: () => void;
+    className?: string;
+    layout?: 'vertical' | 'horizontal';
+}) {
+    if (layout === 'horizontal') {
+        return (
+            <div className={cn('flex gap-2', className)}>
+                <button
+                    type="button"
+                    onClick={onApply}
+                    className="btn-gold flex-1 font-bold"
+                    style={{ height: '2.25rem', borderRadius: '0.625rem', fontSize: '0.8125rem' }}
+                >
+                    Apply
+                </button>
+                <button
+                    type="button"
+                    onClick={onClear}
+                    className="flex-1 rounded-lg border border-[#E8DFCC] bg-white text-xs font-semibold text-meta transition-colors hover:border-[#FFCF00]/50 hover:bg-[#FFCF00]/8"
+                    style={{ height: '2.25rem' }}
+                >
+                    Reset
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className={cn('flex flex-col gap-2', className)}>
+            <button
+                type="button"
+                onClick={onApply}
+                className="btn-gold w-full font-bold"
+                style={{ height: '2.5rem', borderRadius: '0.75rem', fontSize: '0.875rem' }}
+            >
+                Apply Filters
+            </button>
+            <button
+                type="button"
+                onClick={onClear}
+                className="w-full rounded-xl border border-[#E8DFCC] bg-white py-2 text-xs font-semibold text-meta transition-colors hover:border-[#FFCF00]/50 hover:bg-[#FFCF00]/8 hover:text-[#1A1208]"
+            >
+                Reset All
+            </button>
+        </div>
+    );
+}
+
+function FilterSidebarToolbar({
+    activeCount,
+    onApply,
+    onClear,
+    onClose,
+    showClose = false,
+}: {
+    activeCount: number;
+    onApply: () => void;
+    onClear: () => void;
+    onClose?: () => void;
+    showClose?: boolean;
+}) {
+    return (
+        <div className="flex-shrink-0 border-b border-[#FFCF00]/20 px-3 py-2.5">
+            <div className="flex items-center gap-2">
+                {showClose && onClose && (
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="shrink-0 rounded-lg p-1.5 text-subtle transition-colors hover:bg-[#FFCF00]/15 hover:text-[#1A1208]"
+                        aria-label="Close filters"
+                    >
+                        <XIcon size={18} strokeWidth={2} />
+                    </button>
+                )}
+                <FilterActions onApply={onApply} onClear={onClear} layout="horizontal" className="flex-1" />
+                {activeCount > 0 && (
+                    <span className="shrink-0 rounded-full bg-[#FFCF00] px-2 py-0.5 text-[10px] font-bold text-[#1A1208]">
+                        {activeCount}
+                    </span>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
     const { data: bulkOptions } = useOptionsBulk(SEARCH_FILTER_OPTION_GROUPS);
 
     const religionOpts = pickOptions(bulkOptions, 'religion');
@@ -104,154 +264,75 @@ function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) 
     const { data: bdDistrictOpts = [] } = useChildOptions('country', isBangladesh ? selectedBdDivisionId : undefined);
     const shouldHideCity = filters.country === 'united_states' || filters.country === 'canada';
 
-    const sec = (title: string, children: React.ReactNode) => (
-        <div className="space-y-2">
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 pt-1">{title}</h4>
-            {children}
-            <div className="border-b border-[var(--border)]/50" />
-        </div>
-    );
-
     return (
-        <div className="space-y-4">
-            <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm rounded-xl border border-border p-2">
-                <div className="flex gap-2">
-                    <button
-                        onClick={onApply}
-                        className="btn-gold flex-1"
-                        style={{ height: '2.5rem', borderRadius: '0.75rem', fontSize: '0.842rem' }}
-                    >
-                        Apply
-                    </button>
-                    <button
-                        onClick={onClear}
-                        className="btn-outline-gold px-4"
-                        style={{ height: '2.5rem', borderRadius: '0.75rem', fontSize: '0.875rem' }}
-                    >
-                        Clear
-                    </button>
-                </div>
-            </div>
-
-            {sec(
-                'Gender',
+        <div className="space-y-2">
+            <FilterSection title="Essentials" icon={Users} defaultOpen>
+                <p className="text-xs font-bold uppercase tracking-wider text-meta">Gender</p>
                 <div className="flex gap-2">
                     {(['male', 'female'] as const).map((g) => (
                         <button
                             key={g}
+                            type="button"
                             onClick={() => onUpdate('gender', filters.gender === g ? undefined : g)}
-                            className={`flex-1 py-1.5 rounded-xl border text-sm capitalize transition-all ${
+                            className={cn(
+                                'flex-1 rounded-xl border-2 py-2 text-xs font-bold capitalize transition-all duration-200',
                                 filters.gender === g
-                                    ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--accent)] font-semibold'
-                                    : 'border-[var(--border)] text-muted-foreground hover:border-[var(--primary)]/50'
-                            }`}
+                                    ? 'border-[#FFCF00] bg-[#FFCF00] text-[#1A1208] shadow-sm'
+                                    : 'border-[#E8DFCC] bg-white text-meta hover:border-[#FFCF00]/45 hover:bg-[#FFCF00]/8',
+                            )}
                         >
                             {g}
                         </button>
                     ))}
-                </div>,
-            )}
-
-            {sec(
-                'Age Range',
-                <div className="flex items-center gap-2">
+                </div>
+                <p className="text-xs font-bold uppercase tracking-wider text-meta pt-0.5">Age</p>
+                <div className="flex items-center gap-1.5">
                     <Input
                         type="number"
-                        placeholder="Min"
+                        placeholder="Age min"
                         min={18}
                         max={100}
                         value={filters.age_min ?? ''}
                         onChange={(e) => onUpdate('age_min', e.target.value ? Number(e.target.value) : undefined)}
-                        className="h-9 rounded-xl border-[var(--border)] bg-[var(--input)] text-sm"
+                        className={compactInputClass}
                     />
-                    <span className="text-muted-foreground text-sm flex-shrink-0">–</span>
+                    <span className="text-muted-foreground text-xs flex-shrink-0">–</span>
                     <Input
                         type="number"
-                        placeholder="Max"
+                        placeholder="Age max"
                         min={18}
                         max={100}
                         value={filters.age_max ?? ''}
                         onChange={(e) => onUpdate('age_max', e.target.value ? Number(e.target.value) : undefined)}
-                        className="h-9 rounded-xl border-[var(--border)] bg-[var(--input)] text-sm"
+                        className={compactInputClass}
                     />
-                </div>,
-            )}
-
-            {sec(
-                'Height (cm)',
-                <div className="flex items-center gap-2">
+                </div>
+                <p className="text-xs font-bold uppercase tracking-wider text-meta pt-0.5">Height (cm)</p>
+                <div className="flex items-center gap-1.5">
                     <Input
                         type="number"
-                        placeholder="Min"
+                        placeholder="Ht min"
                         min={140}
                         max={220}
                         value={filters.height_min ?? ''}
                         onChange={(e) => onUpdate('height_min', e.target.value ? Number(e.target.value) : undefined)}
-                        className="h-9 rounded-xl border-[var(--border)] bg-[var(--input)] text-sm"
+                        className={compactInputClass}
                     />
-                    <span className="text-muted-foreground text-sm flex-shrink-0">–</span>
+                    <span className="text-muted-foreground text-xs flex-shrink-0">–</span>
                     <Input
                         type="number"
-                        placeholder="Max"
+                        placeholder="Ht max"
                         min={140}
                         max={220}
                         value={filters.height_max ?? ''}
                         onChange={(e) => onUpdate('height_max', e.target.value ? Number(e.target.value) : undefined)}
-                        className="h-9 rounded-xl border-[var(--border)] bg-[var(--input)] text-sm"
+                        className={compactInputClass}
                     />
-                </div>,
-            )}
+                </div>
+            </FilterSection>
 
-            {sec(
-                'Religion & Caste',
-                <div className="space-y-2">
-                    <SearchableSelect
-                        id="psr-rel"
-                        options={toOpts(religionOpts)}
-                        value={filters.religion}
-                        onChange={(v) => {
-                            onUpdate('religion', v ?? undefined);
-                            onUpdate('caste', undefined);
-                        }}
-                        placeholder="Any religion…"
-                    />
-                    {casteOpts.length > 0 && (
-                        <SearchableSelect
-                            id="psr-cst"
-                            options={toOpts(casteOpts)}
-                            value={filters.caste}
-                            onChange={(v) => onUpdate('caste', v ?? undefined)}
-                            placeholder="Any caste…"
-                        />
-                    )}
-                </div>,
-            )}
-
-            {sec(
-                'Marital Status',
-                <SearchableSelect
-                    id="psr-ms"
-                    options={toOpts(maritalOpts)}
-                    value={filters.marital_status}
-                    onChange={(v) => onUpdate('marital_status', v ?? undefined)}
-                    placeholder="Any status…"
-                />,
-            )}
-
-            {sec(
-                'Has Children',
-                <SearchableSelect
-                    id="psr-hc"
-                    options={toOpts(haveChildrenOpts)}
-                    value={filters.has_children}
-                    onChange={(v) => onUpdate('has_children', v ?? undefined)}
-                    placeholder="Any…"
-                />,
-            )}
-
-            {sec(
-                'Location',
-                <div className="space-y-2">
+            <FilterSection title="Location" icon={MapPin} defaultOpen>
+                <div className="space-y-1.5">
                     <SearchableSelect
                         id="psr-cnt"
                         options={toOpts(countryOpts)}
@@ -261,7 +342,7 @@ function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) 
                             onUpdate('state', undefined);
                             onUpdate('city', undefined);
                         }}
-                        placeholder="Any country…"
+                        placeholder="Country…"
                     />
                     {stateOpts.length > 0 && isBangladesh && (
                         <SearchableSelect
@@ -272,7 +353,7 @@ function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) 
                                 onUpdate('city', v ?? undefined);
                                 onUpdate('state', undefined);
                             }}
-                            placeholder="Any division…"
+                            placeholder="Division…"
                         />
                     )}
                     {isBangladesh && bdDistrictOpts.length > 0 && (
@@ -281,7 +362,7 @@ function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) 
                             options={toOpts(bdDistrictOpts)}
                             value={filters.state}
                             onChange={(v) => onUpdate('state', v ?? undefined)}
-                            placeholder="Any district / city…"
+                            placeholder="District / city…"
                         />
                     )}
                     {stateOpts.length > 0 && !isBangladesh && (
@@ -290,15 +371,15 @@ function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) 
                             options={toOpts(stateOpts)}
                             value={filters.state}
                             onChange={(v) => onUpdate('state', v ?? undefined)}
-                            placeholder="Any state / division…"
+                            placeholder="State / division…"
                         />
                     )}
                     {!isBangladesh && !shouldHideCity && (
                         <Input
-                            placeholder="City (type to filter)"
+                            placeholder="City"
                             value={filters.city ?? ''}
                             onChange={(e) => onUpdate('city', e.target.value || undefined)}
-                            className="h-9 rounded-xl border-[var(--border)] bg-[var(--input)] text-sm"
+                            className={compactInputClass}
                         />
                     )}
                     <SearchableSelect
@@ -315,18 +396,55 @@ function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) 
                         onChange={(v) => onUpdate('residing_status', v ?? undefined)}
                         placeholder="Residing status…"
                     />
-                </div>,
-            )}
+                </div>
+            </FilterSection>
 
-            {sec(
-                'Education & Career',
-                <div className="space-y-2">
+            <FilterSection title="Faith & Family" icon={Heart}>
+                <div className="space-y-1.5">
+                    <SearchableSelect
+                        id="psr-rel"
+                        options={toOpts(religionOpts)}
+                        value={filters.religion}
+                        onChange={(v) => {
+                            onUpdate('religion', v ?? undefined);
+                            onUpdate('caste', undefined);
+                        }}
+                        placeholder="Religion…"
+                    />
+                    {casteOpts.length > 0 && (
+                        <SearchableSelect
+                            id="psr-cst"
+                            options={toOpts(casteOpts)}
+                            value={filters.caste}
+                            onChange={(v) => onUpdate('caste', v ?? undefined)}
+                            placeholder="Caste…"
+                        />
+                    )}
+                    <SearchableSelect
+                        id="psr-ms"
+                        options={toOpts(maritalOpts)}
+                        value={filters.marital_status}
+                        onChange={(v) => onUpdate('marital_status', v ?? undefined)}
+                        placeholder="Marital status…"
+                    />
+                    <SearchableSelect
+                        id="psr-hc"
+                        options={toOpts(haveChildrenOpts)}
+                        value={filters.has_children}
+                        onChange={(v) => onUpdate('has_children', v ?? undefined)}
+                        placeholder="Has children…"
+                    />
+                </div>
+            </FilterSection>
+
+            <FilterSection title="Education & Career" icon={Briefcase}>
+                <div className="space-y-1.5">
                     <SearchableSelect
                         id="psr-edu"
                         options={toOpts(educationOpts)}
                         value={filters.education}
                         onChange={(v) => onUpdate('education', v ?? undefined)}
-                        placeholder="Education level…"
+                        placeholder="Education…"
                     />
                     <SearchableSelect
                         id="psr-prf"
@@ -343,14 +461,14 @@ function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) 
                         placeholder="Employed in…"
                     />
                     <div>
-                        <Label className="text-xs text-muted-foreground block mb-1">Annual Income (BDT)</Label>
-                        <div className="flex items-center gap-2">
+                        <Label className="text-xs font-semibold text-meta block mb-1">Income (BDT)</Label>
+                        <div className="flex items-center gap-1.5">
                             <select
                                 value={filters.income_min ?? ''}
                                 onChange={(e) =>
                                     onUpdate('income_min', e.target.value ? Number(e.target.value) : undefined)
                                 }
-                                className="flex-1 border border-[var(--border)] bg-[var(--input)] rounded-xl px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--ring)] text-foreground"
+                                className="flex-1 border border-[var(--border)] bg-[var(--input)] rounded-lg px-2 py-1.5 text-[11px] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] text-foreground"
                             >
                                 <option value="">Min</option>
                                 {INCOME_OPTIONS.map((o) => (
@@ -365,7 +483,7 @@ function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) 
                                 onChange={(e) =>
                                     onUpdate('income_max', e.target.value ? Number(e.target.value) : undefined)
                                 }
-                                className="flex-1 border border-[var(--border)] bg-[var(--input)] rounded-xl px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--ring)] text-foreground"
+                                className="flex-1 border border-[var(--border)] bg-[var(--input)] rounded-lg px-2 py-1.5 text-[11px] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] text-foreground"
                             >
                                 <option value="">Max</option>
                                 {INCOME_OPTIONS.map((o) => (
@@ -376,12 +494,11 @@ function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) 
                             </select>
                         </div>
                     </div>
-                </div>,
-            )}
+                </div>
+            </FilterSection>
 
-            {sec(
-                'Physical',
-                <div className="space-y-2">
+            <FilterSection title="Appearance" icon={Sparkles}>
+                <div className="space-y-1.5">
                     <SearchableSelect
                         id="psr-bt"
                         options={toOpts(bodyTypeOpts)}
@@ -410,12 +527,11 @@ function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) 
                         onChange={(v) => onUpdate('mother_tongue', v ?? undefined)}
                         placeholder="Mother tongue…"
                     />
-                </div>,
-            )}
+                </div>
+            </FilterSection>
 
-            {sec(
-                'Lifestyle',
-                <div className="space-y-2">
+            <FilterSection title="Lifestyle" icon={Leaf}>
+                <div className="space-y-1.5">
                     <SearchableSelect
                         id="psr-diet"
                         options={toOpts(dietOpts)}
@@ -437,8 +553,8 @@ function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) 
                         onChange={(v) => onUpdate('drinking', v ?? undefined)}
                         placeholder="Drinking…"
                     />
-                </div>,
-            )}
+                </div>
+            </FilterSection>
         </div>
     );
 }
@@ -485,11 +601,11 @@ function ActiveBadges({
     ) as [keyof PublicSearchFilters, unknown][];
     if (entries.length === 0) return null;
     return (
-        <div className="flex flex-wrap gap-1.5 mb-4">
+        <div className="flex flex-wrap gap-1.5 mb-2">
             {entries.map(([key, val]) => (
                 <span
                     key={key}
-                    className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border border-[var(--primary)]/40 bg-[var(--accent)] text-[var(--primary)] font-medium"
+                    className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border border-[var(--primary)]/40 bg-[var(--accent)] text-[#1A1208] font-medium"
                 >
                     {FILTER_LABELS[key] ?? String(key)}: <span className="font-semibold">{String(val)}</span>
                     <button onClick={() => onRemove(key)} className="ml-0.5 hover:text-red-400 transition-colors">
@@ -595,149 +711,130 @@ export default function PublicSearchPageContent() {
                 open={isModalOpen}
                 onOpenChange={setModalOpen}
             />
-            <div className="py-10" style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)' }}>
-                <div className="max-w-7xl mx-auto px-4 text-center">
-                    <h1
-                        className="text-3xl md:text-4xl font-bold text-white"
-                        style={{ fontFamily: 'var(--font-heading, serif)' }}
-                    >
-                        Search Profiles
-                    </h1>
-                    <p className="text-gray-400 mt-3 text-sm md:text-base">
-                        Browse verified matrimony profiles. Sign up free to view full details and connect.
-                    </p>
-                </div>
-            </div>
-
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-20">
-                <div className="mb-5 animate-fade-in-up">
-                    <div className="flex items-center justify-between mb-3">
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                {total > 0 ? `${total.toLocaleString()} profiles found` : 'Find your perfect match'}
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => setSidebarOpen(true)}
-                            className="btn-gold md:hidden flex items-center gap-1.5 relative"
-                            style={{ height: '2.5rem', borderRadius: '0.75rem', padding: '0 1rem', fontSize: '0.875rem' }}
-                        >
-                            <FilterIcon size={14} strokeWidth={2} /> Filters
-                            {activeCount > 0 && (
-                                <span className="absolute -top-1.5 -right-1.5 min-w-[1.1rem] h-[1.1rem] rounded-full bg-[var(--primary)] text-white text-[10px] font-bold flex items-center justify-center px-0.5">
-                                    {activeCount}
-                                </span>
-                            )}
-                        </button>
-                    </div>
-
-                    <div className="relative">
-                        <SearchIcon
-                            size={16}
-                            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-                            strokeWidth={2}
-                        />
-                        <input
-                            type="text"
-                            value={globalQuery}
-                            onChange={(e) => handleGlobalSearch(e.target.value)}
-                            placeholder="Search by name, city, country, religion, profession…"
-                            className="w-full h-11 pl-10 pr-10 border border-[var(--border)] bg-white rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-[var(--primary)] transition-all"
-                        />
-                        {globalQuery && (
-                            <button
-                                onClick={() => handleGlobalSearch('')}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                                <XIcon size={14} strokeWidth={2} />
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                <div className="flex gap-6">
-                    <aside className="hidden md:block w-72 flex-shrink-0">
-                        <div className="bg-white rounded-2xl border border-gray-100 p-5 sticky top-6 max-h-[calc(100vh-7rem)] overflow-y-auto shadow-sm">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="font-semibold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
-                                    Filters
-                                    {activeCount > 0 && (
-                                        <span className="ml-2 text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--primary)] text-white">
-                                            {activeCount}
-                                        </span>
-                                    )}
-                                </h2>
-                            </div>
-                            <FilterPanel
-                                filters={filters}
-                                onUpdate={updateFilter}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 pb-20 min-h-screen" style={{ background: 'linear-gradient(180deg, #FEFCF5 0%, #F8F9FB 12rem)' }}>
+                <div className="flex items-start gap-4 lg:gap-5">
+                    <aside className="hidden md:flex w-[17.5rem] lg:w-72 flex-shrink-0">
+                        <div className="search-filter-sidebar search-filter-sidebar-panel flex flex-col w-full sticky top-[4.25rem] min-h-0 rounded-2xl border-2 border-[#FFCF00]/30 bg-white overflow-hidden">
+                            <FilterSidebarToolbar
+                                activeCount={activeCount}
                                 onApply={handleApplyFilters}
                                 onClear={handleClearFilters}
                             />
+                            <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-2.5">
+                                <FilterPanel filters={filters} onUpdate={updateFilter} />
+                            </div>
                         </div>
                     </aside>
 
                     {sidebarOpen && (
                         <div className="fixed inset-0 z-50 md:hidden">
                             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-                            <div className="absolute right-0 top-0 bottom-0 w-80 bg-card shadow-2xl flex flex-col border-l border-[var(--border)]">
-                                <div className="flex justify-between items-center px-5 py-4 border-b border-[var(--border)]">
-                                    <h2 className="font-semibold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
-                                        Filters{' '}
-                                        {activeCount > 0 && (
-                                            <span className="ml-1.5 text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--primary)] text-white">
-                                                {activeCount}
-                                            </span>
-                                        )}
-                                    </h2>
-                                    <button
-                                        onClick={() => setSidebarOpen(false)}
-                                        className="text-muted-foreground p-1.5 hover:text-foreground rounded-lg hover:bg-[var(--muted)] transition-colors"
-                                    >
-                                        <XIcon size={18} strokeWidth={2} />
-                                    </button>
-                                </div>
-                                <div className="flex-1 overflow-y-auto p-5">
-                                    <FilterPanel
-                                        filters={filters}
-                                        onUpdate={updateFilter}
-                                        onApply={handleApplyFilters}
-                                        onClear={handleClearFilters}
-                                    />
+                            <div className="search-filter-sidebar search-filter-sidebar-drawer absolute right-0 top-0 bottom-0 w-[min(21rem,calc(100vw-0.75rem))] flex flex-col min-h-0 border-l-2 border-[#FFCF00]/30 bg-white shadow-2xl">
+                                <FilterSidebarToolbar
+                                    activeCount={activeCount}
+                                    onApply={handleApplyFilters}
+                                    onClear={handleClearFilters}
+                                    onClose={() => setSidebarOpen(false)}
+                                    showClose
+                                />
+                                <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-2.5">
+                                    <FilterPanel filters={filters} onUpdate={updateFilter} />
                                 </div>
                             </div>
                         </div>
                     )}
 
                     <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between mb-3 gap-3">
-                            <div className="flex-1 min-w-0">
-                                <ActiveBadges filters={appliedFilters} onRemove={removeFilter} />
-                            </div>
-                            {!isLoading && results.length > 0 && (
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                    <label className="text-xs text-muted-foreground whitespace-nowrap hidden sm:inline">
-                                        Sort:
-                                    </label>
-                                    <select
-                                        value={appliedFilters.sort ?? 'latest'}
-                                        onChange={(e) => handleSortChange(e.target.value)}
-                                        className="border border-[var(--border)] bg-white rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--ring)] text-foreground cursor-pointer"
-                                    >
-                                        {SORT_OPTIONS.map((o) => (
-                                            <option key={o.value} value={o.value}>
-                                                {o.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                        <div className="search-page-header mb-3 overflow-hidden rounded-2xl border border-[#FFCF00]/25 bg-white shadow-sm">
+                            <div className="h-1 bg-gradient-to-r from-[#FFCF00] via-[#FFE033] to-[#FFCF00]" />
+                            <div className="px-4 py-3 sm:px-4 sm:py-3">
+                                <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="flex items-center justify-between gap-3 min-w-0">
+                                        <div className="flex flex-wrap items-center gap-2 min-w-0">
+                                            <h1
+                                                className="text-lg sm:text-xl font-bold text-[#1A1208] leading-tight"
+                                                style={{ fontFamily: 'var(--font-heading, serif)' }}
+                                            >
+                                                Search Profiles
+                                            </h1>
+                                            {!isLoading && total > 0 && (
+                                                <span className="inline-flex items-center rounded-full bg-[#FFCF00] px-2 py-0.5 text-[10px] font-bold text-[#1A1208]">
+                                                    {total.toLocaleString()}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSidebarOpen(true)}
+                                            className="btn-gold md:hidden flex items-center gap-1.5 relative shrink-0"
+                                            style={{ height: '2.25rem', borderRadius: '0.625rem', padding: '0 0.875rem', fontSize: '0.8125rem' }}
+                                        >
+                                            <FilterIcon size={14} strokeWidth={2} /> Filters
+                                            {activeCount > 0 && (
+                                                <span className="absolute -top-1.5 -right-1.5 min-w-[1.1rem] h-[1.1rem] rounded-full bg-[#1A1208] text-[#FFCF00] text-[10px] font-bold flex items-center justify-center px-0.5">
+                                                    {activeCount}
+                                                </span>
+                                            )}
+                                        </button>
+                                    </div>
+
+                                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-end min-w-0 sm:max-w-xl">
+                                        <div className="relative flex-1 min-w-0">
+                                            <SearchIcon
+                                                size={15}
+                                                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5C4F3A] pointer-events-none"
+                                                strokeWidth={2}
+                                            />
+                                            <input
+                                                type="text"
+                                                value={globalQuery}
+                                                onChange={(e) => handleGlobalSearch(e.target.value)}
+                                                placeholder="Search by name, city, religion…"
+                                                className="w-full h-10 pl-9 pr-9 rounded-xl border border-[#E8DFCC] bg-[#FFCF00]/5 text-sm text-[#1A1208] placeholder:text-[#5C4F3A] focus:outline-none focus:ring-2 focus:ring-[#FFCF00]/35 focus:border-[#FFCF00] transition-all"
+                                            />
+                                            {globalQuery && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleGlobalSearch('')}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5C4F3A] hover:text-[#1A1208] transition-colors"
+                                                >
+                                                    <XIcon size={14} strokeWidth={2} />
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {!isLoading && results.length > 0 && (
+                                            <select
+                                                value={appliedFilters.sort ?? 'latest'}
+                                                onChange={(e) => handleSortChange(e.target.value)}
+                                                className="h-10 min-w-[9.5rem] rounded-xl border border-[#E8DFCC] bg-white px-2.5 text-xs font-semibold text-[#1A1208] focus:outline-none focus:ring-2 focus:ring-[#FFCF00]/35 focus:border-[#FFCF00] cursor-pointer sm:shrink-0"
+                                            >
+                                                {SORT_OPTIONS.map((o) => (
+                                                    <option key={o.value} value={o.value}>
+                                                        {o.label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        )}
+                                    </div>
                                 </div>
-                            )}
+                            </div>
+                        </div>
+
+                        <div className="mb-2">
+                            <ActiveBadges filters={appliedFilters} onRemove={removeFilter} />
                         </div>
 
                         {isLoading && (
-                            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 sm:gap-2.5">
                                 {Array.from({ length: 8 }).map((_, i) => (
-                                    <div key={i} className="skeleton-gold aspect-[3/4] rounded-2xl" />
+                                    <div key={i} className="card-premium profile-card overflow-hidden">
+                                        <div className="skeleton-gold profile-card-photo w-full" />
+                                        <div className="p-3 space-y-2">
+                                            <div className="skeleton-gold h-3.5 w-3/4 rounded" />
+                                            <div className="skeleton-gold h-3 w-1/2 rounded" />
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -777,7 +874,7 @@ export default function PublicSearchPageContent() {
 
                         {!isLoading && results.length > 0 && (
                             <>
-                                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 stagger">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 sm:gap-2.5 stagger">
                                     {results.map((profile) => (
                                         <div key={profile.id} className="h-full">
                                             <PublicProfileCard

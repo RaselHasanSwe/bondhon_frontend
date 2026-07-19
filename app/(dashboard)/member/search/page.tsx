@@ -89,7 +89,7 @@ function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) 
 
     const sec = (title: string, children: React.ReactNode) => (
         <div className="space-y-2">
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 pt-1">{title}</h4>
+            <h4 className="text-xs font-bold uppercase tracking-widest text-foreground pt-1">{title}</h4>
             {children}
             <div className="border-b border-[var(--border)]/50" />
         </div>
@@ -117,7 +117,7 @@ function FilterPanel({ filters, onUpdate, onApply, onClear }: FilterPanelProps) 
                             onClick={() => onUpdate('gender', filters.gender === g ? undefined : g)}
                             className={`flex-1 py-1.5 rounded-xl border text-sm capitalize transition-all ${
                                 filters.gender === g
-                                    ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--accent)] font-semibold'
+                                    ? 'border-[var(--primary)] text-[#1A1208] bg-[var(--accent)] font-semibold'
                                     : 'border-[var(--border)] text-muted-foreground hover:border-[var(--primary)]/50'
                             }`}
                         >{g}</button>
@@ -295,7 +295,7 @@ function ActiveBadges({ filters, onRemove }: { filters: SearchFilters; onRemove:
         <div className="flex flex-wrap gap-1.5 mb-4">
             {entries.map(([key, val]) => (
                 <span key={key}
-                    className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border border-[var(--primary)]/40 bg-[var(--accent)] text-[var(--primary)] font-medium">
+                    className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border border-[var(--primary)]/40 bg-[var(--accent)] text-[#1A1208] font-medium">
                     {FILTER_LABELS[key] ?? String(key)}: <span className="font-semibold">{String(val)}</span>
                     <button onClick={() => onRemove(key)} className="ml-0.5 hover:text-red-400 transition-colors">
                         <XIcon size={10} strokeWidth={3} />
@@ -396,7 +396,7 @@ export default function SearchPage() {
                 <div className="flex items-center justify-between mb-3">
                     <div>
                         <h1 className="page-title">Search Profiles</h1>
-                        <p className="text-sm text-muted-foreground mt-0.5">
+                        <p className="text-sm font-medium text-foreground mt-0.5">
                             {total > 0 ? `${total.toLocaleString()} profiles found` : 'Find your perfect match'}
                         </p>
                     </div>
@@ -405,7 +405,7 @@ export default function SearchPage() {
                         style={{ height: '2.5rem', borderRadius: '0.75rem', padding: '0 1rem', fontSize: '0.875rem' }}>
                         <FilterIcon size={14} strokeWidth={2} /> Filters
                         {activeCount > 0 && (
-                            <span className="absolute -top-1.5 -right-1.5 min-w-[1.1rem] h-[1.1rem] rounded-full bg-[var(--primary)] text-white text-[10px] font-bold flex items-center justify-center px-0.5">
+                            <span className="absolute -top-1.5 -right-1.5 min-w-[1.1rem] h-[1.1rem] rounded-full bg-[var(--primary)] text-[#1A1208] text-[10px] font-bold flex items-center justify-center px-0.5">
                                 {activeCount}
                             </span>
                         )}
@@ -439,7 +439,7 @@ export default function SearchPage() {
                             <h2 className="font-semibold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
                                 Filters
                                 {activeCount > 0 && (
-                                    <span className="ml-2 text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--primary)] text-white">{activeCount}</span>
+                                    <span className="ml-2 text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--primary)] text-[#1A1208]">{activeCount}</span>
                                 )}
                             </h2>
                         </div>
@@ -454,7 +454,7 @@ export default function SearchPage() {
                         <div className="absolute right-0 top-0 bottom-0 w-80 bg-card shadow-2xl flex flex-col border-l border-[var(--border)]">
                             <div className="flex justify-between items-center px-5 py-4 border-b border-[var(--border)]">
                                 <h2 className="font-semibold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
-                                    Filters {activeCount > 0 && <span className="ml-1.5 text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--primary)] text-white">{activeCount}</span>}
+                                    Filters {activeCount > 0 && <span className="ml-1.5 text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--primary)] text-[#1A1208]">{activeCount}</span>}
                                 </h2>
                                 <button onClick={() => setSidebarOpen(false)} className="text-muted-foreground p-1.5 hover:text-foreground rounded-lg hover:bg-[var(--muted)] transition-colors">
                                     <XIcon size={18} strokeWidth={2} />
@@ -487,8 +487,16 @@ export default function SearchPage() {
                     </div>
 
                     {isLoading && (
-                        <div className="grid grid-cols-1 min-[380px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-                            {Array.from({ length: 8 }).map((_, i) => <div key={i} className="skeleton-gold aspect-[3/4] rounded-2xl" />)}
+                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-2.5">
+                            {Array.from({ length: 8 }).map((_, i) => (
+                                <div key={i} className="card-premium profile-card overflow-hidden">
+                                    <div className="skeleton-gold profile-card-photo w-full" />
+                                    <div className="p-3 space-y-2">
+                                        <div className="skeleton-gold h-3.5 w-3/4 rounded" />
+                                        <div className="skeleton-gold h-3 w-1/2 rounded" />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     )}
 
@@ -518,7 +526,7 @@ export default function SearchPage() {
 
                     {!isLoading && results.length > 0 && (
                         <>
-                            <div className="grid grid-cols-1 min-[380px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 stagger">
+                            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-2.5 stagger">
                                 {results.map(profile => <MatchCard key={profile.id} profile={profile} showScore={false} />)}
                             </div>
 

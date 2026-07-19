@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0d1117"/>
+      <stop offset="1" stop-color="#1a2744"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <rect x="320" y="220" width="560" height="360" rx="28" fill="#FFFFFF" opacity="0.06" stroke="#FFCF00" stroke-width="2"/>
+  <circle cx="480" cy="360" r="70" fill="#FFCF00" opacity="0.25"/>
+  <rect x="590" y="300" width="220" height="28" rx="14" fill="#FFCF00" opacity="0.6"/>
+  <rect x="590" y="350" width="180" height="20" rx="10" fill="#FFFFFF" opacity="0.2"/>
+  <rect x="590" y="390" width="200" height="20" rx="10" fill="#FFFFFF" opacity="0.15"/>
+  <rect x="590" y="440" width="140" height="36" rx="18" fill="#FFCF00"/>
+  <path d="M610 458 L625 473 L655 443" stroke="#1A1208" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="600" y="720" text-anchor="middle" font-family="Georgia, serif" font-size="40" font-weight="700" fill="#FFCF00">Verification Badge</text>
+  <text x="600" y="770" text-anchor="middle" font-family="system-ui, sans-serif" font-size="20" fill="#D1D5DB">Replace: /images/home/verification-badge.svg</text>
+</svg>

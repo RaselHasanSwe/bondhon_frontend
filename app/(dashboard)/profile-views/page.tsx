@@ -83,7 +83,7 @@ function ViewerCard({
         <div className="card-premium p-4 hover:shadow-md transition-all duration-200 hover:border-[var(--primary)]/20 group">
             <div className="flex items-start gap-4">
                 <Link href={profileUrl} className="flex-shrink-0">
-                    <div className="w-14 h-14 rounded-full bg-[var(--gold-50)] overflow-hidden border-2 border-transparent group-hover:border-[var(--primary)]/30 transition-colors">
+                    <div className="w-14 h-14 rounded-full bg-[var(--gold-50)] overflow-hidden profile-photo-border">
                         {resolvePhotoUrl(view.viewer.primary_photo) ? (
                             <img
                                 src={resolvePhotoUrl(view.viewer.primary_photo)!}
@@ -92,7 +92,7 @@ function ViewerCard({
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                                <UserIcon size={24} strokeWidth={1.5} className="text-[var(--gold-200)]" />
+                                <UserIcon size={24} strokeWidth={1.5} className="text-subtle" />
                             </div>
                         )}
                     </div>
@@ -104,7 +104,7 @@ function ViewerCard({
                             <div className="flex items-center gap-2 flex-wrap">
                                 <Link
                                     href={profileUrl}
-                                    className="font-semibold text-foreground truncate group-hover:text-[var(--primary)] transition-colors"
+                                    className="font-semibold text-foreground truncate group-hover:text-[#8A7000] transition-colors"
                                     style={{ fontFamily: 'var(--font-heading)' }}
                                 >
                                     {view.viewer.name}
@@ -336,12 +336,12 @@ export default function ProfileViewsPage() {
                             href="/dashboard"
                             className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
                         >
-                            <ArrowLeftIcon size={20} strokeWidth={1.8} className="text-gray-600" />
+                            <ArrowLeftIcon size={20} strokeWidth={1.8} className="text-[#3D3220]" />
                         </Link>
                         <div>
                             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"
                                 style={{ fontFamily: 'var(--font-heading)' }}>
-                                <EyeIcon size={24} strokeWidth={1.8} className="text-[var(--primary)]" />
+                                <EyeIcon size={24} strokeWidth={1.8} className="text-[#1A1208]" />
                                 Profile Viewers
                             </h1>
                             {!isLoading && !isError && (
@@ -427,7 +427,7 @@ export default function ProfileViewsPage() {
                 </div>
             ) : viewers.length === 0 ? (
                 <div className="card-premium p-16 text-center animate-fade-in-up">
-                    <div className="w-24 h-24 rounded-full bg-[var(--gold-50)] flex items-center justify-center mx-auto mb-4">
+                    <div className="w-24 h-24 rounded-full bg-[var(--gold-50)] flex items-center justify-center mx-auto mb-4 profile-photo-border">
                         <EyeIcon size={48} strokeWidth={1.2} className="text-[var(--gold-200)]" />
                     </div>
                     <h3 className="text-xl font-semibold text-foreground"

@@ -20,7 +20,7 @@ export function ProfileUpgradePrompt({ title, message }: ProfileUpgradePromptPro
                 style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
                 {title}
             </h3>
-            <p className="text-gray-500 mt-2 max-w-md mx-auto text-sm leading-relaxed"
+            <p className="text-meta mt-2 max-w-md mx-auto text-sm leading-relaxed"
                style={{ fontFamily: 'system-ui, sans-serif' }}>
                 {message}
             </p>
@@ -57,8 +57,8 @@ export function ProfileAccessGate({
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#FDFAF4]">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-16 h-16 rounded-full border-4 border-[#C9A227]/30 border-t-[#C9A227] animate-spin" />
-                    <p className="text-[#C9A227] font-serif text-sm tracking-widest uppercase">Loading…</p>
+                    <div className="w-16 h-16 rounded-full border-4 border-[#FFCF00]/30 border-t-[#FFCF00] animate-spin" />
+                    <p className="text-[#1A1208] font-serif text-sm tracking-widest uppercase">Loading…</p>
                 </div>
             </div>
         );

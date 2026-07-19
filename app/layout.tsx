@@ -11,6 +11,7 @@ const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 const playfair = Playfair_Display({
@@ -29,8 +30,8 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   const siteName    = settings?.site_name        ?? APP_NAME;
-  const metaTitle   = settings?.meta_title       ?? `${siteName} — Premium Matrimony`;
-  const metaDesc    = settings?.meta_description ?? `Find your perfect life partner on ${siteName} — Bangladesh's most trusted premium matrimony platform.`;
+  const metaTitle   = settings?.meta_title       ?? `${siteName} — Find Your Perfect Life Partner`;
+  const metaDesc    = settings?.meta_description ?? `Find your perfect life partner on ${siteName}.`;
   const metaKw      = settings?.meta_keywords    ?? "matrimony, marriage, Bangladesh";
   const faviconUrl  = cfImageUrl(settings?.site_favicon);
 

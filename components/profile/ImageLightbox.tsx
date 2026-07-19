@@ -106,7 +106,7 @@ export function ImageLightbox({ images, startIndex, onClose }: ImageLightboxProp
                                 onClick={(e) => { e.stopPropagation(); setIndex(i); }}
                                 className={cn(
                                     'w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all',
-                                    i === index ? 'border-[#C9A227]' : 'border-white/20 opacity-60 hover:opacity-100',
+                                    i === index ? 'border-[#FFCF00]' : 'border-white/20 opacity-60 hover:opacity-100',
                                 )}
                                 aria-label={`View image ${i + 1}`}
                             >

@@ -87,7 +87,7 @@ export default async function FaqPage() {
             {page.title}
           </h1>
           {page.meta_description && (
-            <p className="text-gray-400 mt-3">{page.meta_description}</p>
+            <p className="text-[#FFFFFF] mt-3">{page.meta_description}</p>
           )}
         </div>
       </div>

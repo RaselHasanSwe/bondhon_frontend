@@ -11,7 +11,7 @@ import {CallButton} from '@/components/call/CallButton';
 import type {Conversation, Message, MessageType, MediaItem} from '@/types/message';
 import type {CallLog, CallParticipant} from '@/types/call';
 import {cfImageUrl} from '@/lib/utils';
-import {showErrorToast} from '@/lib/toast';
+import {showErrorToast, getErrorMessage} from '@/lib/toast';
 import {queryClient} from '@/lib/queryClient';
 import {invalidateMessageUnreadQueries} from '@/lib/cacheInvalidation';
 
@@ -535,16 +535,29 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
             }
             chatService.sendTyping(conversationId, false).catch(() => {
             });
-        } catch {
-            setMessages((prev) =>
-                prev.map((m) => (m.id === optimisticId ? {...m, status: 'sent' as const} : m))
-            );
-            // Revoke on error too (no retry UI)
-            const blobs = blobUrlsMap.current.get(optimisticId);
-            if (blobs) {
-                blobs.forEach(URL.revokeObjectURL);
-                blobUrlsMap.current.delete(optimisticId);
+        } catch (err) {
+            setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+
+            if (sendType === 'text' && body) {
+                setText(body);
+            } else if (sendType === 'image') {
+                setPendingKind('images');
+                setPendingImages(imgFiles);
+                setImagePreviews(capturedImagePreviews);
+                if (label) setMediaLabel(label);
+            } else if (sendType === 'document') {
+                setPendingKind('docs');
+                setPendingDocs(docFiles);
+                if (label) setMediaLabel(label);
             }
+
+            const blobs = blobUrlsMap.current.get(optimisticId);
+            blobUrlsMap.current.delete(optimisticId);
+            if (sendType !== 'image' && blobs) {
+                blobs.forEach(URL.revokeObjectURL);
+            }
+
+            showErrorToast(getErrorMessage(err));
         } finally {
             setIsSending(false);
         }
@@ -624,7 +637,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
     if (!conversation) {
         return (
             <div className="flex-1 flex items-center justify-center p-4">
-                <p className="text-gray-400 text-sm text-center">Conversation not found.</p>
+                <p className="text-[#4A3F2E] text-sm text-center">Conversation not found.</p>
             </div>
         );
     }
@@ -639,7 +652,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                 className="flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-2.5 border-b border-gray-100 bg-white shrink-0">
                 <button
                     onClick={() => router.push('/chat')}
-                    className="md:hidden text-gray-500 hover:text-[#1F2937] mr-1 p-1 rounded-lg hover:bg-gray-100 transition-colors shrink-0"
+                    className="md:hidden text-meta hover:text-[#1F2937] mr-1 p-1 rounded-lg hover:bg-gray-100 transition-colors shrink-0"
                     aria-label="Back"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -651,10 +664,10 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                     {participant.avatar ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={cfImageUrl(participant.avatar) ?? ''} alt={participant.name}
-                             className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover"/>
+                             className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover profile-photo-border"/>
                     ) : (
                         <div
-                            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-linear-to-br from-[#C9A227] to-[#D4AF37] flex items-center justify-center text-white font-bold text-sm">
+                            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-linear-to-br from-[#FFCF00] to-[#FFE033] flex items-center justify-center text-[#1A1208] font-bold text-sm profile-photo-border">
                             {initials}
                         </div>
                     )}
@@ -666,7 +679,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
 
                 <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-[#1F2937] truncate">{participant.name}</p>
-                    <p className="text-xs text-gray-400 truncate">
+                    <p className="text-xs text-[#4A3F2E] truncate">
                         {participant.is_online
                             ? <span className="flex items-center gap-1">
                                 <span className="w-2 h-2 rounded-full bg-green-400 inline-block"/>
@@ -682,7 +695,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                 </div>
 
                 <span
-                    className="hidden sm:inline text-[10px] text-gray-400 bg-gray-100 px-2 py-1 rounded-full font-mono shrink-0">
+                    className="hidden sm:inline text-[10px] text-[#4A3F2E] bg-gray-100 px-2 py-1 rounded-full font-mono shrink-0">
           {participant.profile_id}
         </span>
 
@@ -725,11 +738,11 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                 {isLoadingMore && (
                     <div className="flex justify-center py-2">
                         <span
-                            className="w-5 h-5 border-2 border-[#C9A227]/30 border-t-[#C9A227] rounded-full animate-spin"/>
+                            className="w-5 h-5 border-2 border-[#FFCF00]/30 border-t-[#FFCF00] rounded-full animate-spin"/>
                     </div>
                 )}
                 {!hasMore && messages.length > 0 && (
-                    <p className="text-center text-[11px] text-gray-400 py-1">
+                    <p className="text-center text-[11px] text-[#4A3F2E] py-1">
                         <span className="inline-block w-1 h-1 rounded-full bg-gray-300 mx-0.5 align-middle"/>
                         Beginning of conversation
                     </p>
@@ -740,7 +753,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                         <div className="flex items-center gap-2 sm:gap-3 my-3 sm:my-4">
                             <div className="flex-1 h-px bg-gray-200"/>
                             <span
-                                className="text-[10px] sm:text-[11px] text-gray-400 font-medium px-2 whitespace-nowrap">{date}</span>
+                                className="text-[10px] sm:text-[11px] text-[#4A3F2E] font-medium px-2 whitespace-nowrap">{date}</span>
                             <div className="flex-1 h-px bg-gray-200"/>
                         </div>
                         <div className="space-y-1.5 sm:space-y-2">
@@ -802,7 +815,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                                 {pendingImages.length < MAX_IMAGES && (
                                     <button
                                         onClick={() => imageRef.current?.click()}
-                                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl border-2 border-dashed border-[#C9A227]/40 flex items-center justify-center text-[#C9A227] hover:border-[#C9A227] hover:bg-[#C9A227]/5 transition-colors shrink-0"
+                                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl border-2 border-dashed border-[#FFCF00]/40 flex items-center justify-center text-[#1A1208] hover:border-[#FFCF00] hover:bg-[#FFCF00]/5 transition-colors shrink-0"
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                              strokeWidth={2}>
@@ -811,7 +824,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                                     </button>
                                 )}
                             </div>
-                            <p className="text-[10px] text-gray-400">{pendingImages.length}/{MAX_IMAGES} images · max 2 MB each</p>
+                            <p className="text-[10px] text-[#4A3F2E]">{pendingImages.length}/{MAX_IMAGES} images · max 2 MB each</p>
                         </div>
                     )}
 
@@ -822,23 +835,23 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                                 <div key={i}
                                      className="flex items-center gap-2 bg-gray-50 rounded-xl px-2 sm:px-3 py-1.5">
                                     <div
-                                        className="w-7 h-7 rounded-lg bg-[#C9A227]/10 flex items-center justify-center text-[#C9A227] shrink-0">
+                                        className="w-7 h-7 rounded-lg bg-[#FFCF00]/10 flex items-center justify-center text-[#1A1208] shrink-0">
                                         <span
                                             className="text-[10px] font-bold">{(f.name.split('.').pop() ?? 'DOC').toUpperCase().slice(0, 3)}</span>
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-xs font-semibold text-[#1F2937] truncate">{f.name}</p>
-                                        <p className="text-[10px] text-gray-400">{formatFileSize(f.size)}</p>
+                                        <p className="text-[10px] text-[#4A3F2E]">{formatFileSize(f.size)}</p>
                                     </div>
                                      <button onClick={() => removeDoc(i)}
-                                             className="w-5 h-5 rounded-full hover:bg-red-100 text-gray-400 hover:text-red-500 flex items-center justify-center transition-colors">
+                                             className="w-5 h-5 rounded-full hover:bg-red-100 text-[#4A3F2E] hover:text-red-500 flex items-center justify-center transition-colors">
                                         <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     </button>
                                 </div>
                             ))}
                             {pendingDocs.length < MAX_FILES && (
                                 <button onClick={() => fileRef.current?.click()}
-                                        className="text-xs text-[#C9A227] hover:underline text-left pl-1">+ Add file
+                                        className="text-xs text-[#1A1208] hover:underline text-left pl-1">+ Add file
                                     (PDF/DOC, max {MAX_FILES}, 2 MB each)</button>
                             )}
                         </div>
@@ -852,10 +865,10 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                             onChange={(e) => setMediaLabel(e.target.value)}
                             placeholder="Add a label / caption… (optional)"
                             maxLength={500}
-                            className="flex-1 text-xs rounded-xl bg-[#F8F9FB] border border-gray-200 px-2.5 py-1.5 text-[#1F2937] placeholder-gray-400 focus:outline-none focus:border-[#C9A227] focus:ring-1 focus:ring-[#C9A227]/30 transition-all min-w-0"
+                            className="flex-1 text-xs rounded-xl bg-[#F8F9FB] border border-gray-200 px-2.5 py-1.5 text-[#1F2937] placeholder-gray-400 focus:outline-none focus:border-[#FFCF00] focus:ring-1 focus:ring-[#FFCF00]/30 transition-all min-w-0"
                         />
                         <button onClick={clearPending}
-                                className="text-xs text-gray-400 hover:text-red-500 transition-colors whitespace-nowrap px-1 shrink-0">Cancel
+                                className="text-xs text-[#4A3F2E] hover:text-red-500 transition-colors whitespace-nowrap px-1 shrink-0">Cancel
                         </button>
                     </div>
                 </div>
@@ -885,7 +898,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                                 if (!pendingKind || pendingKind === 'images') imageRef.current?.click();
                             }}
                             disabled={!!pendingKind && pendingKind !== 'images'}
-                            className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:text-[#C9A227] hover:bg-[#C9A227]/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            className="w-8 h-8 flex items-center justify-center rounded-xl text-meta hover:text-[#1A1208] hover:bg-[#FFCF00]/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             title={`Send photos (max ${MAX_IMAGES}, 2 MB each)`}
                         >
                             <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -899,7 +912,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                                 if (!pendingKind || pendingKind === 'docs') fileRef.current?.click();
                             }}
                             disabled={!!pendingKind && pendingKind !== 'docs'}
-                            className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:text-[#C9A227] hover:bg-[#C9A227]/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            className="w-8 h-8 flex items-center justify-center rounded-xl text-meta hover:text-[#1A1208] hover:bg-[#FFCF00]/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             title={`Send PDF/DOC files (max ${MAX_FILES}, 2 MB each)`}
                         >
                             <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -917,14 +930,14 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                         onKeyDown={handleKeyDown}
                         placeholder={hasPending ? 'Add a caption…' : 'Type a message…'}
                         rows={1}
-                        className="flex-1 min-w-0 resize-none rounded-2xl bg-[#F8F9FB] border border-gray-200 px-3 sm:px-4 py-2 sm:py-2.5 text-sm text-[#1F2937] placeholder-gray-400 focus:outline-none focus:border-[#C9A227] focus:ring-2 focus:ring-[#C9A227]/20 transition-all max-h-24 sm:max-h-28 overflow-y-auto"
+                        className="flex-1 min-w-0 resize-none rounded-2xl bg-[#F8F9FB] border border-gray-200 px-3 sm:px-4 py-2 sm:py-2.5 text-sm text-[#1F2937] placeholder-gray-400 focus:outline-none focus:border-[#FFCF00] focus:ring-2 focus:ring-[#FFCF00]/20 transition-all max-h-24 sm:max-h-28 overflow-y-auto"
                         style={{lineHeight: '1.5'}}
                     />
 
                     <button
                         onClick={handleSend}
                         disabled={(!text.trim() && !hasPending) || isSending}
-                        className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-[#C9A227] text-white hover:bg-[#b8911f] disabled:opacity-40 disabled:cursor-not-allowed transition-all shrink-0 self-end"
+                        className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-[#FFCF00] text-[#1A1208] hover:bg-[#E6BA00] disabled:opacity-40 disabled:cursor-not-allowed transition-all shrink-0 self-end"
                         aria-label="Send"
                     >
                         {isSending ? (
@@ -939,7 +952,7 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
                     </button>
                 </div>
 
-                <p className="text-[9px] sm:text-[10px] text-gray-400 mt-1 text-center">
+                <p className="text-[9px] sm:text-[10px] text-[#4A3F2E] mt-1 text-center">
                     Photos &amp; files max 2 MB each · Documents: PDF, DOC, DOCX only · Chat available between mutually accepted interests
                 </p>
             </div>

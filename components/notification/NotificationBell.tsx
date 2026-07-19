@@ -120,14 +120,14 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
                 <div className="flex items-center gap-2">
                     {unreadCount > 0 && (
                         <button onClick={() => markAllRead()}
-                                className="text-[11px] text-[#C9A227] hover:underline font-medium">
+                                className="text-[11px] text-[#1A1208] hover:underline font-medium">
                             Mark all read
                         </button>
                     )}
                     <button onClick={() => {
                         setOpen(false);
                         router.push('/notifications');
-                    }} className="text-[11px] text-gray-500 hover:text-[#1F2937]">
+                    }} className="text-[11px] text-meta hover:text-[#1F2937]">
                         View all →
                     </button>
                 </div>
@@ -138,7 +138,7 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
                 {preview.length === 0 ? (
                     <div className="py-10 text-center">
                         <BellIcon size={32} className="mx-auto text-gray-300 mb-1"/>
-                        <p className="text-sm text-gray-400">No notifications yet</p>
+                        <p className="text-sm text-[#4A3F2E]">No notifications yet</p>
                     </div>
                 ) : (
                     preview.map((n) => (
@@ -149,14 +149,14 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
                         >
                             {(() => {
                                 const NIcon = TYPE_ICONS[n.type] ?? MegaphoneIcon;
-                                return <NIcon size={20} strokeWidth={1.8} className="shrink-0 mt-0.5 text-gray-500"/>;
+                                return <NIcon size={20} strokeWidth={1.8} className="shrink-0 mt-0.5 text-meta"/>;
                             })()}
                             <div className="flex-1 min-w-0">
                                 <p className={cn('text-xs font-semibold text-[#1F2937] leading-tight', !n.is_read && 'font-bold')}>{n.title}</p>
-                                <p className="text-[11px] text-gray-500 mt-0.5 leading-snug line-clamp-2">{n.body}</p>
-                                <p className="text-[10px] text-gray-400 mt-1">{formatRelativeTime(n.created_at)}</p>
+                                <p className="text-[11px] text-meta mt-0.5 leading-snug line-clamp-2">{n.body}</p>
+                                <p className="text-[10px] text-[#4A3F2E] mt-1">{formatRelativeTime(n.created_at)}</p>
                             </div>
-                            {!n.is_read && <span className="w-2 h-2 rounded-full bg-[#C9A227] shrink-0 mt-1.5"/>}
+                            {!n.is_read && <span className="w-2 h-2 rounded-full bg-[#FFCF00] shrink-0 mt-1.5"/>}
                         </button>
                     ))
                 )}
@@ -167,7 +167,7 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
                     <button onClick={() => {
                         setOpen(false);
                         router.push('/notifications');
-                    }} className="text-xs text-[#C9A227] hover:underline font-medium">
+                    }} className="text-xs text-[#1A1208] hover:underline font-medium">
                         See all {notifications.length} notifications
                     </button>
                 </div>
@@ -184,7 +184,7 @@ export function NotificationBell({placement = 'default'}: { placement?: 'default
                 className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors"
                 aria-label="Notifications"
             >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                <svg className="w-5 h-5 text-[#3D3220]" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                      strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round"
                           d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>

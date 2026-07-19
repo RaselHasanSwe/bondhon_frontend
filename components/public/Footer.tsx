@@ -79,7 +79,7 @@ export default async function Footer({settings}: FooterProps) {
                             )}
                         </div>
                         {settings.site_slogan && (
-                            <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
+                            <p className="text-white font-medium text-sm leading-relaxed max-w-xs">
                                 {settings.site_slogan}
                             </p>
                         )}
@@ -91,7 +91,7 @@ export default async function Footer({settings}: FooterProps) {
                                         href={settings[key]!}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-gray-400 hover:text-[#C9A227] transition-colors"
+                                        className="text-white hover:text-[#FFCF00] transition-colors"
                                         aria-label={key.replace('_url', '')}
                                     >
                                         <Icon/>
@@ -103,7 +103,7 @@ export default async function Footer({settings}: FooterProps) {
 
                     {/* Quick Links */}
                     <div>
-                        <h4 className="font-semibold text-sm uppercase tracking-wider mb-4" style={{color: '#C9A227'}}>
+                        <h4 className="font-semibold text-sm uppercase tracking-wider mb-4" style={{color: '#FFCF00'}}>
                             Quick Links
                         </h4>
                         {quickLinks.length > 0 ? (
@@ -112,7 +112,7 @@ export default async function Footer({settings}: FooterProps) {
                                     <li key={page.id}>
                                         <Link
                                             href={pageSlugToHref(page.slug)}
-                                            className="text-gray-400 text-sm hover:text-[#C9A227] transition-colors"
+                                            className="text-white font-medium text-sm hover:text-[#FFCF00] transition-colors"
                                         >
                                             {page.title}
                                         </Link>
@@ -120,37 +120,37 @@ export default async function Footer({settings}: FooterProps) {
                                 ))}
                             </ul>
                         ) : (
-                            <p className="text-gray-500 text-sm">No pages available.</p>
+                            <p className="text-gray-400 text-sm">No pages available.</p>
                         )}
                     </div>
 
                     {/* Contact */}
                     <div>
-                        <h4 className="font-semibold text-sm uppercase tracking-wider mb-4" style={{color: '#C9A227'}}>
+                        <h4 className="font-semibold text-sm uppercase tracking-wider mb-4" style={{color: '#FFCF00'}}>
                             Contact Us
                         </h4>
                         <ul className="space-y-3">
                             {settings.contact_email && (
-                                <li className="flex items-center gap-2 text-gray-400 text-sm">
-                                    <Mail size={15} className="shrink-0" style={{color: '#C9A227'}}/>
+                                <li className="flex items-center gap-2 text-white font-medium text-sm">
+                                    <Mail size={15} className="shrink-0" style={{color: '#FFCF00'}}/>
                                     <a href={`mailto:${settings.contact_email}`}
-                                       className="hover:text-white transition-colors">
+                                       className="hover:text-[#FFCF00] transition-colors">
                                         {settings.contact_email}
                                     </a>
                                 </li>
                             )}
                             {settings.contact_phone && (
-                                <li className="flex items-center gap-2 text-gray-400 text-sm">
-                                    <Phone size={15} className="shrink-0" style={{color: '#C9A227'}}/>
+                                <li className="flex items-center gap-2 text-white font-medium text-sm">
+                                    <Phone size={15} className="shrink-0" style={{color: '#FFCF00'}}/>
                                     <a href={`tel:${settings.contact_phone.replace(/\s/g, '')}`}
-                                       className="hover:text-white transition-colors">
+                                       className="hover:text-[#FFCF00] transition-colors">
                                         {settings.contact_phone}
                                     </a>
                                 </li>
                             )}
                             {settings.contact_address && (
-                                <li className="flex items-start gap-2 text-gray-400 text-sm">
-                                    <MapPin size={15} className="shrink-0 mt-0.5" style={{color: '#C9A227'}}/>
+                                <li className="flex items-start gap-2 text-white font-medium text-sm">
+                                    <MapPin size={15} className="shrink-0 mt-0.5" style={{color: '#FFCF00'}}/>
                                     <span>{settings.contact_address}</span>
                                 </li>
                             )}
@@ -159,7 +159,7 @@ export default async function Footer({settings}: FooterProps) {
                 </div>
 
                 <div
-                    className="mt-10 pt-6 flex justify-center text-gray-500 text-xs"
+                    className="mt-10 pt-6 flex justify-center text-gray-400 font-medium text-xs"
                     style={{borderTop: '1px solid rgba(255,255,255,0.08)'}}
                 >
                     <p>© {currentYear} {settings.site_name}. All rights reserved.</p>

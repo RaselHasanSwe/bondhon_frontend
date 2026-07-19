@@ -46,11 +46,11 @@ const REPORT_REASONS = [
 /* ─── Ornament SVG ─── */
 const OrnamentDivider = () => (
     <div className="flex items-center gap-3 my-1">
-        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#C9A227]/40 to-transparent"/>
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#FFCF00]/40 to-transparent"/>
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M9 1L10.5 7.5H17L11.5 11.5L13.5 17L9 13L4.5 17L6.5 11.5L1 7.5H7.5L9 1Z" fill="#C9A227" opacity="0.7"/>
+            <path d="M9 1L10.5 7.5H17L11.5 11.5L13.5 17L9 13L4.5 17L6.5 11.5L1 7.5H7.5L9 1Z" fill="#FFCF00" opacity="0.7"/>
         </svg>
-        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#C9A227]/40 to-transparent"/>
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#FFCF00]/40 to-transparent"/>
     </div>
 );
 
@@ -210,7 +210,7 @@ export default function ProfileViewPage() {
                         <svg className="w-7 h-7 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
                     </div>
                     <p className="font-serif text-xl text-gray-700">Profile Not Found</p>
-                    <Button onClick={() => router.back()} variant="outline" className="rounded-full border-[#C9A227] text-[#C9A227] hover:bg-[#C9A227]/5">Go Back</Button>
+                    <Button onClick={() => router.back()} variant="outline" className="rounded-full border-[#FFCF00] text-[#1A1208] hover:bg-[#FFCF00]/5">Go Back</Button>
                 </div>
             </div>
         );
@@ -236,7 +236,7 @@ export default function ProfileViewPage() {
                      style={{backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A227' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")"}}/>
 
                 <div className="relative max-w-5xl mx-auto px-4 md:px-8 py-10 md:py-14">
-                    <div className="md:flex md:gap-10 items-end">
+                    <div className="md:flex md:gap-10 md:items-start">
 
                         {/* ── Photo Column ── */}
                         <div className="md:w-72 lg:w-80 shrink-0">
@@ -244,7 +244,7 @@ export default function ProfileViewPage() {
                             <div className="relative mx-auto md:mx-0" style={{maxWidth: 300}}>
                                 {/* Ornate gold frame */}
                                 <div className="absolute -inset-[3px] rounded-2xl"
-                                     style={{background: 'linear-gradient(135deg, #C9A227 0%, #f0d060 30%, #C9A227 60%, #8a6b10 100%)'}}/>
+                                     style={{background: 'linear-gradient(135deg, #FFCF00 0%, #f0d060 30%, #FFCF00 60%, #8a6b10 100%)'}}/>
                                 <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl bg-gray-900">
                                     {heroPhotoUrl ? (
                                         <img
@@ -254,7 +254,7 @@ export default function ProfileViewPage() {
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-                                            <UserIcon size={80} className="text-gray-600" strokeWidth={1}/>
+                                            <UserIcon size={80} className="text-[#3D3220]" strokeWidth={1}/>
                                         </div>
                                     )}
                                     {/* Verified badge — shown only when face scan is approved */}
@@ -272,7 +272,7 @@ export default function ProfileViewPage() {
                             {approvedPhotos.length > 0 && (
                                 <Link
                                     href={galleryHref}
-                                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#C9A227]/35 bg-[#C9A227]/10 px-4 py-2.5 text-xs font-semibold text-[#d4af37] hover:bg-[#C9A227]/20 transition-colors"
+                                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#FFCF00]/35 bg-[#FFCF00]/10 px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#FFCF00]/20 transition-colors"
                                     style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 300 }}
                                 >
                                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -290,8 +290,8 @@ export default function ProfileViewPage() {
                         <div className="flex-1 mt-8 md:mt-0 text-white">
                             {/* Eyebrow */}
                             <div className="flex items-center gap-3 mb-3">
-                                <div className="h-px w-8 bg-[#C9A227]"/>
-                                <span className="text-[#C9A227] text-xs tracking-[0.25em] uppercase font-sans"
+                                <div className="h-px w-8 bg-[#FFCF00]"/>
+                                <span className="text-[#FFCF00] text-xs tracking-[0.25em] uppercase font-sans"
                                       style={{fontFamily: 'system-ui, sans-serif'}}>
                                     {p.profile?.profile_created_for?.replace('_', ' ') ?? ' Profile'}
                                 </span>
@@ -306,7 +306,7 @@ export default function ProfileViewPage() {
                             {/* Profile ID + location line */}
                             <div className="flex items-center gap-3 mt-3 flex-wrap">
                                 {p.profile?.profile_id && (
-                                    <span className="font-mono text-[10px] bg-white/10 border border-white/20 text-white/70 px-2.5 py-1 rounded tracking-widest">
+                                    <span className="font-mono text-[10px] bg-white/10 border border-white/20 text-white px-2.5 py-1 rounded tracking-widest">
                                         {p.profile.profile_id}
                                     </span>
                                 )}
@@ -317,7 +317,7 @@ export default function ProfileViewPage() {
                                 )}
                                 {p.profile?.city && (
                                     <span className="text-white/60 text-sm flex items-center gap-1" style={{fontFamily: 'system-ui, sans-serif'}}>
-                                        <svg className="w-3 h-3 text-[#C9A227]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/></svg>
+                                        <svg className="w-3 h-3 text-[#FFCF00]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/></svg>
                                         {p.profile.city}{p.profile.country ? `, ${p.profile.country}` : ''}
                                     </span>
                                 )}
@@ -334,7 +334,7 @@ export default function ProfileViewPage() {
 
                             {/* About me quote */}
                             {p.profile?.about_me && (
-                                <div className="mt-6 border-l-2 border-[#C9A227] pl-4">
+                                <div className="mt-6 border-l-2 border-[#FFCF00] pl-4">
                                     <p className="text-white/70 text-sm leading-relaxed italic"
                                        style={{fontFamily: "'Georgia', serif"}}>
                                         "{p.profile.about_me}"
@@ -356,7 +356,7 @@ export default function ProfileViewPage() {
                                              <button
                                                  onClick={() => sendInterestMutation.mutate(p.id)}
                                                  disabled={sendInterestMutation.isPending}
-                                                 className="group relative inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 overflow-hidden shadow-md shrink-0 whitespace-nowrap bg-[#C9A227] hover:bg-[#d4af37] text-white hover:shadow-[0_0_15px_rgba(201,162,39,0.4)]"
+                                                 className="group relative inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 overflow-hidden shadow-md shrink-0 whitespace-nowrap bg-[#FFCF00] hover:bg-[#FFE033] text-[#1A1208] hover:shadow-[0_0_15px_rgba(255,207,0,0.4)]"
                                                  style={{fontFamily: 'system-ui, sans-serif'}}>
                                                  {sendInterestMutation.isPending
                                                      ? <><ClockIcon size={12} strokeWidth={1.8}/> Sending…</>
@@ -369,7 +369,7 @@ export default function ProfileViewPage() {
                                              <>
                                                  <button
                                                      onClick={() => interestActionMutation.mutate({ id: interestId, action: 'accept' })}
-                                                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#C9A227] text-white shadow-md shrink-0 whitespace-nowrap"
+                                                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#FFCF00] text-[#1A1208] shadow-md shrink-0 whitespace-nowrap"
                                                      style={{fontFamily: 'system-ui, sans-serif'}}>
                                                      <CheckIcon size={12} strokeWidth={2.5}/> Accept
                                                  </button>
@@ -435,8 +435,8 @@ export default function ProfileViewPage() {
                                              disabled={shortlistMutation.isPending}
                                              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs transition-all duration-200 border shrink-0 whitespace-nowrap
                                                  ${shortlisted
-                                                 ? 'border-[#C9A227] text-[#C9A227] bg-[#C9A227]/10'
-                                                 : 'border-white/20 text-white/70 hover:border-[#C9A227]/60 hover:text-[#C9A227]'
+                                                 ? 'border-white/20 text-white bg-[#FFCF00]/10'
+                                                 : 'border-white/20 text-white hover:border-[#FFCF00]/60 hover:text-[#FFCF00]'
                                              }`}
                                              style={{fontFamily: 'system-ui, sans-serif'}}>
                                              {shortlisted ? <StarFilledIcon size={12} strokeWidth={1.8}/> : <StarIcon size={12} strokeWidth={1.8}/>}
@@ -446,12 +446,12 @@ export default function ProfileViewPage() {
                                          {/* Secondary actions */}
                                          <div className="flex gap-1 ml-auto shrink-0">
                                              <button onClick={() => setReportOpen(true)}
-                                                     className="text-white/40 hover:text-white/70 text-xs px-2 py-1.5 rounded-full border border-white/10 hover:border-white/25 transition-colors whitespace-nowrap"
+                                                     className="text-white hover:text-white/70 text-xs px-2 py-1.5 rounded-full border border-white/20 hover:border-white/25 transition-colors whitespace-nowrap"
                                                      style={{fontFamily: 'system-ui, sans-serif'}}>
                                                  Report
                                              </button>
                                              <button onClick={() => setBlockOpen(true)}
-                                                     className="text-white/40 hover:text-red-400 text-xs px-2 py-1.5 rounded-full border border-white/10 hover:border-red-400/30 transition-colors whitespace-nowrap"
+                                                     className="text-white hover:text-red-400 text-xs px-2 py-1.5 rounded-full border border-white/20 hover:border-red-400/30 transition-colors whitespace-nowrap"
                                                      style={{fontFamily: 'system-ui, sans-serif'}}>
                                                  Block
                                              </button>
@@ -459,7 +459,7 @@ export default function ProfileViewPage() {
                                      </>
                                  ) : (
                                      <a href="/profile/edit"
-                                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#C9A227] hover:bg-[#d4af37] text-white text-xs font-semibold shadow-md transition-all whitespace-nowrap"
+                                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFCF00] hover:bg-[#FFE033] text-[#1A1208] text-xs font-semibold shadow-md transition-all whitespace-nowrap"
                                         style={{fontFamily: 'system-ui, sans-serif'}}>
                                          Edit Profile
                                      </a>
@@ -492,22 +492,22 @@ export default function ProfileViewPage() {
                     <div className="relative rounded-3xl overflow-hidden shadow-md"
                          style={{background: 'linear-gradient(135deg, #fffbf0 0%, #fdf5dc 100%)', border: '1px solid #e8d59a'}}>
                         <div className="absolute top-0 left-0 w-1.5 h-full"
-                             style={{background: 'linear-gradient(to bottom, #C9A227, #f0d060, #C9A227)'}}/>
+                             style={{background: 'linear-gradient(to bottom, #FFCF00, #f0d060, #FFCF00)'}}/>
                         <div className="px-8 py-6 pl-10">
                             <SectionTitle icon={
-                                <svg className="w-4 h-4 text-[#C9A227]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <svg className="w-4 h-4 text-[#1A1208]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             }>About & Preferences</SectionTitle>
                             <div className="mt-4 grid md:grid-cols-2 gap-6">
                                 {p.profile.about_me && (
                                     <div>
-                                        <p className="text-[10px] tracking-[0.2em] uppercase text-[#C9A227] font-sans mb-2"
+                                        <p className="text-[10px] tracking-[0.2em] uppercase text-[#1A1208] font-sans mb-2"
                                            style={{fontFamily: 'system-ui, sans-serif'}}>About Me</p>
                                         <p className="text-gray-700 text-sm leading-relaxed italic">"{p.profile.about_me}"</p>
                                     </div>
                                 )}
                                 {p.profile.what_looking_for && (
                                     <div>
-                                        <p className="text-[10px] tracking-[0.2em] uppercase text-[#C9A227] font-sans mb-2"
+                                        <p className="text-[10px] tracking-[0.2em] uppercase text-[#1A1208] font-sans mb-2"
                                            style={{fontFamily: 'system-ui, sans-serif'}}>What I'm Looking For</p>
                                         <p className="text-gray-700 text-sm leading-relaxed italic">"{p.profile.what_looking_for}"</p>
                                     </div>
@@ -516,12 +516,12 @@ export default function ProfileViewPage() {
                             {p.profile.profile_completion_percentage != null && (
                                 <div className="mt-5">
                                     <div className="flex items-center justify-between mb-1">
-                                        <span className="text-xs text-gray-500" style={{fontFamily: 'system-ui, sans-serif'}}>{p.name}'s profile is {p.profile.profile_completion_percentage}% complete</span>
-                                        <span className="text-xs font-bold text-[#C9A227]" style={{fontFamily: 'system-ui, sans-serif'}}>{p.profile.profile_completion_percentage}%</span>
+                                        <span className="text-xs text-meta" style={{fontFamily: 'system-ui, sans-serif'}}>{p.name}'s profile is {p.profile.profile_completion_percentage}% complete</span>
+                                        <span className="text-xs font-bold text-[#1A1208]" style={{fontFamily: 'system-ui, sans-serif'}}>{p.profile.profile_completion_percentage}%</span>
                                     </div>
-                                    <div className="h-1.5 bg-[#C9A227]/15 rounded-full overflow-hidden">
+                                    <div className="h-1.5 bg-[#FFCF00]/15 rounded-full overflow-hidden">
                                         <div className="h-full rounded-full transition-all duration-700"
-                                             style={{width: `${p.profile.profile_completion_percentage}%`, background: 'linear-gradient(to right, #C9A227, #f0d060)'}}/>
+                                             style={{width: `${p.profile.profile_completion_percentage}%`, background: 'linear-gradient(to right, #FFCF00, #f0d060)'}}/>
                                     </div>
                                 </div>
                             )}
@@ -616,11 +616,11 @@ export default function ProfileViewPage() {
                             {p.lifestyle.hobbies && p.lifestyle.hobbies.length > 0 && (
                                 <div className="pt-2">
                                     <OrnamentDivider/>
-                                    <p className="text-[10px] tracking-[0.18em] uppercase text-[#C9A227] mt-3 mb-2"
+                                    <p className="text-[10px] tracking-[0.18em] uppercase text-[#1A1208] mt-3 mb-2"
                                        style={{fontFamily: 'system-ui, sans-serif'}}>Hobbies</p>
                                     <div className="flex flex-wrap gap-1.5">
                                         {p.lifestyle.hobbies.map((h) => (
-                                            <span key={h} className="text-xs bg-[#C9A227]/10 border border-[#C9A227]/20 text-[#7a5d10] rounded-full px-3 py-1"
+                                            <span key={h} className="text-xs bg-[#FFCF00]/10 border border-[#FFCF00]/20 text-[#1A1208] rounded-full px-3 py-1"
                                                   style={{fontFamily: 'system-ui, sans-serif'}}>{h}</span>
                                         ))}
                                     </div>
@@ -628,7 +628,7 @@ export default function ProfileViewPage() {
                             )}
                             {p.lifestyle.languages_known && p.lifestyle.languages_known.length > 0 && (
                                 <div className="pt-2">
-                                    <p className="text-[10px] tracking-[0.18em] uppercase text-[#C9A227] mt-3 mb-2"
+                                    <p className="text-[10px] tracking-[0.18em] uppercase text-[#1A1208] mt-3 mb-2"
                                        style={{fontFamily: 'system-ui, sans-serif'}}>Languages</p>
                                     <div className="flex flex-wrap gap-1.5">
                                         {p.lifestyle.languages_known.map((lang) => (
@@ -679,7 +679,7 @@ export default function ProfileViewPage() {
                              style={{background: 'linear-gradient(135deg, #2d1f08 0%, #1a1207 100%)'}}>
                             <h2 className="text-white text-lg flex items-center gap-3"
                                 style={{fontFamily: "'Playfair Display', Georgia, serif"}}>
-                                <svg className="w-5 h-5 text-[#C9A227]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                                <svg className="w-5 h-5 text-[#1A1208]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
                                 Partner Preferences
                             </h2>
                         </div>
@@ -709,7 +709,7 @@ export default function ProfileViewPage() {
                 {/* Footer ornament */}
                 <div className="flex flex-col items-center py-4 gap-2 opacity-40">
                     <OrnamentDivider/>
-                    <p className="text-[10px] tracking-[0.3em] uppercase text-gray-400"
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-[#4A3F2E]"
                        style={{fontFamily: 'system-ui, sans-serif'}}>End of Profile</p>
                 </div>
             </div>
@@ -738,7 +738,7 @@ export default function ProfileViewPage() {
                                style={{fontFamily: "'Playfair Display', Georgia, serif"}}>
                                 Block {p.name}?
                             </p>
-                            <p className="text-gray-500 text-sm mt-2 max-w-xs leading-relaxed"
+                            <p className="text-meta text-sm mt-2 max-w-xs leading-relaxed"
                                style={{fontFamily: 'system-ui, sans-serif'}}>
                                 They will no longer be able to view your profile or contact you. You won&apos;t see them in search or matches either.
                             </p>
@@ -748,7 +748,7 @@ export default function ProfileViewPage() {
                                 variant="outline"
                                 onClick={() => setBlockOpen(false)}
                                 disabled={blockMutation.isPending}
-                                className="rounded-full border-gray-200 text-gray-600 text-sm"
+                                className="rounded-full border-gray-200 text-[#3D3220] text-sm"
                                 style={{fontFamily: 'system-ui, sans-serif'}}
                             >
                                 Cancel
@@ -778,19 +778,19 @@ export default function ProfileViewPage() {
                     </div>
                     <div className="p-6 space-y-4 bg-[#FDFAF4]">
                         <div>
-                            <label className="text-xs tracking-widest uppercase text-[#C9A227] block mb-2"
+                            <label className="text-xs tracking-widest uppercase text-[#1A1208] block mb-2"
                                    style={{fontFamily: 'system-ui, sans-serif'}}>Reason</label>
                             <select
                                 value={reportReason}
                                 onChange={(e) => setReportReason(e.target.value)}
-                                className="w-full border border-[#e8d59a] rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#C9A227]/40 text-gray-700"
+                                className="w-full border border-[#e8d59a] rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#FFCF00]/40 text-gray-700"
                                 style={{fontFamily: 'system-ui, sans-serif'}}
                             >
                                 {REPORT_REASONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                             </select>
                         </div>
                         <div>
-                            <label className="text-xs tracking-widest uppercase text-[#C9A227] block mb-2"
+                            <label className="text-xs tracking-widest uppercase text-[#1A1208] block mb-2"
                                    style={{fontFamily: 'system-ui, sans-serif'}}>Description (optional)</label>
                             <Textarea
                                 value={reportDesc}
@@ -798,13 +798,13 @@ export default function ProfileViewPage() {
                                 placeholder="Please provide any additional details…"
                                 maxLength={500}
                                 rows={3}
-                                className="resize-none border-[#e8d59a] rounded-xl focus-visible:ring-[#C9A227]/40 bg-white text-gray-700"
+                                className="resize-none border-[#e8d59a] rounded-xl focus-visible:ring-[#FFCF00]/40 bg-white text-gray-700"
                                 style={{fontFamily: 'system-ui, sans-serif'}}
                             />
                         </div>
                         <div className="flex gap-2 justify-end pt-1">
                             <Button variant="outline" onClick={() => setReportOpen(false)}
-                                    className="rounded-full border-gray-200 text-gray-600 text-sm"
+                                    className="rounded-full border-gray-200 text-[#3D3220] text-sm"
                                     style={{fontFamily: 'system-ui, sans-serif'}}>Cancel</Button>
                             <Button
                                 onClick={() => reportMutation.mutate({
@@ -831,7 +831,7 @@ export default function ProfileViewPage() {
 function SectionTitle({icon, children}: {icon?: React.ReactNode; children: React.ReactNode}) {
     return (
         <div className="flex items-center gap-2">
-            <span className="text-[#C9A227]">{icon}</span>
+            <span className="text-[#1A1208]">{icon}</span>
             <h2 className="text-[#1F2937] text-lg font-semibold" style={{fontFamily: "'Playfair Display', Georgia, serif"}}>
                 {children}
             </h2>
@@ -841,7 +841,7 @@ function SectionTitle({icon, children}: {icon?: React.ReactNode; children: React
 
 function PreferenceGroupTitle({children}: {children: React.ReactNode}) {
     return (
-        <p className="text-[10px] tracking-[0.2em] uppercase text-[#C9A227] font-semibold mb-2 mt-1"
+        <p className="text-[10px] tracking-[0.2em] uppercase text-[#1A1208] font-semibold mb-2 mt-1"
            style={{fontFamily: 'system-ui, sans-serif'}}>{children}</p>
     );
 }
@@ -852,7 +852,7 @@ function PremiumCard({title, icon, children}: {title: string; icon?: React.React
             {/* Card header */}
             <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-[#e8d59a]/40"
                  style={{background: 'linear-gradient(to right, #fdf5dc, #fffbf0)'}}>
-                <span className="text-[#C9A227]">{icon}</span>
+                <span className="text-[#1A1208]">{icon}</span>
                 <h3 className="font-semibold text-[#1F2937] text-sm tracking-wide"
                     style={{fontFamily: "'Playfair Display', Georgia, serif"}}>{title}</h3>
             </div>
@@ -868,7 +868,7 @@ function Row({label, value}: {label: string; value?: string | null}) {
     if (!value) return null;
     return (
         <div className="flex justify-between items-start py-2 gap-4">
-            <span className="text-gray-400 text-xs shrink-0 pt-0.5 tracking-wide"
+            <span className="text-[#4A3F2E] text-xs shrink-0 pt-0.5 tracking-wide"
                   style={{fontFamily: 'system-ui, sans-serif'}}>{label}</span>
             <span className="text-[#1F2937] text-xs font-medium capitalize text-right leading-relaxed"
                   style={{fontFamily: 'system-ui, sans-serif'}}>{value}</span>
@@ -881,9 +881,9 @@ function GoldPill({label}: {label: string}) {
         <span className="inline-flex items-center text-xs px-3 py-1.5 rounded-full border font-medium tracking-wide"
               style={{
                   fontFamily: 'system-ui, sans-serif',
-                  background: 'rgba(201,162,39,0.12)',
-                  borderColor: 'rgba(201,162,39,0.35)',
-                  color: '#d4af37'
+                  background: 'rgba(255,207,0,0.12)',
+                  borderColor: 'rgba(255,207,0,0.35)',
+                  color: '#FFFFFF'
               }}>
             {label}
         </span>
@@ -897,14 +897,14 @@ function ProfileViewsUsageBanner({usage}: {usage: ProfileAccess['profile_views_p
 
     return (
         <div className="rounded-2xl border border-[#e8d59a]/60 bg-white/80 backdrop-blur-sm px-5 py-4 flex items-center gap-3 shadow-sm">
-            <div className="w-10 h-10 rounded-full bg-[#C9A227]/10 flex items-center justify-center shrink-0">
-                <CrownIcon size={18} strokeWidth={2} className="text-[#C9A227]" />
+            <div className="w-10 h-10 rounded-full bg-[#FFCF00]/10 flex items-center justify-center shrink-0">
+                <CrownIcon size={18} strokeWidth={2} className="text-[#1A1208]" />
             </div>
             <div>
                 <p className="text-sm font-semibold text-[#1F2937]" style={{fontFamily: 'system-ui, sans-serif'}}>
                     {label}
                 </p>
-                <p className="text-xs text-gray-500 mt-0.5" style={{fontFamily: 'system-ui, sans-serif'}}>
+                <p className="text-xs text-meta mt-0.5" style={{fontFamily: 'system-ui, sans-serif'}}>
                     Profile Views per Day from your subscription
                 </p>
             </div>

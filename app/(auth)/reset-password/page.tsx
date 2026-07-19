@@ -52,7 +52,7 @@ function ResetPasswordForm() {
                 </p>
                 <Link
                     href="/forgot-password"
-                    className="inline-flex items-center gap-1 mt-2 text-[#C9A227] font-medium hover:underline"
+                    className="inline-flex items-center gap-1 mt-2 text-[#1A1208] font-medium hover:underline"
                 >
                     Request new link
                     <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -184,8 +184,8 @@ export default function ResetPasswordPage() {
 
     return (
         <div className="bg-card rounded-2xl overflow-hidden animate-fade-in-up"
-             style={{boxShadow: '0 4px 40px rgba(201,162,39,0.12), 0 1px 8px rgba(0,0,0,0.06)'}}>
-            <div className="h-1.5 w-full" style={{background: 'linear-gradient(90deg, #C9A227, #E8C547, #C9A227)'}}/>
+             style={{boxShadow: '0 4px 40px rgba(255,207,0,0.12), 0 1px 8px rgba(0,0,0,0.06)'}}>
+            <div className="h-1.5 w-full" style={{background: 'linear-gradient(90deg, #FFCF00, #FFE033, #FFCF00)'}}/>
 
             <div className="p-8">
                 <div className="text-center mb-7">

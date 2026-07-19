@@ -199,7 +199,7 @@ type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
 
 // ─── UI Helpers ───────────────────────────────────────────────────────────────
 function SaveStatus({saved,saving}:{saved:boolean;saving:boolean}) {
-    if (saving) return <span className="text-xs text-gray-400">Saving…</span>;
+    if (saving) return <span className="text-xs text-[#4A3F2E]">Saving…</span>;
     if (saved) return <span className="text-xs text-green-600 flex items-center gap-1"><svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Saved</span>;
     return null;
 }
@@ -208,7 +208,7 @@ function FieldRow({label,hint,required,children}:{label:string;hint?:string;requ
     return (
         <div className="space-y-1.5">
             <Label className="text-sm font-medium">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</Label>
-            {hint && <p className="text-xs text-gray-400">{hint}</p>}
+            {hint && <p className="text-xs text-[#4A3F2E]">{hint}</p>}
             {children}
         </div>
     );
@@ -643,7 +643,7 @@ function ProfileEditInner() {
                             {value:'preferences',label:'Preferences'},{value:'security',label:'Security'},
                         ].map(tab=>(
                             <TabsTrigger key={tab.value} value={tab.value}
-                                className="rounded-lg px-3 py-2 text-xs font-medium whitespace-nowrap data-[state=active]:bg-card data-[state=active]:text-primary">
+                                className="rounded-lg px-3 py-2 text-xs font-medium whitespace-nowrap data-[state=active]:bg-card data-[state=active]:text-[#1A1208]">
                                 {tab.label}
                             </TabsTrigger>
                         ))}
@@ -1084,13 +1084,13 @@ function ProfileEditInner() {
                         {photos.length>0 ? (
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                 {photos.map(photo=>(
-                                    <div key={photo.id} className="relative group rounded-xl overflow-hidden border border-gray-100">
+                                    <div key={photo.id} className="relative group rounded-xl overflow-hidden profile-photo-border">
                                         <img src={resolveProfilePhotoUrl(photo) ?? ''} alt="Profile photo" className="w-full aspect-square object-cover"/>
-                                        {photo.is_primary && <span className="absolute top-2 left-2 bg-[#C9A227] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Primary</span>}
+                                        {photo.is_primary && <span className="absolute top-2 left-2 bg-[#FFCF00] text-[#1A1208] text-[10px] font-bold px-2 py-0.5 rounded-full">Primary</span>}
                                         {photo.moderation_status==='pending' && <span className="absolute top-2 right-2 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Pending</span>}
                                         {photo.moderation_status==='rejected' && <span className="absolute top-2 right-2 bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full">Rejected</span>}
                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-end gap-1 pb-2">
-                                             {!photo.is_primary && <button onClick={()=>handleSetPrimary(photo.id)} className="text-white text-xs bg-[#C9A227] rounded-full px-2.5 py-1 hover:bg-[#b8911f] transition-colors text-[11px]">Primary</button>}
+                                             {!photo.is_primary && <button onClick={()=>handleSetPrimary(photo.id)} className="text-[#1A1208] text-xs bg-[#FFCF00] rounded-full px-2.5 py-1 hover:bg-[#E6BA00] transition-colors text-[11px]">Primary</button>}
                                              <button onClick={()=>handleDeletePhoto(photo.id)} className="text-white text-xs bg-red-500 rounded-full px-2.5 py-1 hover:bg-red-600 transition-colors text-[11px]">Delete</button>
                                          </div>
                                     </div>
@@ -1101,8 +1101,8 @@ function ProfileEditInner() {
                                 <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 mx-auto text-gray-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/>
                                 </svg>
-                                <p className="text-gray-500 font-medium text-sm">No photos yet</p>
-                                <p className="text-xs text-gray-400 mt-1">Upload your first photo to attract more matches</p>
+                                <p className="text-meta font-medium text-sm">No photos yet</p>
+                                <p className="text-xs text-[#4A3F2E] mt-1">Upload your first photo to attract more matches</p>
                             </div>
                         )}
                     </div>

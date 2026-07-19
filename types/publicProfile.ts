@@ -1,6 +1,7 @@
 export interface PublicProfileCard {
     id: number;
     name: string;
+    gender?: 'male' | 'female' | null;
     profile: {
         profile_id?: string | null;
         dob?: string | null;

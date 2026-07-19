@@ -57,7 +57,7 @@ const TYPE_ICONS: Record<AppNotification['type'], ComponentType<IconProps>> = {
 const TYPE_ICON_COLORS: Record<AppNotification['type'], string> = {
     interest_received: 'bg-pink-100 text-pink-600',
     interest_accepted: 'bg-green-100 text-green-600',
-    interest_expired: 'bg-gray-100 text-gray-500',
+    interest_expired: 'bg-gray-100 text-meta',
     profile_viewed: 'bg-blue-100 text-blue-600',
     new_message: 'bg-indigo-100 text-indigo-600',
     match_suggestion: 'bg-purple-100 text-purple-600',
@@ -72,7 +72,7 @@ const TYPE_ICON_COLORS: Record<AppNotification['type'], string> = {
     account_disable_request_submitted: 'bg-yellow-100 text-yellow-600',
     account_disable_request_disabled: 'bg-red-100 text-red-600',
     account_disable_request_banned: 'bg-red-100 text-red-600',
-    account_disable_request_dismissed: 'bg-gray-100 text-gray-600',
+    account_disable_request_dismissed: 'bg-gray-100 text-[#3D3220]',
     account_disable_request_reactivated: 'bg-green-100 text-green-600',
     admin_account_disabled: 'bg-red-100 text-red-600',
     admin_account_banned: 'bg-red-100 text-red-600',
@@ -209,7 +209,7 @@ export default function NotificationDetailPage() {
                                     {typeLabel}
                                 </span>
                                 {!notification.is_read && (
-                                    <span className="ml-2 inline-flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                                    <span className="ml-2 inline-flex items-center gap-1 text-[10px] font-bold text-[#1A1208] bg-primary/10 px-2 py-0.5 rounded-full">
                                         <span className="w-1.5 h-1.5 rounded-full bg-primary"/>
                                         Unread
                                     </span>
@@ -254,7 +254,7 @@ export default function NotificationDetailPage() {
                         {notification.action_url && (
                             <button
                                 onClick={() => router.push(notification.action_url!)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/15 transition-colors shrink-0"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#1A1208] bg-primary/10 hover:bg-primary/15 transition-colors shrink-0"
                             >
                                 {actionLabel}
                                 <ExternalLinkIcon size={13} strokeWidth={2}/>

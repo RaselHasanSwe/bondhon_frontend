@@ -140,21 +140,21 @@ export default async function SuccessStoriesPage() {
                 style={{ background: 'linear-gradient(135deg,#0d1117 0%,#161b27 50%,#1a2744 100%)' }}>
                 <div className="absolute inset-0 pointer-events-none">
                     <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full opacity-10"
-                        style={{ background: 'radial-gradient(circle,#C9A227 0%,transparent 70%)' }} />
+                        style={{ background: 'radial-gradient(circle,#FFCF00 0%,transparent 70%)' }} />
                     <div className="absolute top-10 right-0 h-64 w-64 rounded-full opacity-8"
-                        style={{ background: 'radial-gradient(circle,#D4AF37 0%,transparent 70%)' }} />
+                        style={{ background: 'radial-gradient(circle,#FFE033 0%,transparent 70%)' }} />
                 </div>
                 <div className="relative max-w-4xl mx-auto px-4 text-center">
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6"
-                        style={{ background: 'rgba(201,162,39,0.12)', color: '#D4AF37', border: '1px solid rgba(201,162,39,0.3)' }}>
+                        style={{ background: 'rgba(255,207,0,0.12)', color: '#FFCF00', border: '1px solid rgba(255,207,0,0.3)' }}>
                         <Heart size={11} fill="currentColor" /> Real Stories · Real People
                     </div>
                     <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight animate-fade-in-up"
                         style={{ fontFamily: 'var(--font-heading,serif)' }}>
                         3,500+ Couples Found Their
-                        <span className="text-gold-gradient"> Perfect Match</span>
+                        <span className="text-[#FFCF00]"> Perfect Match</span>
                     </h1>
-                    <p className="text-gray-400 text-lg max-w-2xl mx-auto mt-4 leading-relaxed animate-fade-in-up"
+                    <p className="text-[#4A3F2E] text-lg max-w-2xl mx-auto mt-4 leading-relaxed animate-fade-in-up"
                         style={{ animationDelay: '100ms' }}>
                         These are real stories from real families who trusted {settings.site_name} to guide them to their life partner.
                     </p>
@@ -168,8 +168,8 @@ export default async function SuccessStoriesPage() {
                             { value: '64', label: 'Districts' },
                         ].map((s) => (
                             <div key={s.label} className="text-center">
-                                <p className="text-xl md:text-2xl font-black" style={{ color: '#C9A227' }}>{s.value}</p>
-                                <p className="text-gray-400 text-xs">{s.label}</p>
+                                <p className="text-xl md:text-2xl font-black" style={{ color: '#FFCF00' }}>{s.value}</p>
+                                <p className="text-[#4A3F2E] text-xs">{s.label}</p>
                             </div>
                         ))}
                     </div>
@@ -181,48 +181,48 @@ export default async function SuccessStoriesPage() {
                 <section className="py-16 md:py-20" style={{ background: '#F8F9FB' }}>
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="text-center mb-12">
-                            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#C9A227' }}>Featured</p>
+                            <p className="text-xs font-bold uppercase tracking-widest mb-2 text-[#1A1208]">Featured</p>
                             <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Highlighted Stories</h2>
                         </div>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             {stories.filter(s => s.featured).map((story) => (
                                 <div key={story.id}
                                     className="bg-white rounded-2xl p-8 border border-gray-100 flex flex-col gap-5"
-                                    style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.07)', borderLeft: '4px solid #C9A227' }}>
+                                    style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.07)', borderLeft: '4px solid #FFCF00' }}>
                                     <div className="flex items-start gap-4">
-                                        <div className="h-16 w-16 rounded-2xl flex items-center justify-center font-bold text-white text-xl shrink-0"
-                                            style={{ background: 'linear-gradient(135deg,#C9A227,#D4AF37)' }}>
+                                        <div className="h-16 w-16 rounded-2xl flex items-center justify-center font-bold text-[#1A1208] text-xl shrink-0"
+                                            style={{ background: '#FFCF00' }}>
                                             {story.initials}
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 <h3 className="font-bold text-gray-900 text-lg">{story.names}</h3>
-                                                <BadgeCheck size={16} style={{ color: '#C9A227' }} />
+                                                <BadgeCheck size={16} className="text-[#1A1208]" />
                                             </div>
-                                            <p className="text-gray-500 text-sm">{story.occupation}</p>
+                                            <p className="text-meta text-sm">{story.occupation}</p>
                                             <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                                                <span className="flex items-center gap-1 text-xs text-gray-400">
+                                                <span className="flex items-center gap-1 text-xs text-[#4A3F2E]">
                                                     <MapPin size={10} /> {story.location}
                                                 </span>
-                                                <span className="text-xs text-gray-400">· {story.year}</span>
+                                                <span className="text-xs text-[#4A3F2E]">· {story.year}</span>
                                                 <span className="flex gap-0.5">
                                                     {Array.from({ length: 5 }).map((_, i) => (
-                                                        <Star key={i} size={11} fill="#C9A227" style={{ color: '#C9A227' }} />
+                                                        <Star key={i} size={11} fill="#FFCF00" style={{ color: '#FFCF00' }} />
                                                     ))}
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <Quote size={22} style={{ color: '#C9A227', opacity: 0.35 }} />
+                                    <Quote size={22} style={{ color: '#1A1208', opacity: 0.35 }} />
 
-                                    <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{story.text}</p>
+                                    <p className="text-[#3D3220] text-sm leading-relaxed whitespace-pre-line">{story.text}</p>
 
                                     <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
                                         {story.tags.map((tag) => (
                                             <span key={tag}
                                                 className="px-2.5 py-1 rounded-full text-xs font-medium"
-                                                style={{ background: 'rgba(201,162,39,0.1)', color: '#C9A227' }}>
+                                                style={{ background: 'rgba(255,207,0,0.15)', color: '#1A1208' }}>
                                                 {tag}
                                             </span>
                                         ))}
@@ -239,7 +239,7 @@ export default async function SuccessStoriesPage() {
                 <section className="py-16 md:py-20 bg-white">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="text-center mb-12">
-                            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#C9A227' }}>More Stories</p>
+                            <p className="text-xs font-bold uppercase tracking-widest mb-2 text-[#1A1208]">More Stories</p>
                             <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Every Story Matters</h2>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -247,36 +247,36 @@ export default async function SuccessStoriesPage() {
                                 <div key={story.id}
                                     className="testimonial-card bg-white rounded-2xl p-6 border border-gray-100 flex flex-col gap-4"
                                     style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
-                                    <Quote size={24} style={{ color: '#C9A227', opacity: 0.35 }} />
-                                    <p className="text-gray-600 text-sm leading-relaxed flex-1 line-clamp-5">
+                                    <Quote size={24} style={{ color: '#1A1208', opacity: 0.35 }} />
+                                    <p className="text-[#3D3220] text-sm leading-relaxed flex-1 line-clamp-5">
                                         {story.text}
                                     </p>
                                     <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
-                                        <div className="h-11 w-11 rounded-full flex items-center justify-center font-bold text-white text-sm shrink-0"
-                                            style={{ background: 'linear-gradient(135deg,#C9A227,#D4AF37)' }}>
+                                        <div className="h-11 w-11 rounded-full flex items-center justify-center font-bold text-[#1A1208] text-sm shrink-0"
+                                            style={{ background: '#FFCF00' }}>
                                             {story.initials}
                                         </div>
                                         <div className="flex-1">
                                             <p className="font-bold text-gray-800 text-sm">{story.names}</p>
-                                            <p className="text-xs text-gray-400">{story.occupation}</p>
-                                            <p className="text-gray-400 text-xs flex items-center gap-1 mt-0.5">
+                                            <p className="text-xs text-[#4A3F2E]">{story.occupation}</p>
+                                            <p className="text-[#4A3F2E] text-xs flex items-center gap-1 mt-0.5">
                                                 <MapPin size={9} /> {story.location} · {story.year}
                                             </p>
                                         </div>
                                         <div className="flex flex-col items-end gap-1">
                                             <div className="flex gap-0.5">
                                                 {Array.from({ length: 5 }).map((_, i) => (
-                                                    <Star key={i} size={10} fill="#C9A227" style={{ color: '#C9A227' }} />
+                                                    <Star key={i} size={10} fill="#FFCF00" style={{ color: '#FFCF00' }} />
                                                 ))}
                                             </div>
-                                            <span className="text-xs text-gray-400">Verified</span>
+                                            <span className="text-xs text-[#4A3F2E]">Verified</span>
                                         </div>
                                     </div>
                                     <div className="flex flex-wrap gap-1.5">
                                         {story.tags.slice(0, 2).map((tag) => (
                                             <span key={tag}
                                                 className="px-2 py-0.5 rounded-full text-xs font-medium"
-                                                style={{ background: 'rgba(201,162,39,0.08)', color: '#C9A227' }}>
+                                                style={{ background: 'rgba(255,207,0,0.12)', color: '#1A1208' }}>
                                                 {tag}
                                             </span>
                                         ))}
@@ -293,18 +293,18 @@ export default async function SuccessStoriesPage() {
                 <section className="relative overflow-hidden py-20"
                     style={{ background: 'linear-gradient(135deg,#0d1117,#1a2744)' }}>
                     <div className="absolute inset-0 pointer-events-none opacity-10"
-                        style={{ backgroundImage: 'radial-gradient(circle at 20% 50%,#C9A227 0%,transparent 60%)' }} />
+                        style={{ backgroundImage: 'radial-gradient(circle at 20% 50%,#FFCF00 0%,transparent 60%)' }} />
                     <div className="relative max-w-3xl mx-auto px-4 text-center">
-                        <Heart size={44} fill="#C9A227" style={{ color: '#C9A227' }} className="mx-auto mb-5 animate-float" />
+                        <Heart size={44} fill="#FFCF00" style={{ color: '#FFCF00' }} className="mx-auto mb-5 animate-float" />
                         <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
                             Write Your Own Success Story
                         </h2>
-                        <p className="text-gray-400 text-base mb-8 max-w-md mx-auto leading-relaxed">
+                        <p className="text-[#4A3F2E] text-base mb-8 max-w-md mx-auto leading-relaxed">
                             Thousands of couples have found love on {settings.site_name}. Your perfect match may just be one click away.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
                             <Link href="/register"
-                                className="btn-gold hover-shimmer inline-flex items-center gap-2 px-9 py-4 rounded-xl font-bold text-white text-base"
+                                className="btn-gold hover-shimmer inline-flex items-center gap-2 px-9 py-4 rounded-xl font-bold text-[#1A1208] text-base"
                                 style={{ height: 'auto' }}>
                                 <Sparkles size={17} /> Create Free Profile
                             </Link>
@@ -313,10 +313,10 @@ export default async function SuccessStoriesPage() {
                                 Browse Profiles <ArrowRight size={16} />
                             </Link>
                         </div>
-                        <div className="flex flex-wrap justify-center gap-6 text-gray-400 text-xs">
-                            <span className="flex items-center gap-1.5"><CheckCircle size={12} style={{ color: '#C9A227' }} /> Free to Join</span>
-                            <span className="flex items-center gap-1.5"><BadgeCheck size={12} style={{ color: '#C9A227' }} /> NID Verified Profiles</span>
-                            <span className="flex items-center gap-1.5"><Heart size={12} style={{ color: '#C9A227' }} /> 3,500+ Success Stories</span>
+                        <div className="flex flex-wrap justify-center gap-6 text-[#4A3F2E] text-xs">
+                            <span className="flex items-center gap-1.5"><CheckCircle size={12} style={{ color: '#FFCF00' }} /> Free to Join</span>
+                            <span className="flex items-center gap-1.5"><BadgeCheck size={12} style={{ color: '#FFCF00' }} /> NID Verified Profiles</span>
+                            <span className="flex items-center gap-1.5"><Heart size={12} style={{ color: '#FFCF00' }} /> 3,500+ Success Stories</span>
                         </div>
                     </div>
                 </section>

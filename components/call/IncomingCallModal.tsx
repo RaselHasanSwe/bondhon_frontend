@@ -2,6 +2,7 @@
 
 import {useEffect, useRef, useState, useCallback} from 'react';
 import Swal from 'sweetalert2';
+import { swalDefaults } from '@/lib/toast';
 import {useCallStore} from '@/store/callStore';
 import {callService} from '@/services/callService';
 import {retryIncomingCallRingtoneIfNeeded, startIncomingCallRingtone, stopIncomingCallRingtone} from '@/lib/soundPlayer';
@@ -78,11 +79,10 @@ export function IncomingCallModal() {
                     : null;
             clearIncomingCall();
             await Swal.fire({
+                ...swalDefaults,
                 title: 'Could Not Answer',
                 text: msg ?? 'Failed to answer the call. Please try again.',
                 icon: 'error',
-                confirmButtonColor: '#C9A227',
-                customClass: {popup: 'rounded-2xl'},
             });
         }
     }, [incomingCall, isAnswering, stopRing, startActiveCall, clearIncomingCall]);
@@ -121,7 +121,7 @@ export function IncomingCallModal() {
                 {/* Top countdown bar */}
                 <div className="relative z-10 h-1 bg-white/10">
                     <div
-                        className="h-full bg-[#C9A227] transition-all duration-1000 ease-linear"
+                        className="h-full bg-[#FFCF00] transition-all duration-1000 ease-linear"
                         style={{width: `${(remainingSeconds / 45) * 100}%`}}
                     />
                 </div>
@@ -133,21 +133,21 @@ export function IncomingCallModal() {
 
                 <div className="relative z-10 flex flex-col items-center px-5 sm:px-8 pt-4 sm:pt-8 pb-8 sm:pb-10 text-center">
                     {/* Label */}
-                    <p className="text-[11px] sm:text-xs text-[#C9A227] font-bold uppercase tracking-widest mb-4 sm:mb-5">
+                    <p className="text-[11px] sm:text-xs text-[#FFCF00] font-bold uppercase tracking-widest mb-4 sm:mb-5">
                         {callType === 'video' ? '📹 Incoming Video Call' : '📞 Incoming Audio Call'}
                     </p>
 
                     {/* Ripple avatar */}
                     <div className="relative mb-5">
-                        <div className="absolute inset-0 rounded-full bg-[#C9A227]/20 animate-ping"/>
-                        <div className="absolute -inset-2 rounded-full bg-[#C9A227]/10 animate-ping" style={{animationDelay: '0.35s'}}/>
-                        <div className="absolute -inset-4 rounded-full bg-[#C9A227]/5 animate-ping" style={{animationDelay: '0.7s'}}/>
+                        <div className="absolute inset-0 rounded-full bg-[#FFCF00]/20 animate-ping"/>
+                        <div className="absolute -inset-2 rounded-full bg-[#FFCF00]/10 animate-ping" style={{animationDelay: '0.35s'}}/>
+                        <div className="absolute -inset-4 rounded-full bg-[#FFCF00]/5 animate-ping" style={{animationDelay: '0.7s'}}/>
                         {caller.avatar ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={cfImageUrl(caller.avatar) ?? ''} alt={caller.name}
                                  className="relative z-10 w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-white/20"/>
                         ) : (
-                            <div className="relative z-10 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-linear-to-br from-[#C9A227] to-[#D4AF37] flex items-center justify-center border-2 border-white/20">
+                            <div className="relative z-10 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-linear-to-br from-[#FFCF00] to-[#FFE033] flex items-center justify-center border-2 border-white/20">
                                 <span className="text-2xl sm:text-3xl font-bold text-white">{initials}</span>
                             </div>
                         )}

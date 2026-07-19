@@ -20,8 +20,8 @@ export function ShortlistToggleButton({
             title={isShortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
             className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                 isShortlisted
-                    ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--accent)]'
-                    : 'border-[var(--border)] text-muted-foreground hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--accent)]'
+                    ? 'border-[var(--primary)] text-[#1A1208] bg-[var(--accent)]'
+                    : 'border-[var(--border)] text-muted-foreground hover:border-[var(--primary)] hover:text-[#8A7000] hover:bg-[var(--accent)]'
             }`}
         >
             {isLoading ? (

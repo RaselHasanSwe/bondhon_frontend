@@ -44,19 +44,19 @@ function StatusIcon({status}: { status: Message['status'] }) {
         </svg>
     );
     if (status === 'sent') return (
-        <svg className="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg className="w-3.5 h-3.5 text-[#4A3F2E]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12"/>
         </svg>
     );
     if (status === 'delivered') return (
-        <svg className="w-4 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg className="w-4 h-3.5 text-[#4A3F2E]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="17 6 7 16 3 12"/>
             <polyline points="22 6 13 15"/>
         </svg>
     );
     // read
     return (
-        <svg className="w-4 h-3.5 text-[#C9A227]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg className="w-4 h-3.5 text-[#1A1208]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="17 6 7 16 3 12"/>
             <polyline points="22 6 13 15"/>
         </svg>
@@ -133,7 +133,7 @@ function Lightbox({images, startIndex, onClose}: LightboxProps) {
                                 e.stopPropagation();
                                 setIdx(i);
                             }}
-                                    className={cn('w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all', i === idx ? 'border-[#C9A227]' : 'border-white/20 opacity-60 hover:opacity-100')}>
+                                    className={cn('w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all', i === idx ? 'border-[#FFCF00]' : 'border-white/20 opacity-60 hover:opacity-100')}>
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={img.src} alt="" className="w-full h-full object-cover"/>
                             </button>
@@ -253,16 +253,16 @@ function AudioPlayer({src, isMine}: { src: string; isMine: boolean }) {
                 setProgress(0);
             }}/>
             <button onClick={toggle}
-                    className={cn('w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors', isMine ? 'bg-white/20 hover:bg-white/30' : 'bg-[#C9A227]/10 hover:bg-[#C9A227]/20')}>
+                    className={cn('w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors', isMine ? 'bg-white/20 hover:bg-white/30' : 'bg-[#FFCF00]/10 hover:bg-[#FFCF00]/20')}>
                 {playing ? (
-                    <svg className={cn('w-4 h-4', isMine ? 'text-white' : 'text-[#C9A227]')} fill="currentColor"
+                    <svg className={cn('w-4 h-4', isMine ? 'text-[#1A1208]' : 'text-[#1A1208]')} fill="currentColor"
                          viewBox="0 0 20 20">
                         <path fillRule="evenodd"
                               d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"
                               clipRule="evenodd"/>
                     </svg>
                 ) : (
-                    <svg className={cn('w-4 h-4', isMine ? 'text-white' : 'text-[#C9A227]')} fill="currentColor"
+                    <svg className={cn('w-4 h-4', isMine ? 'text-[#1A1208]' : 'text-[#1A1208]')} fill="currentColor"
                          viewBox="0 0 20 20">
                         <path fillRule="evenodd"
                               d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
@@ -278,11 +278,11 @@ function AudioPlayer({src, isMine}: { src: string; isMine: boolean }) {
                          const r = e.currentTarget.getBoundingClientRect();
                          el.currentTime = ((e.clientX - r.left) / r.width) * duration;
                      }} style={{cursor: 'pointer'}}>
-                    <div className={cn('h-full rounded-full transition-all', isMine ? 'bg-white' : 'bg-[#C9A227]')}
+                    <div className={cn('h-full rounded-full transition-all', isMine ? 'bg-white' : 'bg-[#FFCF00]')}
                          style={{width: duration ? `${(progress / duration) * 100}%` : '0%'}}/>
                 </div>
                 <span
-                    className={cn('text-[10px] mt-0.5 block', isMine ? 'text-white/60' : 'text-gray-400')}>{fmt(progress)} / {duration ? fmt(duration) : '0:00'}</span>
+                    className={cn('text-[10px] mt-0.5 block', isMine ? 'text-meta' : 'text-meta')}>{fmt(progress)} / {duration ? fmt(duration) : '0:00'}</span>
             </div>
         </div>
     );
@@ -306,13 +306,13 @@ function DocumentMessage({src, name, size, mime, isMine}: {
         <a href={src} target="_blank" rel="noopener noreferrer" download={name ?? 'file'}
            className={cn('flex items-center gap-3 rounded-xl px-3 py-2.5 min-w-[180px] transition-colors', isMine ? 'bg-white/15 hover:bg-white/25' : 'bg-gray-50 hover:bg-gray-100')}>
             <div
-                className={cn('w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0', isMine ? 'bg-white/20 text-white' : 'bg-[#C9A227]/10 text-[#C9A227]')}>{ext.slice(0, 3)}</div>
+                className={cn('w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0', isMine ? 'bg-[#1A1208]/15 text-[#1A1208]' : 'bg-[#FFCF00]/10 text-[#1A1208]')}>{ext.slice(0, 3)}</div>
             <div className="flex-1 min-w-0">
-                <p className={cn('text-xs font-semibold truncate', isMine ? 'text-white' : 'text-[#1F2937]')}>{name ?? 'Document'}</p>
+                <p className={cn('text-xs font-semibold truncate', isMine ? 'text-[#1A1208]' : 'text-[#1F2937]')}>{name ?? 'Document'}</p>
                 {size &&
-                    <p className={cn('text-[10px]', isMine ? 'text-white/60' : 'text-gray-400')}>{formatSize(size)}</p>}
+                    <p className={cn('text-[10px]', isMine ? 'text-meta' : 'text-meta')}>{formatSize(size)}</p>}
             </div>
-            <svg className={cn('w-4 h-4 flex-shrink-0', isMine ? 'text-white/70' : 'text-gray-400')} fill="none"
+            <svg className={cn('w-4 h-4 flex-shrink-0', isMine ? 'text-meta' : 'text-[#4A3F2E]')} fill="none"
                  stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round"
                       d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -328,8 +328,8 @@ export function MessageBubble({message, isMine, senderName, showAvatar = true, o
         return (
             <div className={cn('flex items-end gap-2', isMine ? 'flex-row-reverse' : 'flex-row')}>
                 {showAvatar && !isMine && <div
-                    className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-400 flex-shrink-0">{senderName?.charAt(0).toUpperCase() ?? '?'}</div>}
-                <div className="italic text-xs text-gray-400 px-3 py-2">This message was deleted</div>
+                    className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-[#4A3F2E] flex-shrink-0 profile-photo-border">{senderName?.charAt(0).toUpperCase() ?? '?'}</div>}
+                <div className="italic text-xs text-[#4A3F2E] px-3 py-2">This message was deleted</div>
             </div>
         );
     }
@@ -374,19 +374,19 @@ export function MessageBubble({message, isMine, senderName, showAvatar = true, o
         <div className={cn('flex items-end gap-2 group', isMine ? 'flex-row-reverse' : 'flex-row')}>
             {showAvatar && !isMine ? (
                 <div
-                    className="w-7 h-7 rounded-full bg-gradient-to-br from-[#C9A227] to-[#D4AF37] flex items-center justify-center text-xs font-bold text-white flex-shrink-0 self-end">
+                    className="w-7 h-7 rounded-full bg-gradient-to-br from-[#FFCF00] to-[#FFE033] flex items-center justify-center text-xs font-bold text-[#1A1208] flex-shrink-0 self-end profile-photo-border">
                     {senderName?.charAt(0).toUpperCase() ?? '?'}
                 </div>
             ) : (!isMine && <div className="w-7 flex-shrink-0"/>)}
 
             <div
-                className={cn('max-w-[72%] md:max-w-[60%] rounded-2xl shadow-sm', isMedia ? 'overflow-hidden' : 'px-4 py-2.5', isMine ? 'bg-[#C9A227] text-white rounded-br-sm' : 'bg-white border border-gray-100 text-[#1F2937] rounded-bl-sm')}>
+                className={cn('max-w-[72%] md:max-w-[60%] rounded-2xl shadow-sm', isMedia ? 'overflow-hidden' : 'px-4 py-2.5', isMine ? 'bg-[#FFCF00] text-[#1A1208] rounded-br-sm' : 'bg-white border border-gray-100 text-[#1F2937] rounded-bl-sm')}>
                 {/* Reply preview */}
                 {message.reply_to && (
                     <div
-                        className={cn('text-xs px-3 pt-2.5 pb-1.5 border-l-2 mb-1 rounded-t', isMine ? 'border-white/40 bg-black/10' : 'border-[#C9A227] bg-gray-50')}>
-                        <span className={cn('font-semibold', isMine ? 'text-white/70' : 'text-[#C9A227]')}>Reply</span>
-                        <p className={cn('truncate', isMine ? 'text-white/60' : 'text-gray-400')}>{message.reply_to.body ?? '[media]'}</p>
+                        className={cn('text-xs px-3 pt-2.5 pb-1.5 border-l-2 mb-1 rounded-t', isMine ? 'border-white/40 bg-black/10' : 'border-[#FFCF00] bg-gray-50')}>
+                        <span className={cn('font-semibold', isMine ? 'text-meta' : 'text-[#1A1208]')}>Reply</span>
+                        <p className={cn('truncate', isMine ? 'text-meta' : 'text-meta')}>{message.reply_to.body ?? '[media]'}</p>
                     </div>
                 )}
 
@@ -419,18 +419,18 @@ export function MessageBubble({message, isMine, senderName, showAvatar = true, o
 
                     {/* Label / caption */}
                     {label && <div
-                        className={cn('px-3 pb-1.5 pt-1 text-xs', isMine ? 'text-white/90' : 'text-[#1F2937]')}>{label}</div>}
+                        className={cn('px-3 pb-1.5 pt-1 text-xs', isMine ? 'text-[#1A1208]' : 'text-[#1F2937]')}>{label}</div>}
 
                     {/* Body alongside media */}
                     {message.body && message.type !== 'text' && (
                         <div
-                            className={cn('px-3 pb-1 text-sm leading-relaxed whitespace-pre-wrap break-words', isMine ? 'text-white' : 'text-[#1F2937]')}>{message.body}</div>
+                            className={cn('px-3 pb-1 text-sm leading-relaxed whitespace-pre-wrap break-words', isMine ? 'text-[#1A1208]' : 'text-[#1F2937]')}>{message.body}</div>
                     )}
                 </div>
 
                 {/* Timestamp + status */}
                 <div
-                    className={cn('flex items-center justify-end gap-1 mt-1', isMedia ? 'px-3 pb-2' : '', isMine ? 'text-white/70' : 'text-gray-400')}>
+                    className={cn('flex items-center justify-end gap-1 mt-1', isMedia ? 'px-3 pb-2' : '', isMine ? 'text-meta' : 'text-[#4A3F2E]')}>
                     <span className="text-[10px]">{formatTime(message.created_at)}</span>
                     {isMine && <span className="text-[10px]"><StatusIcon status={message.status}/></span>}
                 </div>

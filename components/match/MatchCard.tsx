@@ -11,7 +11,8 @@ import {showErrorToast, showSuccessToast, getErrorMessage} from '@/lib/toast';
 import {handleSendInterestError} from '@/lib/interest';
 import {invalidateInterestQueries, invalidateShortlistQueries} from '@/lib/cacheInvalidation';
 import type {ProfileCard} from '@/types/profile';
-import {MapPinIcon, ReligionIcon, GraduationCapIcon, MailIcon, StarIcon, StarFilledIcon, UserIcon, CheckIcon, ClockIcon} from '@/components/ui/icons';
+import {MapPinIcon, MailIcon, StarIcon, StarFilledIcon, UserIcon, CheckIcon, ClockIcon} from '@/components/ui/icons';
+import { ProfileGenderBadge } from '@/components/match/ProfileGenderBadge';
 
 interface MatchCardProps {
     profile: ProfileCard;
@@ -160,7 +161,7 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
 
     const shortlistButtonClass = `flex items-center justify-center rounded-full border shadow-md backdrop-blur-sm transition-all active:scale-95 ${
         shortlisted
-            ? 'border-[var(--primary)] text-[var(--primary)] bg-white/95'
+            ? 'border-[var(--primary)] text-[#1A1208] bg-white/95'
             : 'border-white/80 text-white bg-black/35 hover:bg-black/50'
     }`;
 
@@ -170,9 +171,9 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
 
     return (
         <div
-            className="card-premium overflow-hidden group animate-fade-in flex flex-col h-full min-w-0">
+            className="card-premium profile-card group animate-fade-in flex flex-col h-full min-w-0">
             {/* Photo */}
-            <div className="relative aspect-[4/5] bg-[var(--gold-50)]">
+            <div className="relative profile-card-photo bg-[var(--gold-50)]">
                 <Link href={profileUrl} className="block w-full h-full">
                     {resolvePhotoUrl(profile.primary_photo) ? (
                         <img
@@ -182,13 +183,13 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                            <UserIcon size={48} className="text-[var(--gold-200)]" strokeWidth={1.2}/>
+                            <UserIcon size={40} className="text-subtle" strokeWidth={1.2}/>
                         </div>
                     )}
 
                     {/* Score badge */}
                     {showScore && score !== undefined && (
-                        <div className="absolute top-3 right-3">
+                        <div className="absolute top-2 right-2">
                             <CompatibilityScore score={score} size="sm"/>
                         </div>
                     )}
@@ -196,11 +197,13 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                     {/* Verified badge — shown only when face scan is approved */}
                     {profile.profile?.is_verified && (
                         <div
-                            className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-green-600 font-medium flex items-center gap-1 shadow-sm">
-                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            className="absolute top-2 left-2 bg-white rounded-full px-2 py-0.5 text-xs text-green-700 font-bold flex items-center gap-0.5 shadow-sm z-10">
+                            <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                             Verified
                         </div>
                     )}
+
+                    <ProfileGenderBadge gender={profile.gender} />
 
                     {/* Gradient overlay on hover */}
                     <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>
@@ -213,55 +216,42 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                     disabled={shortlistMutation.isPending}
                     title={shortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
                     aria-label={shortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
-                    className={`absolute bottom-2.5 right-2.5 z-10 w-9 h-9 sm:hidden ${shortlistButtonClass}`}
+                    className={`absolute bottom-2 right-2 z-10 w-8 h-8 sm:hidden ${shortlistButtonClass}`}
                 >
                     {shortlistIcon}
                 </button>
             </div>
 
             {/* Info */}
-            <div className="p-3 sm:p-4 flex flex-col flex-1 min-w-0">
-                {/* Profile Content - Takes up space */}
+            <div className="p-2.5 sm:p-3 flex flex-col flex-1 min-w-0">
                 <div className="min-w-0">
                     <Link href={profileUrl}>
-                        <h3 className="font-semibold text-foreground truncate hover:text-[var(--primary)] transition-colors" style={{fontFamily:'var(--font-heading)'}}>
+                        <h3 className="font-semibold text-sm text-foreground truncate hover:text-[#8A7000] transition-colors leading-tight" style={{fontFamily:'var(--font-heading)'}}>
                             {profile.name}
                         </h3>
                     </Link>
 
                     <div className="mt-1 space-y-0.5">
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs text-muted-foreground truncate">
                             {formatAge(profile.profile?.dob)} •{' '}
                             {formatHeight(profile.profile?.height_cm)}
                         </p>
                         {profile.profile?.city && (
-                            <p className="text-xs text-muted-foreground/70 flex items-center gap-1 truncate">
-                                <MapPinIcon size={12} strokeWidth={1.8}/>
-                                {profile.profile.city}{profile.profile.country ? `, ${profile.profile.country}` : ''}
-                            </p>
-                        )}
-                        {profile.religion && (
-                            <p className="text-xs text-muted-foreground/70 flex items-center gap-1">
-                                <ReligionIcon size={12} strokeWidth={1.8}/>
-                                {profile.religion}
-                            </p>
-                        )}
-                        {profile.education && (
-                            <p className="text-xs text-muted-foreground/70 flex items-center gap-1">
-                                <GraduationCapIcon size={12} strokeWidth={1.8}/>
-                                {profile.education}
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 truncate font-medium">
+                                <MapPinIcon size={12} strokeWidth={1.8} className="shrink-0"/>
+                                <span className="truncate">{profile.profile.city}{profile.profile.country ? `, ${profile.profile.country}` : ''}</span>
                             </p>
                         )}
                     </div>
                 </div>
 
-                {/* Actions - full width on mobile; shortlist beside button on sm+ */}
-                <div className="mt-auto pt-3 sm:pt-4 flex items-stretch gap-2 min-w-0">
+                {/* Actions */}
+                <div className="mt-auto pt-2 flex items-stretch gap-1.5 min-w-0">
                     <button
                         type="button"
                         onClick={handleSendInterest}
                         disabled={!canSendInterest || sendInterestMutation.isPending}
-                        className={`w-full sm:flex-1 min-w-0 min-h-10 sm:min-h-9 px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 leading-tight ${
+                        className={`w-full sm:flex-1 min-w-0 min-h-8 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1 leading-tight ${
                             interestStatus === 'accepted'
                                 ? 'bg-green-50 text-green-600 border border-green-200'
                                 : interestStatus === 'pending' && isInterestSender && !canSendInterest
@@ -269,10 +259,10 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                                     : interestStatus === 'declined'
                                         ? 'bg-red-50 text-red-500 border border-red-200'
                                         : interestStatus === 'ignored'
-                                            ? 'bg-gray-50 text-gray-500 border border-gray-200'
+                                            ? 'bg-gray-50 text-meta border border-gray-200'
                                             : canSendInterest
-                                                ? 'text-white shadow-sm active:scale-[0.98]'
-                                                : 'bg-gray-50 text-gray-500 border border-gray-200'
+                                                ? 'text-[#1A1208] shadow-sm active:scale-[0.98]'
+                                                : 'bg-gray-50 text-meta border border-gray-200'
                         }`}
                         style={canSendInterest && interestStatus !== 'accepted' && !(interestStatus === 'pending' && isInterestSender && !canSendInterest) && interestStatus !== 'declined' && interestStatus !== 'ignored'
                             ? {background: 'var(--gradient-gold-btn)'}
@@ -303,10 +293,10 @@ export function MatchCard({profile, score, showScore = true}: MatchCardProps) {
                         disabled={shortlistMutation.isPending}
                         title={shortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
                         aria-label={shortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
-                        className={`hidden sm:flex shrink-0 w-9 h-9 items-center justify-center rounded-xl border transition-all active:scale-95 ${
+                        className={`hidden sm:flex shrink-0 w-8 h-8 items-center justify-center rounded-lg border transition-all active:scale-95 ${
                             shortlisted
-                                ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--accent)]'
-                                : 'border-[var(--border)] text-muted-foreground hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--accent)]'
+                                ? 'border-[var(--primary)] text-[#1A1208] bg-[var(--accent)]'
+                                : 'border-[var(--border)] text-muted-foreground hover:border-[var(--primary)] hover:text-[#1A1208] hover:bg-[var(--accent)]'
                         }`}
                     >
                         {shortlistIcon}

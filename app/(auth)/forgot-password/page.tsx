@@ -43,8 +43,8 @@ export default function ForgotPasswordPage() {
 
     return (
         <div className="bg-card rounded-2xl overflow-hidden animate-fade-in-up"
-             style={{boxShadow: '0 4px 40px rgba(201,162,39,0.12), 0 1px 8px rgba(0,0,0,0.06)'}}>
-            <div className="h-1.5 w-full" style={{background: 'linear-gradient(90deg, #C9A227, #E8C547, #C9A227)'}}/>
+             style={{boxShadow: '0 4px 40px rgba(255,207,0,0.12), 0 1px 8px rgba(0,0,0,0.06)'}}>
+            <div className="h-1.5 w-full" style={{background: 'linear-gradient(90deg, #FFCF00, #FFE033, #FFCF00)'}}/>
 
             <div className="p-8">
                 <div className="text-center mb-7">
@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
                             Didn&apos;t receive it? Check your spam folder or{' '}
                             <button
                                 onClick={() => setSubmitted(false)}
-                                className="text-[var(--primary)] hover:text-[var(--gold-600)] font-medium transition-colors"
+                                className="text-[#1A1208] hover:text-[#8A7000] font-medium transition-colors"
                             >
                                 try again
                             </button>

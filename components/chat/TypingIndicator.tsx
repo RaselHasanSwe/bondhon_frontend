@@ -11,7 +11,7 @@ export function TypingIndicator({name, className}: TypingIndicatorProps) {
     return (
         <div className={cn('flex items-end gap-2', className)}>
             <div
-                className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 flex-shrink-0">
+                className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-meta flex-shrink-0">
                 {name ? name.charAt(0).toUpperCase() : '?'}
             </div>
             <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">

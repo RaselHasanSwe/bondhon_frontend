@@ -2,6 +2,8 @@ import Swal from 'sweetalert2';
 
 export type AlertType = 'success' | 'error' | 'warning' | 'info';
 
+const SWAL_CONFIRM_COLOR = '#FFCF00';
+
 interface ToastOptions {
     title?: string;
     message: string;
@@ -20,8 +22,8 @@ export const showToast = ({
 }: ToastOptions) => {
     const Toast = Swal.mixin({
         toast: true,
-        position: 'top-right',
-        iconColor: 'white',
+        position: 'top-end',
+        width: 'auto',
         customClass: {
             popup: 'colored-toast',
         },
@@ -31,15 +33,32 @@ export const showToast = ({
         },
     });
 
+    const hasCustomTitle = Boolean(title?.trim());
+
     Toast.fire({
         icon: type,
-        title: title || (type === 'error' ? 'Error' : type === 'success' ? 'Success' : 'Info'),
-        html: message,
+        title: hasCustomTitle ? title!.trim() : message,
+        text: hasCustomTitle ? message : undefined,
         timer: duration,
         timerProgressBar: true,
         showConfirmButton: false,
     });
 };
+
+/** Shared modal defaults for Holud-themed SweetAlert dialogs */
+export const swalDefaults = {
+    confirmButtonColor: SWAL_CONFIRM_COLOR,
+    background: '#FFFFFF',
+    color: '#1A1208',
+    width: 'auto',
+    padding: '1.25rem 1.5rem',
+    customClass: {
+        popup: 'rounded-2xl swal-modal-compact',
+        title: 'text-[#1A1208] swal-modal-title',
+        htmlContainer: 'text-[#5C4F3A] swal-modal-text',
+        confirmButton: 'font-semibold',
+    },
+} as const;
 
 /**
  * Show an error toast
@@ -47,7 +66,7 @@ export const showToast = ({
 export const showErrorToast = (message: string, title?: string, duration?: number) => {
     showToast({
         type: 'error',
-        title: title || 'Error',
+        title,
         message,
         duration: duration || 5000,
     });
@@ -59,7 +78,7 @@ export const showErrorToast = (message: string, title?: string, duration?: numbe
 export const showSuccessToast = (message: string, title?: string, duration?: number) => {
     showToast({
         type: 'success',
-        title: title || 'Success',
+        title,
         message,
         duration: duration || 3000,
     });
@@ -71,7 +90,7 @@ export const showSuccessToast = (message: string, title?: string, duration?: num
 export const showInfoToast = (message: string, title?: string, duration?: number) => {
     showToast({
         type: 'info',
-        title: title || 'Info',
+        title,
         message,
         duration: duration || 4000,
     });
@@ -83,7 +102,7 @@ export const showInfoToast = (message: string, title?: string, duration?: number
 export const showWarningToast = (message: string, title?: string, duration?: number) => {
     showToast({
         type: 'warning',
-        title: title || 'Warning',
+        title,
         message,
         duration: duration || 4000,
     });

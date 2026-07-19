@@ -1,7 +1,7 @@
 /**
  * Central SVG icon library for Enorsia Matrimony.
  * All icons are inline SVG components for zero-dependency, crisp rendering.
- * Usage: <HomeIcon className="w-5 h-5 text-gray-600" />
+ * Usage: <HomeIcon className="w-5 h-5 text-[#3D3220]" />
  */
 
 import React from 'react';

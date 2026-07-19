@@ -58,8 +58,8 @@ export function ChatList({
         return (
             <div className="flex flex-col items-center justify-center h-48 text-center px-6">
                 <svg className="w-10 h-10 text-gray-200 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                <p className="text-sm font-medium text-gray-600">No conversations yet</p>
-                <p className="text-xs text-gray-400 mt-1">Accept an interest to start chatting</p>
+                <p className="text-sm font-medium text-[#3D3220]">No conversations yet</p>
+                <p className="text-xs text-[#4A3F2E] mt-1">Accept an interest to start chatting</p>
             </div>
         );
     }
@@ -84,14 +84,14 @@ export function ChatList({
                         className={cn(
                             'flex items-center gap-3 px-4 py-3.5 cursor-pointer transition-all duration-150 border-b border-gray-50',
                             isActive
-                                ? 'bg-[#FBF6E8] border-l-2 border-l-[#C9A227]'
+                                ? 'bg-[#FBF6E8] border-l-2 border-l-[#FFCF00]'
                                 : 'hover:bg-gray-50'
                         )}
                     >
                         {/* Avatar with online dot */}
                         <div className="relative flex-shrink-0">
                             <div
-                                className="w-12 h-12 rounded-full bg-gradient-to-br from-[#C9A227] to-[#D4AF37] flex items-center justify-center text-white font-bold text-sm">
+                                className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FFCF00] to-[#FFE033] flex items-center justify-center text-[#1A1208] font-bold text-sm profile-photo-border">
                                 {initials}
                             </div>
                             {participant.is_online && (
@@ -111,7 +111,7 @@ export function ChatList({
                 >
                   {participant.name}
                 </span>
-                                <span className="text-[10px] text-gray-400 flex-shrink-0 ml-1">
+                                <span className="text-[10px] text-[#4A3F2E] flex-shrink-0 ml-1">
                   {conv.last_message_at ? formatRelativeTime(conv.last_message_at) : ''}
                 </span>
                             </div>
@@ -120,7 +120,7 @@ export function ChatList({
                                 <p
                                     className={cn(
                                         'text-xs truncate',
-                                        hasUnread ? 'text-[#1F2937] font-medium' : 'text-gray-400'
+                                        hasUnread ? 'text-[#1F2937] font-medium' : 'text-[#4A3F2E]'
                                     )}
                                 >
                                     {conv.last_message?.is_deleted
@@ -129,7 +129,7 @@ export function ChatList({
                                 </p>
                                 {hasUnread && (
                                     <span
-                                        className="ml-1 flex-shrink-0 w-5 h-5 rounded-full bg-[#C9A227] text-white text-[10px] font-bold flex items-center justify-center">
+                                        className="ml-1 flex-shrink-0 w-5 h-5 rounded-full bg-[#FFCF00] text-[#1A1208] text-[10px] font-bold flex items-center justify-center">
                     {conv.unread_count > 9 ? '9+' : conv.unread_count}
                   </span>
                                 )}

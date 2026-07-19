@@ -33,13 +33,13 @@ export function PublicProfileViewPromptModal({
             <DialogContent className="sm:max-w-md p-0 overflow-hidden gap-0">
                 <div
                     className="h-1.5 w-full"
-                    style={{background: 'linear-gradient(90deg, #C9A227, #E8C547, #C9A227)'}}
+                    style={{background: 'linear-gradient(90deg, #FFCF00, #FFE033, #FFCF00)'}}
                 />
                 <div className="p-6">
                     <DialogHeader className="text-center sm:text-center">
                         <div className="mx-auto mb-4">
                             <div
-                                className="relative h-20 w-20 mx-auto rounded-2xl overflow-hidden flex items-center justify-center"
+                                className="relative h-20 w-20 mx-auto rounded-2xl overflow-hidden flex items-center justify-center profile-photo-border"
                                 style={{background: 'linear-gradient(135deg,#FDF3CC,#FAE495)'}}
                             >
                                 {photoUrl ? (
@@ -49,14 +49,14 @@ export function PublicProfileViewPromptModal({
                                         className="h-full w-full object-cover"
                                     />
                                 ) : (
-                                    <UserIcon size={36} className="text-[#C9A227]" strokeWidth={1.5}/>
+                                    <UserIcon size={36} className="text-[#1A1208]" strokeWidth={1.5}/>
                                 )}
                                 {profile.is_verified && (
                                     <span
                                         className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full"
-                                        style={{background: 'linear-gradient(135deg,#C9A227,#D4AF37)'}}
+                                        style={{background: 'linear-gradient(135deg,#FFCF00,#FFE033)'}}
                                     >
-                                        <BadgeCheck size={11} className="text-white"/>
+                                        <BadgeCheck size={11} className="text-[#1A1208]"/>
                                     </span>
                                 )}
                             </div>
@@ -84,9 +84,9 @@ export function PublicProfileViewPromptModal({
                                 <li key={item.text} className="flex items-start gap-2.5">
                                     <span
                                         className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-                                        style={{background: 'rgba(201,162,39,0.12)'}}
+                                        style={{background: 'rgba(255,207,0,0.12)'}}
                                     >
-                                        <Icon size={13} style={{color: '#C9A227'}}/>
+                                        <Icon size={13} style={{color: '#FFCF00'}}/>
                                     </span>
                                     {item.text}
                                 </li>
@@ -108,8 +108,8 @@ export function PublicProfileViewPromptModal({
                             className="inline-flex items-center justify-center gap-2 w-full rounded-xl border font-semibold text-sm transition-colors hover:bg-muted/50"
                             style={{
                                 height: '2.75rem',
-                                borderColor: 'rgba(201,162,39,0.35)',
-                                color: '#C9A227',
+                                borderColor: 'rgba(255,207,0,0.35)',
+                                color: '#FFCF00',
                             }}
                             onClick={() => onOpenChange(false)}
                         >

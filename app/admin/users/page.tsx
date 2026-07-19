@@ -57,7 +57,7 @@ export default function AdminUsersPage() {
         <div className="space-y-6 max-w-7xl mx-auto">
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-                <p className="text-sm text-gray-500 mt-0.5">Manage all platform users{total > 0 ? ` · ${total} total` : ''}</p>
+                <p className="text-sm text-meta mt-0.5">Manage all platform users{total > 0 ? ` · ${total} total` : ''}</p>
             </div>
 
             {/* Search */}
@@ -79,21 +79,21 @@ export default function AdminUsersPage() {
             {/* Table */}
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                 {isLoading ? (
-                    <div className="p-8 text-center text-gray-400">Loading…</div>
+                    <div className="p-8 text-center text-[#4A3F2E]">Loading…</div>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead className="bg-gray-50 border-b border-gray-100">
                                 <tr>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Email</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Role</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Plan</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Face</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Verified</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Joined</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Name</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Email</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Role</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Plan</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Status</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Face</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Verified</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Joined</th>
+                                    <th className="text-left px-4 py-3 font-medium text-[#3D3220]">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -102,12 +102,12 @@ export default function AdminUsersPage() {
                                         <td className="px-4 py-3">
                                             <div className="font-medium text-gray-900">{user.name}</div>
                                             {user.profile?.profile_id && (
-                                                <div className="text-xs text-gray-400">{user.profile.profile_id}</div>
+                                                <div className="text-xs text-[#4A3F2E]">{user.profile.profile_id}</div>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3 text-gray-600">{user.email}</td>
+                                        <td className="px-4 py-3 text-[#3D3220]">{user.email}</td>
                                         <td className="px-4 py-3">
-                                            <Badge className={user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}>
+                                            <Badge className={user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-[#3D3220]'}>
                                                 {user.role}
                                             </Badge>
                                         </td>
@@ -116,14 +116,14 @@ export default function AdminUsersPage() {
                                                 user.subscription_plan === 'platinum' ? 'bg-purple-100 text-purple-700' :
                                                 user.subscription_plan === 'gold' ? 'bg-amber-100 text-amber-700' :
                                                 user.subscription_plan === 'silver' ? 'bg-gray-100 text-gray-700' :
-                                                'bg-gray-50 text-gray-500'
+                                                'bg-gray-50 text-meta'
                                             }>
                                                 {user.subscription_plan}
                                             </Badge>
                                         </td>
                                         <td className="px-4 py-3">
                                             {user.deleted_at ? (
-                                                <Badge className="bg-gray-100 text-gray-500">Deleted</Badge>
+                                                <Badge className="bg-gray-100 text-meta">Deleted</Badge>
                                             ) : user.is_banned ? (
                                                 <Badge className="bg-red-100 text-red-700">Banned</Badge>
                                             ) : (
@@ -140,17 +140,17 @@ export default function AdminUsersPage() {
                                                     {user.face_scan_session.status === 'approved' ? '✅ Face OK' : user.face_scan_session.status === 'rejected' ? '❌ Face Rejected' : '⏳ Face Pending'}
                                                 </Badge>
                                             ) : (
-                                                <Badge className="bg-gray-100 text-gray-500">No Face</Badge>
+                                                <Badge className="bg-gray-100 text-meta">No Face</Badge>
                                             )}
                                         </td>
                                         <td className="px-4 py-3">
                                             {user.profile?.is_verified ? (
                                                 <Badge className="bg-emerald-100 text-emerald-700">✓ Verified</Badge>
                                             ) : (
-                                                <Badge className="bg-gray-100 text-gray-400">Unverified</Badge>
+                                                <Badge className="bg-gray-100 text-[#4A3F2E]">Unverified</Badge>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3 text-gray-500 text-xs">
+                                        <td className="px-4 py-3 text-meta text-xs">
                                             {new Date(user.created_at).toLocaleDateString()}
                                         </td>
                                         <td className="px-4 py-3">
@@ -189,7 +189,7 @@ export default function AdminUsersPage() {
                                 ))}
                                 {users.length === 0 && (
                                     <tr>
-                                        <td colSpan={9} className="px-4 py-10 text-center text-gray-400">
+                                        <td colSpan={9} className="px-4 py-10 text-center text-[#4A3F2E]">
                                             No users found.
                                         </td>
                                     </tr>
