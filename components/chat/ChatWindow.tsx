@@ -11,7 +11,7 @@ import {CallButton} from '@/components/call/CallButton';
 import type {Conversation, Message, MessageType, MediaItem} from '@/types/message';
 import type {CallLog, CallParticipant} from '@/types/call';
 import {cfImageUrl} from '@/lib/utils';
-import {showErrorToast} from '@/lib/toast';
+import {showErrorToast, getErrorMessage} from '@/lib/toast';
 import {queryClient} from '@/lib/queryClient';
 import {invalidateMessageUnreadQueries} from '@/lib/cacheInvalidation';
 
@@ -535,16 +535,29 @@ export function ChatWindow({conversationId, currentUserId}: ChatWindowProps) {
             }
             chatService.sendTyping(conversationId, false).catch(() => {
             });
-        } catch {
-            setMessages((prev) =>
-                prev.map((m) => (m.id === optimisticId ? {...m, status: 'sent' as const} : m))
-            );
-            // Revoke on error too (no retry UI)
-            const blobs = blobUrlsMap.current.get(optimisticId);
-            if (blobs) {
-                blobs.forEach(URL.revokeObjectURL);
-                blobUrlsMap.current.delete(optimisticId);
+        } catch (err) {
+            setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+
+            if (sendType === 'text' && body) {
+                setText(body);
+            } else if (sendType === 'image') {
+                setPendingKind('images');
+                setPendingImages(imgFiles);
+                setImagePreviews(capturedImagePreviews);
+                if (label) setMediaLabel(label);
+            } else if (sendType === 'document') {
+                setPendingKind('docs');
+                setPendingDocs(docFiles);
+                if (label) setMediaLabel(label);
             }
+
+            const blobs = blobUrlsMap.current.get(optimisticId);
+            blobUrlsMap.current.delete(optimisticId);
+            if (sendType !== 'image' && blobs) {
+                blobs.forEach(URL.revokeObjectURL);
+            }
+
+            showErrorToast(getErrorMessage(err));
         } finally {
             setIsSending(false);
         }

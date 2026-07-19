@@ -731,19 +731,37 @@ button {
   border: 1px solid #E8DFCC !important;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12) !important;
   padding: 1.5rem 1.5rem 1.25rem !important;
+  max-width: min(520px, calc(100vw - 2rem)) !important;
 }
 
-.swal2-title {
+.swal-modal-compact.swal2-popup {
+  padding: 1.25rem 1.5rem 1.125rem !important;
+}
+
+.swal2-title,
+.swal-modal-title {
   color: #1A1208 !important;
   font-family: var(--font-heading) !important;
   font-weight: 700 !important;
   font-size: 1.125rem !important;
+  line-height: 1.35 !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
 }
 
-.swal2-html-container {
+.swal2-html-container,
+.swal-modal-text {
   color: #5C4F3A !important;
   font-size: 0.9375rem !important;
-  line-height: 1.5 !important;
+  line-height: 1.4 !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+}
+
+.swal-modal-text:empty {
+  display: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .swal2-confirm {
@@ -804,47 +822,48 @@ button {
   background: #FFCF00 !important;
 }
 
-/* Toast notifications */
+/* Toast notifications — Holud colors only (icon/layout: SweetAlert default) */
 .colored-toast.swal2-popup {
   border-radius: 0.875rem;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
   padding: 1rem 1.125rem;
-  min-width: 320px;
+  min-width: min(300px, calc(100vw - 1.5rem));
+  max-width: min(480px, calc(100vw - 1.5rem));
   border: 1px solid rgba(26, 18, 8, 0.1);
 }
 
 .colored-toast.swal2-popup .swal2-title {
   font-size: 0.9375rem;
-  font-weight: 700;
-  margin: 0 0 0.25rem 0;
-  font-family: var(--font-heading);
+  font-weight: 600;
+  margin: 0;
+  font-family: var(--font-sans);
   padding: 0;
+  line-height: 1.45;
+  text-align: left;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 .colored-toast.swal2-popup .swal2-html-container {
   font-size: 0.875rem;
-  line-height: 1.45;
+  line-height: 1.4;
   margin: 0;
   padding: 0;
   font-weight: 500;
+  text-align: left;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.colored-toast.swal2-popup .swal2-html-container:empty {
+  display: none;
+  margin: 0;
+  padding: 0;
 }
 
 .colored-toast.swal2-popup .swal2-timer-progress-bar {
-  background: rgba(26, 18, 8, 0.25);
   height: 3px;
   border-radius: 99px;
-}
-
-.colored-toast.swal2-popup .swal2-icon {
-  width: 1.75rem;
-  height: 1.75rem;
-  margin: 0 0.75rem 0 0;
-  border-width: 2px;
-}
-
-.colored-toast.swal2-popup .swal2-icon-content {
-  line-height: 1.5;
-  font-weight: 700;
 }
 
 /* Success toast — Holud yellow + black text */
@@ -858,13 +877,13 @@ button {
   color: #1A1208 !important;
 }
 
-.colored-toast.swal2-popup.swal2-icon-success .swal2-icon {
-  border-color: #1A1208;
-  color: #1A1208;
+.colored-toast.swal2-popup.swal2-icon-success .swal2-icon.swal2-success {
+  border-color: #1A1208 !important;
+  color: #1A1208 !important;
 }
 
 .colored-toast.swal2-popup.swal2-icon-success .swal2-success-ring {
-  border-color: rgba(26, 18, 8, 0.2) !important;
+  border-color: rgba(26, 18, 8, 0.35) !important;
 }
 
 .colored-toast.swal2-popup.swal2-icon-success [class^='swal2-success-line'] {
@@ -886,11 +905,6 @@ button {
   color: #FFFFFF !important;
 }
 
-.colored-toast.swal2-popup.swal2-icon-error .swal2-icon {
-  border-color: #fca5a5;
-  color: #fca5a5;
-}
-
 .colored-toast.swal2-popup.swal2-icon-error .swal2-timer-progress-bar {
   background: rgba(255, 255, 255, 0.35) !important;
 }
@@ -906,11 +920,6 @@ button {
   color: #1A1208 !important;
 }
 
-.colored-toast.swal2-popup.swal2-icon-warning .swal2-icon {
-  border-color: #1A1208;
-  color: #1A1208;
-}
-
 .colored-toast.swal2-popup.swal2-icon-warning .swal2-timer-progress-bar {
   background: rgba(26, 18, 8, 0.22) !important;
 }
@@ -924,11 +933,6 @@ button {
 .colored-toast.swal2-popup.swal2-icon-info .swal2-title,
 .colored-toast.swal2-popup.swal2-icon-info .swal2-html-container {
   color: #FFFFFF !important;
-}
-
-.colored-toast.swal2-popup.swal2-icon-info .swal2-icon {
-  border-color: #FFCF00;
-  color: #FFCF00;
 }
 
 .colored-toast.swal2-popup.swal2-icon-info .swal2-timer-progress-bar {
