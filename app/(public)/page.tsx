@@ -453,7 +453,6 @@ export default async function HomePage() {
                 imageAlt="HD video calling on Enorsia"
                 icon={Video}
                 reverse
-                variant="dark"
                 bullets={[
                     'Encrypted voice and video inside the app',
                     'No personal phone numbers shared',
@@ -472,7 +471,6 @@ export default async function HomePage() {
                 imageSrc="/images/home/complete-privacy.svg"
                 imageAlt="Complete privacy controls on Enorsia"
                 icon={Lock}
-                variant="cream"
                 bullets={[
                     'Control who views your photos and details',
                     'Contact info shared only with consent',
@@ -510,7 +508,6 @@ export default async function HomePage() {
                 imageSrc="/images/home/verification-badge.svg"
                 imageAlt="Verification badges on Enorsia profiles"
                 icon={BadgeCheck}
-                variant="dark"
                 bullets={[
                     'Face scan verification badge',
                     'Visible trust indicators on every profile',
