@@ -69,7 +69,7 @@ export function PublicProfileViewPromptModal({
                         </DialogTitle>
                         <DialogDescription className="text-sm leading-relaxed pt-1">
                             You are browsing as a guest. To view full profile details, photos, and
-                            connect with members, please create a free account or sign in.
+                            connect with members, please create a free account or login.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -113,7 +113,7 @@ export function PublicProfileViewPromptModal({
                             }}
                             onClick={() => onOpenChange(false)}
                         >
-                            <LogIn size={16}/> Sign In
+                            <LogIn size={16}/> Login
                         </Link>
                     </div>
 

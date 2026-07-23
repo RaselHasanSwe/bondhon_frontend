@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
     const siteName = settings.site_name ?? APP_NAME;
 
     return {
-        title: {default: 'Sign In', template: `%s | ${siteName}`},
+        title: {default: 'Login', template: `%s | ${siteName}`},
     };
 }
 

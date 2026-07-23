@@ -39,7 +39,7 @@ function LoginForm() {
         } else if (searchParams.get('account_banned') === '1') {
             setRedirectNotice('Your account has been suspended following review of your disable request.');
         } else if (searchParams.get('face_scan_rejected') === '1') {
-            setRedirectNotice('Your face verification was rejected. Please sign in again to resubmit.');
+            setRedirectNotice('Your face verification was rejected. Please login again to resubmit.');
         }
     }, [searchParams]);
 
@@ -98,7 +98,7 @@ function LoginForm() {
                     <h2 className="text-2xl font-bold text-[#1A1208]" style={{fontFamily: 'var(--font-heading)'}}>
                         Welcome back
                     </h2>
-                    <p className="text-sm text-[#8A7A62] mt-1">Sign in to your {settings.site_name} account</p>
+                    <p className="text-sm text-[#8A7A62] mt-1">Login to your {settings.site_name} account</p>
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
@@ -178,9 +178,9 @@ function LoginForm() {
                                     <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" strokeWidth="3"/>
                                     <path d="M12 2a10 10 0 0110 10" stroke="white" strokeWidth="3" strokeLinecap="round"/>
                                 </svg>
-                                Signing in…
+                                Logging in…
                             </span>
-                        ) : 'Sign In'}
+                        ) : 'Login'}
                     </button>
                 </form>
 
