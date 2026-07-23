@@ -83,13 +83,13 @@ function VerifyCallback({vUrl}: { vUrl: string }) {
                 <h2 className="text-2xl font-bold text-green-700" style={{fontFamily:'var(--font-heading)'}}>Email Verified!</h2>
                 <p className="text-muted-foreground text-sm leading-relaxed">
                     Your email has been verified successfully.
-                    {isAuthenticated ? ' Redirecting you to the next step…' : ' You can now sign in to continue.'}
+                    {isAuthenticated ? ' Redirecting you to the next step…' : ' You can now login to continue.'}
                 </p>
                 {!isAuthenticated && (
                     <Link href="/login">
                         <button className="btn-gold w-full flex items-center justify-center gap-1.5"
                                 style={{height:'2.75rem', borderRadius:'0.875rem'}}>
-                            Sign In to Continue
+                            Login to Continue
                             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                         </button>
                     </Link>
@@ -110,7 +110,7 @@ function VerifyCallback({vUrl}: { vUrl: string }) {
                     <Link href="/login">
                         <button className="btn-gold w-full flex items-center justify-center gap-1.5"
                                 style={{height:'2.75rem', borderRadius:'0.875rem'}}>
-                            Go to Sign In
+                            Go to Login
                             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                         </button>
                     </Link>

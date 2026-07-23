@@ -502,7 +502,7 @@ export default function Navbar({siteName, siteSlogan, logoUrl, navLinks}: Navbar
                                     href="/login"
                                     className="px-3 xl:px-4 py-2 text-[0.8125rem] font-semibold text-meta hover:text-[#1A1208] hover:bg-[#FFCF00]/15 rounded-lg transition-colors duration-200 whitespace-nowrap"
                                 >
-                                    Sign in
+                                    Login
                                 </Link>
                                 <Link
                                     href="/register"
@@ -574,7 +574,7 @@ export default function Navbar({siteName, siteSlogan, logoUrl, navLinks}: Navbar
                                     className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-semibold text-[#1A1208] border border-[#FFCF00]/40 bg-white hover:bg-[#FFCF00]/10 transition-colors"
                                     onClick={() => setOpen(false)}
                                 >
-                                    Sign in
+                                    Login
                                 </Link>
                                 <Link
                                     href="/register"

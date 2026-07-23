@@ -72,7 +72,7 @@ function ResetPasswordForm() {
                         {successMessage ?? 'Password reset successfully!'}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                        You can now sign in with your new password.
+                        You can now login with your new password.
                     </p>
                 </div>
                 <button
@@ -80,7 +80,7 @@ function ResetPasswordForm() {
                     className="btn-gold w-full"
                     style={{height:'2.75rem', borderRadius:'0.875rem'}}
                 >
-                    Go to Sign In
+                    Go to Login
                 </button>
             </div>
         );
@@ -215,7 +215,7 @@ export default function ResetPasswordPage() {
                     <p className="text-sm text-muted-foreground">
                         Remembered your password?{' '}
                         <Link href="/login" className="text-[var(--primary)] font-semibold hover:text-[var(--gold-600)] transition-colors">
-                            Sign in
+                            Login
                         </Link>
                     </p>
                 </div>
