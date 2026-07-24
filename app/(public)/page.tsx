@@ -7,8 +7,9 @@ import {
     Heart, Search, Star, Shield, Users, CheckCircle, ArrowRight,
     BadgeCheck, Zap, MessageCircle, Video, Crown, ChevronRight,
     MapPin, GraduationCap, HandHeart, Sparkles, Lock, PhoneCall,
-    Quote,
+    Quote, Globe, SlidersHorizontal, Headset,
 } from 'lucide-react';
+import { EngagementRingIcon } from '@/components/ui/icons';
 import AnimateSection from '@/components/public/AnimateSection';
 import NewMembersPreview from '@/components/public/NewMembersPreview';
 import { HomeMissionSection } from '@/components/public/HomeMissionSection';
@@ -70,6 +71,21 @@ const features = [
         title: 'Voice & Video Calls',
         desc: 'Gold & Platinum members can make encrypted voice and video calls inside the platform.'
     },
+    {
+        icon: SlidersHorizontal,
+        title: 'Advanced Search',
+        desc: 'You can easily search profiles using many filters including age, religion, location, education, profession, language, and other specific criteria.'
+    },
+    {
+        icon: Globe,
+        title: 'Global Reach',
+        desc: 'Our platform connects you within Bangladesh or among the Non-Resident Bangladeshi (NRB) community worldwide.'
+    },
+    {
+        icon: Headset,
+        title: 'Ongoing Support',
+        desc: 'We are here to answer your questions and provide support throughout your matchmaking journey, ensuring you feel confident and informed every step of the way.'
+    },
 ];
 
 const steps = [
@@ -93,9 +109,9 @@ const steps = [
     },
     {
         step: '04',
-        icon: Heart,
-        title: 'Connect',
-        desc: 'With families connected and hearts aligned, your Enorsia begins — and ours is just the beginning.'
+        icon: EngagementRingIcon,
+        title: 'Connect & Marry',
+        desc: "It's easy to find out the best life partner for a happy married life on our platform."
     },
 ];
 

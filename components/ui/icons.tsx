@@ -50,6 +50,15 @@ export function MatchesIcon(props: IconProps) {
     );
 }
 
+export function EngagementRingIcon({ size = 20, strokeWidth = 1.75, className, ...props }: IconProps) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+            <path d="M9 6 12 2.5 15 6 14 8.5 12 10 10 8.5z" fill="#D4AF37" stroke="#D4AF37" />
+            <circle cx="12" cy="14.5" r="6.5" />
+        </svg>
+    );
+}
+
 export function SearchIcon(props: IconProps) {
     return (
         <Icon {...props}>
