@@ -84,7 +84,7 @@ const basicSchema = z.object({
 });
 
 const locationSchema = z.object({
-    nationality: z.string().optional(),
+    // nationality: z.string().optional(), // retired
     country: z.string().optional(),
     city: z.string().optional(),
     state: z.string().optional(),
@@ -358,7 +358,7 @@ function ProfileEditInner() {
     const dietOptions = pickOptions(bulkOptions, 'diet');
     const eyeWearOptions = pickOptions(bulkOptions, 'eye_wear');
     const hobbiesOptions = pickOptions(bulkOptions, 'hobbies');
-    const nationalityOptions = pickOptions(bulkOptions, 'nationality');
+    // const nationalityOptions = pickOptions(bulkOptions, 'nationality'); // retired
     const countryOptions = pickOptions(bulkOptions, 'country');
     const residingStatusOptions = pickOptions(bulkOptions, 'residing_status');
     const familyTypeOptions = pickOptions(bulkOptions, 'family_type');
@@ -445,7 +445,8 @@ function ProfileEditInner() {
                 mother_tongue:p.mother_tongue??'', about_me:p.about_me??'', what_looking_for:p.what_looking_for??'',
             });
             locationForm.reset({
-                nationality:p.nationality??'', country:p.country??'', city:p.city??'',
+                // nationality:p.nationality??'', // retired
+                country:p.country??'', city:p.city??'',
                 state:p.state??'', upazila:(p as {upazila?: string}).upazila??'',
                 postal_code:p.postal_code??'', residing_status:p.residing_status??'',
             });
@@ -799,11 +800,13 @@ function ProfileEditInner() {
                             <SaveStatus saved={savedTab==='location'} saving={saveMutation.isPending}/>
                         </div>
                         <div className="grid sm:grid-cols-2 gap-4">
+                            {/* Nationality retired — restore useSelectOptions + seeder blocks to bring back
                             <FieldRow label="Nationality" required>
                                 <Controller name="nationality" control={locationForm.control} render={({field})=>(
                                     <SearchableSelect id="nat" options={nationalityOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Search nationality…"/>
                                 )}/>
                             </FieldRow>
+                            */}
                             <FieldRow label="Country Living In" required>
                                 <Controller name="country" control={locationForm.control} render={({field})=>(
                                     <SearchableSelect id="cnt" options={countryOptions} value={field.value} onChange={v=>{field.onChange(v??'');clearLocationFields(locationForm.setValue);}} placeholder="Search country…"/>

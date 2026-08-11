@@ -663,7 +663,7 @@ export default function ProfileViewPage() {
                             ))}
                             <Row label="Postal Code" value={p.profile.postal_code}/>
                             <Row label="Residing Status" value={p.profile.residing_status?.replace('_', ' ')}/>
-                            <Row label="Nationality" value={p.profile.nationality}/>
+                            {/* <Row label="Nationality" value={p.profile.nationality}/> */}
                             <Row label="Mother Tongue" value={p.profile.mother_tongue}/>
                             <Row label="Disability" value={p.profile.disability}/>
                             <Row label="Marital Status" value={optionLabel(maritalOptions, p.profile.marital_status)}/>
