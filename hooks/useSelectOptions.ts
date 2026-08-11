@@ -36,7 +36,7 @@ export const SEARCH_FILTER_OPTION_GROUPS = [
     'complexion',
     'blood_group',
     'mother_tongue',
-    'nationality',
+    // 'nationality', // retired
     'country',
     'residing_status',
     'have_children',
@@ -71,7 +71,7 @@ export const PROFILE_EDIT_OPTION_GROUPS = [
     'diet',
     'eye_wear',
     'hobbies',
-    'nationality',
+    // 'nationality', // retired
     'country',
     'residing_status',
     'family_type',

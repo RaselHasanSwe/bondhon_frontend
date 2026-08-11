@@ -253,7 +253,7 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
     const complexionOpts = pickOptions(bulkOptions, 'complexion');
     const bloodGroupOpts = pickOptions(bulkOptions, 'blood_group');
     const motherTongueOpts = pickOptions(bulkOptions, 'mother_tongue');
-    const nationalityOpts = pickOptions(bulkOptions, 'nationality');
+    // const nationalityOpts = pickOptions(bulkOptions, 'nationality'); // retired
     const countryOpts = pickOptions(bulkOptions, 'country');
     const residingStatusOpts = pickOptions(bulkOptions, 'residing_status');
     const haveChildrenOpts = pickOptions(bulkOptions, 'have_children');
@@ -379,6 +379,7 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
                             placeholder={`${level4Label}…`}
                         />
                     )}
+                    {/* Nationality filter retired
                     <SearchableSelect
                         id="psr-nat"
                         options={toOpts(nationalityOpts)}
@@ -386,6 +387,7 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
                         onChange={(v) => onUpdate('nationality', v ?? undefined)}
                         placeholder="Nationality…"
                     />
+                    */}
                     <SearchableSelect
                         id="psr-rs"
                         options={toOpts(residingStatusOpts)}
@@ -569,7 +571,7 @@ const FILTER_LABELS: Partial<Record<keyof PublicSearchFilters, string>> = {
     state: 'State',
     city: 'City',
     upazila: 'Upazila',
-    nationality: 'Nationality',
+    // nationality: 'Nationality', // retired
     residing_status: 'Residing',
     diet: 'Diet',
     smoking: 'Smoking',

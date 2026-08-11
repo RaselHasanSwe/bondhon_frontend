@@ -234,7 +234,7 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
     const complexionOpts = pickOptions(bulkOptions, 'complexion');
     const bloodGroupOpts = pickOptions(bulkOptions, 'blood_group');
     const motherTongueOpts = pickOptions(bulkOptions, 'mother_tongue');
-    const nationalityOpts = pickOptions(bulkOptions, 'nationality');
+    // const nationalityOpts = pickOptions(bulkOptions, 'nationality'); // retired
     const countryOpts = pickOptions(bulkOptions, 'country');
     const residingStatusOpts = pickOptions(bulkOptions, 'residing_status');
     const haveChildrenOpts = pickOptions(bulkOptions, 'have_children');
@@ -348,8 +348,10 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
                             placeholder={`${level4Label}…`}
                         />
                     )}
+                    {/* Nationality filter retired
                     <SearchableSelect id="sr-nat" options={toOpts(nationalityOpts)} value={filters.nationality}
                         onChange={v => onUpdate('nationality', v ?? undefined)} placeholder="Nationality…" />
+                    */}
                     <SearchableSelect id="sr-rs" options={toOpts(residingStatusOpts)} value={filters.residing_status}
                         onChange={v => onUpdate('residing_status', v ?? undefined)} placeholder="Residing status…" />
                 </div>
@@ -447,7 +449,7 @@ const FILTER_LABELS: Partial<Record<keyof SearchFilters, string>> = {
     education: 'Education', profession: 'Profession', employed_in: 'Employed',
     income_min: 'Income ≥', income_max: 'Income ≤',
     country: 'Country', state: 'State', city: 'City', upazila: 'Upazila',
-    nationality: 'Nationality', residing_status: 'Residing',
+    residing_status: 'Residing',
     diet: 'Diet', smoking: 'Smoking', drinking: 'Drinking',
     profile_id: 'Profile ID',
 };

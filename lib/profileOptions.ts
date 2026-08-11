@@ -377,22 +377,22 @@ export const hobbiesOptions: SelectOption[] = [
     { value: 'badminton', label: 'Badminton' },
 ];
 
-// ─── Nationality ──────────────────────────────────────────────────────────────
-export const nationalityOptions: SelectOption[] = [
-    { value: 'bangladeshi', label: 'Bangladeshi' },
-    { value: 'indian', label: 'Indian' },
-    { value: 'pakistani', label: 'Pakistani' },
-    { value: 'sri_lankan', label: 'Sri Lankan' },
-    { value: 'nepali', label: 'Nepali' },
-    { value: 'british', label: 'British' },
-    { value: 'american', label: 'American' },
-    { value: 'canadian', label: 'Canadian' },
-    { value: 'australian', label: 'Australian' },
-    { value: 'german', label: 'German' },
-    { value: 'french', label: 'French' },
-    { value: 'italian', label: 'Italian' },
-    { value: 'other', label: 'Other' },
-];
+// ─── Nationality (retired) ────────────────────────────────────────────────────
+// export const nationalityOptions: SelectOption[] = [
+//     { value: 'bangladeshi', label: 'Bangladeshi' },
+//     { value: 'indian', label: 'Indian' },
+//     { value: 'pakistani', label: 'Pakistani' },
+//     { value: 'sri_lankan', label: 'Sri Lankan' },
+//     { value: 'nepali', label: 'Nepali' },
+//     { value: 'british', label: 'British' },
+//     { value: 'american', label: 'American' },
+//     { value: 'canadian', label: 'Canadian' },
+//     { value: 'australian', label: 'Australian' },
+//     { value: 'german', label: 'German' },
+//     { value: 'french', label: 'French' },
+//     { value: 'italian', label: 'Italian' },
+//     { value: 'other', label: 'Other' },
+// ];
 
 // ─── Countries ────────────────────────────────────────────────────────────────
 export const countryOptions: SelectOption[] = [
