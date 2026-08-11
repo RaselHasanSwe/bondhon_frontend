@@ -12,13 +12,14 @@ export interface ProfileData {
     hair_color: string | null;
     complexion: 'very_fair' | 'fair' | 'wheatish' | 'dark' | null;
     blood_group: string | null;
-    marital_status: 'never_married' | 'divorced' | 'widowed' | 'awaiting_divorce' | null;
+    marital_status: 'never_married' | 'divorced' | 'widowed' | 'separated' | null;
     disability: string | null;
     mother_tongue: string | null;
     nationality: string | null;
     country: string | null;
     state: string | null;
     city: string | null;
+    upazila: string | null;
     postal_code: string | null;
     residing_status: 'citizen' | 'permanent_resident' | 'work_permit' | 'student_visa' | 'visitor_visa' | 'refugee' | 'other' | null;
     about_me: string | null;
@@ -197,6 +198,7 @@ export interface FullProfile {
     id: number;
     name: string;
     gender: 'male' | 'female';
+    profile_created_by?: string | null;
     profile: ProfileData | null;
     religious_detail: ReligiousDetail | null;
     family_detail: FamilyDetail | null;

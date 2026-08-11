@@ -275,14 +275,14 @@
 }
 
 .search-filter-sidebar-panel {
-  height: calc(100dvh - 5.5rem);
-  max-height: calc(100dvh - 5.5rem);
+  height: calc(100dvh - 5.7rem);
+  max-height: calc(100dvh - 5.7rem);
 }
 
 @supports not (height: 100dvh) {
   .search-filter-sidebar-panel {
-    height: calc(100vh - 5.5rem);
-    max-height: calc(100vh - 5.5rem);
+    height: calc(100vh - 5.7rem);
+    max-height: calc(100vh - 5.7rem);
   }
 }
 
@@ -310,6 +310,31 @@
 .search-filter-sidebar .overflow-y-auto::-webkit-scrollbar-thumb {
   background: rgba(255, 207, 0, 0.55);
   border-radius: 999px;
+}
+
+.search-filter-sidebar-panel-dashboard {
+  height: calc(100dvh - 7.7rem);
+  max-height: calc(100dvh - 7.7rem);
+}
+
+@supports not (height: 100dvh) {
+  .search-filter-sidebar-panel-dashboard {
+    height: calc(100vh - 7.7rem);
+    max-height: calc(100vh - 7.7rem);
+  }
+}
+
+.search-filter-sidebar .filter-range-row {
+  width: 100%;
+  min-width: 0;
+}
+
+.search-filter-sidebar .rs__control {
+  min-height: 2rem;
+}
+
+.search-filter-sidebar .rs__value-container {
+  overflow: hidden;
 }
 
 /* stagger children */

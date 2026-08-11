@@ -37,6 +37,8 @@ import { invalidateShortlistQueries } from '@/lib/cacheInvalidation';
 import { shortlistService } from '@/services/profileService';
 import { useAuthStore } from '@/store/authStore';
 import type { ProfileView } from '@/types/profile';
+import { useOptions } from '@/hooks/useSelectOptions';
+import { optionLabel } from '@/lib/optionLabels';
 
 function ViewerSkeleton() {
     return (
@@ -73,6 +75,8 @@ function ViewerCard({
     isMessaging: boolean;
     isTogglingShortlist: boolean;
 }) {
+    const { data: maritalOptions = [] } = useOptions('marital_status');
+    const { data: educationOptions = [] } = useOptions('education_level');
     const profileUrl = view.viewer.profile?.profile_id
         ? `/profile/${view.viewer.profile.profile_id}`
         : '#';
@@ -129,13 +133,13 @@ function ViewerCard({
                             </span>
                         )}
                         {view.viewer.profile?.marital_status && (
-                            <span className="capitalize">
-                                {view.viewer.profile.marital_status.replace(/_/g, ' ')}
+                            <span>
+                                {optionLabel(maritalOptions, view.viewer.profile.marital_status)}
                             </span>
                         )}
                         {view.viewer.education && (
                             <span className="truncate max-w-[120px]">
-                                {view.viewer.education}
+                                {optionLabel(educationOptions, view.viewer.education)}
                             </span>
                         )}
                     </div>

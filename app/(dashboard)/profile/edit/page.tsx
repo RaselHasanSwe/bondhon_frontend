@@ -23,7 +23,7 @@ import {ProfileCompletionBar} from '@/components/profile/ProfileCompletionBar';
 import {SearchableSelect, MultiSearchableSelect} from '@/components/ui/SearchableSelect';
 import type {ProfilePhoto} from '@/types/profile';
 import {
-    heightOptions, weightOptions,
+    heightOptions, weightOptions, ageOptions,
     siblingCountOptions, siblingPositionOptions,
     experienceOptions,
 } from '@/lib/profileOptions';
@@ -34,6 +34,17 @@ import {
     pickOptions,
     PROFILE_EDIT_OPTION_GROUPS,
 } from '@/hooks/useSelectOptions';
+import {
+    clearLocationFields,
+    getLevelLabel,
+    getLocationMetadata,
+    level2Field,
+    level2ValueForChildren,
+    level3Field,
+    level3ValueForChildren,
+    usesDivisionDistrictUpazila,
+    usesRegionCity,
+} from '@/lib/locationHierarchy';
 
 // ─── Tab order for auto-advance after save ───────────────────────────────────
 const PROFILE_EDIT_TABS = [
@@ -77,6 +88,7 @@ const locationSchema = z.object({
     country: z.string().optional(),
     city: z.string().optional(),
     state: z.string().optional(),
+    upazila: z.string().optional(),
     postal_code: z.string().max(20).optional(),
     residing_status: z.string().optional(),
 });
@@ -360,26 +372,29 @@ function ProfileEditInner() {
     const selectedReligionId = religionOptions.find(o => o.value === watchedReligion)?.id;
     const { data: casteOpts = [] } = useChildOptions('caste', selectedReligionId);
 
-    // Location cascade: all levels live inside the unified 'country' group via parent_id
-    // Level 1 → /options/country                     (root countries, parent_id = null)
-    // Level 2 → /options/country?parent_id=<country> (states / divisions)
-    // Level 3 → /options/country?parent_id=<state>   (districts / cities)
+  // Location cascade driven by country metadata
     const selectedCountryOption = countryOptions.find(o => o.value === watchedCountry);
     const selectedCountryId = selectedCountryOption?.id;
+    const locationMeta = getLocationMetadata(selectedCountryOption);
     const { data: locationLevel2Opts = [] } = useChildOptions('country', selectedCountryId);
 
-    const isBangladeshLocation = watchedCountry === 'bangladesh';
-    const selectedLevel2Value = isBangladeshLocation ? watchedCity : watchedState;
-    const selectedLevel2Id = locationLevel2Opts.find(o => o.value === selectedLevel2Value)?.id;
-    const { data: locationLevel3Opts = [] } = useChildOptions('country', isBangladeshLocation ? selectedLevel2Id : undefined);
+    const level2SelectionValue = level2ValueForChildren(selectedCountryOption, watchedCity, watchedState);
+    const selectedLevel2Id = locationLevel2Opts.find(o => o.value === level2SelectionValue)?.id;
+    const showLevel3 = usesDivisionDistrictUpazila(selectedCountryOption) || usesRegionCity(selectedCountryOption);
+    const { data: locationLevel3Opts = [] } = useChildOptions('country', showLevel3 ? selectedLevel2Id : undefined);
 
-    const level2Label = watchedCountry === 'bangladesh'
-        ? 'Division'
-        : watchedCountry === 'united_states'
-            ? 'State'
-            : watchedCountry === 'canada'
-                ? 'Province / Territory'
-                : 'State / Division';
+    const level3SelectionValue = level3ValueForChildren(selectedCountryOption, watchedState);
+    const selectedLevel3Id = locationLevel3Opts.find(o => o.value === level3SelectionValue)?.id;
+    const { data: locationLevel4Opts = [] } = useChildOptions(
+        'country',
+        usesDivisionDistrictUpazila(selectedCountryOption) ? selectedLevel3Id : undefined,
+    );
+
+    const level2Label = getLevelLabel(locationMeta, 2, 'State / Division');
+    const level3Label = getLevelLabel(locationMeta, 3, 'District / City');
+    const level4Label = getLevelLabel(locationMeta, 4, 'Upazila / Thana');
+    const level2FormField = level2Field(selectedCountryOption);
+    const level3FormField = level3Field(selectedCountryOption);
 
     // ── Preferences Location Hierarchy ────────────────────────────────────────
     const watchedPrefCountries = preferencesForm.watch('pref_country');
@@ -431,7 +446,8 @@ function ProfileEditInner() {
             });
             locationForm.reset({
                 nationality:p.nationality??'', country:p.country??'', city:p.city??'',
-                state:p.state??'', postal_code:p.postal_code??'', residing_status:p.residing_status??'',
+                state:p.state??'', upazila:(p as {upazila?: string}).upazila??'',
+                postal_code:p.postal_code??'', residing_status:p.residing_status??'',
             });
         }
         if (profile.religious_detail) {
@@ -790,35 +806,50 @@ function ProfileEditInner() {
                             </FieldRow>
                             <FieldRow label="Country Living In" required>
                                 <Controller name="country" control={locationForm.control} render={({field})=>(
-                                    <SearchableSelect id="cnt" options={countryOptions} value={field.value} onChange={v=>{field.onChange(v??'');locationForm.setValue('city','');locationForm.setValue('state','');}} placeholder="Search country…"/>
+                                    <SearchableSelect id="cnt" options={countryOptions} value={field.value} onChange={v=>{field.onChange(v??'');clearLocationFields(locationForm.setValue);}} placeholder="Search country…"/>
                                 )}/>
                             </FieldRow>
-                            {locationLevel2Opts.length > 0 ? (
-                                <>
-                                    {isBangladeshLocation ? (
-                                        <>
-                                            <FieldRow label={level2Label} required>
-                                                <Controller name="city" control={locationForm.control} render={({field})=>(
-                                                    <SearchableSelect id="div" options={locationLevel2Opts} value={field.value} onChange={v=>{field.onChange(v??'');locationForm.setValue('state','');}} placeholder={`Select ${level2Label.toLowerCase()}…`}/>
-                                                )}/>
-                                            </FieldRow>
-                                            {locationLevel3Opts.length > 0 && (
-                                                <FieldRow label="District / City">
-                                                    <Controller name="state" control={locationForm.control} render={({field})=>(
-                                                        <SearchableSelect id="dist" options={locationLevel3Opts} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select district / city…"/>
-                                                    )}/>
-                                                </FieldRow>
-                                            )}
-                                        </>
-                                    ) : (
-                                        <FieldRow label={level2Label} required>
-                                            <Controller name="state" control={locationForm.control} render={({field})=>(
-                                                <SearchableSelect id="state" options={locationLevel2Opts} value={field.value} onChange={v=>{field.onChange(v??'');locationForm.setValue('city','');}} placeholder={`Select ${level2Label.toLowerCase()}…`}/>
-                                            )}/>
-                                        </FieldRow>
-                                    )}
-                                </>
-                            ) : (
+                            {locationLevel2Opts.length > 0 && level2FormField && (
+                                <FieldRow label={level2Label} required>
+                                    <Controller name={level2FormField} control={locationForm.control} render={({field})=>(
+                                        <SearchableSelect
+                                            id="loc-l2"
+                                            options={locationLevel2Opts}
+                                            value={field.value}
+                                            onChange={v=>{
+                                                field.onChange(v??'');
+                                                if (level3FormField) locationForm.setValue(level3FormField, '');
+                                                locationForm.setValue('upazila', '');
+                                            }}
+                                            placeholder={`Select ${level2Label.toLowerCase()}…`}
+                                        />
+                                    )}/>
+                                </FieldRow>
+                            )}
+                            {locationLevel3Opts.length > 0 && level3FormField && (
+                                <FieldRow label={level3Label}>
+                                    <Controller name={level3FormField} control={locationForm.control} render={({field})=>(
+                                        <SearchableSelect
+                                            id="loc-l3"
+                                            options={locationLevel3Opts}
+                                            value={field.value}
+                                            onChange={v=>{
+                                                field.onChange(v??'');
+                                                locationForm.setValue('upazila', '');
+                                            }}
+                                            placeholder={`Select ${level3Label.toLowerCase()}…`}
+                                        />
+                                    )}/>
+                                </FieldRow>
+                            )}
+                            {locationLevel4Opts.length > 0 && usesDivisionDistrictUpazila(selectedCountryOption) && (
+                                <FieldRow label={level4Label}>
+                                    <Controller name="upazila" control={locationForm.control} render={({field})=>(
+                                        <SearchableSelect id="loc-l4" options={locationLevel4Opts} value={field.value} onChange={v=>field.onChange(v??'')} placeholder={`Select ${level4Label.toLowerCase()}…`}/>
+                                    )}/>
+                                </FieldRow>
+                            )}
+                            {locationLevel2Opts.length === 0 && (
                                 <>
                                     {/*<FieldRow label="City" required>*/}
                                     {/*    <Input placeholder="e.g. London" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...locationForm.register('city')}/>*/}
@@ -1124,19 +1155,63 @@ function ProfileEditInner() {
                             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Age, Height &amp; Income</p>
                             <div className="grid sm:grid-cols-2 gap-4">
                                 <FieldRow label="Age Range">
-                                    <div className="flex gap-2 items-center">
-                                        <Input type="number" placeholder="Min" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('age_min')}/>
-                                        <span className="text-muted-foreground text-sm">–</span>
-                                        <Input type="number" placeholder="Max" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('age_max')}/>
+                                    <div className="flex gap-2 items-center min-w-0">
+                                        <div className="min-w-0 flex-1">
+                                            <Controller name="age_min" control={preferencesForm.control} render={({ field }) => (
+                                                <SearchableSelect
+                                                    id="pref-age-min"
+                                                    options={ageOptions}
+                                                    value={field.value || undefined}
+                                                    onChange={v => field.onChange(v ?? '')}
+                                                    placeholder="Min"
+                                                    compact
+                                                />
+                                            )} />
+                                        </div>
+                                        <span className="text-muted-foreground text-sm shrink-0">–</span>
+                                        <div className="min-w-0 flex-1">
+                                            <Controller name="age_max" control={preferencesForm.control} render={({ field }) => (
+                                                <SearchableSelect
+                                                    id="pref-age-max"
+                                                    options={ageOptions}
+                                                    value={field.value || undefined}
+                                                    onChange={v => field.onChange(v ?? '')}
+                                                    placeholder="Max"
+                                                    compact
+                                                />
+                                            )} />
+                                        </div>
                                     </div>
                                     {preferencesForm.formState.errors.age_min && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.age_min.message}</p>}
                                     {preferencesForm.formState.errors.age_max && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.age_max.message}</p>}
                                 </FieldRow>
-                                <FieldRow label="Height Range (cm)">
-                                    <div className="flex gap-2 items-center">
-                                        <Input type="number" placeholder="Min" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('height_min_cm')}/>
-                                        <span className="text-muted-foreground text-sm">–</span>
-                                        <Input type="number" placeholder="Max" className="border-border bg-input focus-visible:ring-ring focus-visible:border-primary" {...preferencesForm.register('height_max_cm')}/>
+                                <FieldRow label={'Height Range (cm & ft\'in")'}>
+                                    <div className="flex gap-2 items-center min-w-0">
+                                        <div className="min-w-0 flex-1">
+                                            <Controller name="height_min_cm" control={preferencesForm.control} render={({ field }) => (
+                                                <SearchableSelect
+                                                    id="pref-ht-min"
+                                                    options={heightOptions}
+                                                    value={field.value || undefined}
+                                                    onChange={v => field.onChange(v ?? '')}
+                                                    placeholder="Min"
+                                                    compact
+                                                />
+                                            )} />
+                                        </div>
+                                        <span className="text-muted-foreground text-sm shrink-0">–</span>
+                                        <div className="min-w-0 flex-1">
+                                            <Controller name="height_max_cm" control={preferencesForm.control} render={({ field }) => (
+                                                <SearchableSelect
+                                                    id="pref-ht-max"
+                                                    options={heightOptions}
+                                                    value={field.value || undefined}
+                                                    onChange={v => field.onChange(v ?? '')}
+                                                    placeholder="Max"
+                                                    compact
+                                                />
+                                            )} />
+                                        </div>
                                     </div>
                                     {preferencesForm.formState.errors.height_min_cm && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.height_min_cm.message}</p>}
                                     {preferencesForm.formState.errors.height_max_cm && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.height_max_cm.message}</p>}

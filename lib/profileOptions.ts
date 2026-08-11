@@ -49,6 +49,23 @@ export const childLivingStatusOptions: SelectOption[] = [
     { value: 'child_not_living_with_me', label: 'Child Not Living With Me' },
 ];
 
+// ─── Age (years) ─────────────────────────────────────────────────────────────
+export const ageOptions: SelectOption[] = Array.from({ length: 83 }, (_, i) => {
+    const age = 18 + i;
+    return { value: String(age), label: `${age} years` };
+});
+
+// ─── Annual income brackets (BDT) ────────────────────────────────────────────
+export const incomeOptions: SelectOption[] = [
+    { value: '100000', label: '1 Lakh+' },
+    { value: '300000', label: '3 Lakh+' },
+    { value: '500000', label: '5 Lakh+' },
+    { value: '1000000', label: '10 Lakh+' },
+    { value: '2000000', label: '20 Lakh+' },
+    { value: '5000000', label: '50 Lakh+' },
+    { value: '10000000', label: '1 Crore+' },
+];
+
 // ─── Height (cm) ─────────────────────────────────────────────────────────────
 export const heightOptions: SelectOption[] = [
     ...Array.from({ length: 91 }, (_, i) => {

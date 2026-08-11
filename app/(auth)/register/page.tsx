@@ -2,15 +2,17 @@
 
 import {useState} from 'react';
 import {useRouter} from 'next/navigation';
-import {useForm} from 'react-hook-form';
+import {useForm, Controller} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
 import Link from 'next/link';
-import {authService} from '@/services/authService';
+import {authService, type RegisterData} from '@/services/authService';
 import {useAuthStore} from '@/store/authStore';
 import {getPostAuthRedirect} from '@/lib/authRedirect';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
+import {SearchableSelect} from '@/components/ui/SearchableSelect';
+import {useOptions} from '@/hooks/useSelectOptions';
 
 // Step schemas
 const step1Schema = z.object({
@@ -19,7 +21,7 @@ const step1Schema = z.object({
     password: z.string().min(8, 'Password must be at least 8 characters'),
     password_confirmation: z.string(),
     gender: z.enum(['male', 'female'], {error: 'Please select your gender'}),
-    profile_created_by: z.enum(['self', 'parents', 'siblings']),
+    profile_created_by: z.string().min(1, 'Please select who created this profile'),
 }).refine((d) => d.password === d.password_confirmation, {
     message: 'Passwords do not match',
     path: ['password_confirmation'],
@@ -32,11 +34,13 @@ export default function RegisterPage() {
     const setAuth = useAuthStore((s) => s.setAuth);
     const [serverError, setServerError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+    const { data: profileCreatedByOptions = [] } = useOptions('profile_created_by');
 
     const {
         register,
         handleSubmit,
         watch,
+        control,
         formState: {errors, isSubmitting},
     } = useForm<Step1Form>({resolver: zodResolver(step1Schema)});
 
@@ -44,7 +48,10 @@ export default function RegisterPage() {
         setServerError(null);
         setFieldErrors({});
         try {
-            const res = await authService.register(data);
+            const res = await authService.register({
+                ...data,
+                profile_created_by: data.profile_created_by as RegisterData['profile_created_by'],
+            });
             const {user, token} = res.data.data;
             setAuth(user, token);
             router.push(getPostAuthRedirect(user));
@@ -119,14 +126,21 @@ export default function RegisterPage() {
                     {/* Profile created by */}
                     <div className="space-y-1.5">
                         <Label className="text-[var(--secondary-foreground)] font-medium text-sm">Profile created by</Label>
-                        <select
-                            {...register('profile_created_by')}
-                            className="w-full border border-[var(--border)] bg-[var(--input)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] text-foreground"
-                        >
-                            <option value="self">Self</option>
-                            <option value="parents">Parents</option>
-                            <option value="siblings">Siblings</option>
-                        </select>
+                        <Controller
+                            name="profile_created_by"
+                            control={control}
+                            render={({ field }) => (
+                                <SearchableSelect
+                                    id="profile_created_by"
+                                    options={profileCreatedByOptions}
+                                    value={field.value}
+                                    onChange={(v) => field.onChange(v ?? '')}
+                                    placeholder="Select…"
+                                />
+                            )}
+                        />
+                        {errors.profile_created_by && <p className="text-xs text-red-500">{errors.profile_created_by.message}</p>}
+                        {fieldErrors.profile_created_by && <p className="text-xs text-red-500">{fieldErrors.profile_created_by[0]}</p>}
                     </div>
 
                     <div className="space-y-1.5">
