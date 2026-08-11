@@ -48,6 +48,7 @@ export interface SearchFilters {
     country?: string;
     state?: string;
     city?: string;
+    upazila?: string;
     nationality?: string;
     residing_status?: string;
     // Lifestyle

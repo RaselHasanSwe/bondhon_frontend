@@ -7,7 +7,7 @@ export interface RegisterData {
     password: string;
     password_confirmation: string;
     gender: 'male' | 'female';
-    profile_created_by: 'self' | 'parents' | 'siblings';
+    profile_created_by: 'self' | 'parents' | 'siblings' | 'guardian' | 'relative_and_friends';
 }
 
 export interface LoginData {

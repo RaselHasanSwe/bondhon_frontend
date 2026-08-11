@@ -30,7 +30,10 @@ function cssVar(name: string, fallback: string): string {
 
 const PRIMARY = '#FFCF00';
 
-function buildStyles(isMulti = false): StylesConfig<SelectOption, boolean, GroupBase<SelectOption>> {
+function buildStyles(
+    isMulti = false,
+    compact = false,
+): StylesConfig<SelectOption, boolean, GroupBase<SelectOption>> {
     // Resolved at call-time so dark/light mode changes are picked up
     const bg        = cssVar('--input',            '#ffffff');
     const border    = cssVar('--border',           '#e2e8f0');
@@ -49,13 +52,17 @@ function buildStyles(isMulti = false): StylesConfig<SelectOption, boolean, Group
             // Single: fixed h-8 to match Input; Multi: auto height for tag wrapping
             minHeight: '2rem',
             height: isMulti ? 'auto' : '2rem',
+            width: '100%',
             boxShadow: state.isFocused ? `0 0 0 3px ${PRIMARY}50` : 'none',
             cursor: 'pointer',
             '&:hover': { borderColor: PRIMARY },
         }),
         valueContainer: (base) => ({
             ...base,
-            padding: isMulti ? '0.25rem 0.625rem' : '0 0.625rem',
+            padding: isMulti ? '0.25rem 0.625rem' : compact ? '0 0.35rem' : '0 0.625rem',
+            flex: '1 1 0',
+            minWidth: 0,
+            overflow: 'hidden',
             flexWrap: isMulti ? ('wrap' as const) : ('nowrap' as const),
         }),
         input: (base) => ({
@@ -67,7 +74,11 @@ function buildStyles(isMulti = false): StylesConfig<SelectOption, boolean, Group
         singleValue: (base) => ({
             ...base,
             color: fg,
-            fontSize: '0.875rem',
+            fontSize: compact ? '0.75rem' : '0.875rem',
+            maxWidth: '100%',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
         }),
         multiValue: (base) => ({
             ...base,
@@ -89,19 +100,28 @@ function buildStyles(isMulti = false): StylesConfig<SelectOption, boolean, Group
         placeholder: (base) => ({
             ...base,
             color: muted,
-            fontSize: '0.875rem',
+            fontSize: compact ? '0.75rem' : '0.875rem',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+        }),
+        indicatorsContainer: (base) => ({
+            ...base,
+            flexShrink: 0,
         }),
         dropdownIndicator: (base) => ({
             ...base,
             color: muted,
-            padding: '0 0.375rem',
+            padding: compact ? '0 0.15rem' : '0 0.375rem',
             '&:hover': { color: fg },
+            svg: { width: compact ? 14 : 20, height: compact ? 14 : 20 },
         }),
         clearIndicator: (base) => ({
             ...base,
             color: muted,
-            padding: '0 0.25rem',
+            padding: compact ? '0 0.1rem' : '0 0.25rem',
             '&:hover': { color: fg },
+            svg: { width: compact ? 14 : 20, height: compact ? 14 : 20 },
         }),
         indicatorSeparator: () => ({ display: 'none' }),
 
@@ -196,6 +216,9 @@ interface SearchableSelectProps {
     isClearable?: boolean;
     isDisabled?: boolean;
     id?: string;
+    className?: string;
+    /** Tighter layout for min/max pairs in narrow sidebars */
+    compact?: boolean;
 }
 
 export function SearchableSelect({
@@ -206,6 +229,8 @@ export function SearchableSelect({
     isClearable = true,
     isDisabled = false,
     id,
+    className,
+    compact = false,
 }: SearchableSelectProps) {
     const [mounted, setMounted] = useState(false);
     const selected = value ? (options.find(o => o.value === value) ?? null) : null;
@@ -222,14 +247,15 @@ export function SearchableSelect({
     if (!mounted) {
         return (
             <div
-                className="h-8 rounded-lg border border-[var(--border)] bg-[var(--input)]"
+                className={`h-8 rounded-lg border border-[var(--border)] bg-[var(--input)] ${className ?? 'w-full min-w-0'}`}
                 aria-hidden
             />
         );
     }
 
     return (
-        <ReactSelect<SelectOption>
+        <div className={className ?? 'w-full min-w-0'}>
+            <ReactSelect<SelectOption>
             instanceId={id}
             options={options}
             value={selected}
@@ -237,11 +263,12 @@ export function SearchableSelect({
             placeholder={placeholder}
             isClearable={isClearable}
             isDisabled={isDisabled}
-            styles={buildStyles()}
+            styles={buildStyles(false, compact)}
             maxMenuHeight={maxMenuHeight}
             onMenuOpen={handleMenuOpen}
             {...sharedSelectProps}
         />
+        </div>
     );
 }
 

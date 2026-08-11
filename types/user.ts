@@ -3,7 +3,7 @@ export interface User {
     name: string;
     email: string;
     gender: 'male' | 'female';
-    profile_created_by: 'self' | 'parents' | 'siblings';
+    profile_created_by: 'self' | 'parents' | 'siblings' | 'guardian' | 'relative_and_friends';
     role: 'user' | 'admin';
     is_active: boolean;
     is_banned: boolean;

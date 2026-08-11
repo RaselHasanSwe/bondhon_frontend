@@ -26,6 +26,8 @@ import { ShortlistToggleButton } from '@/components/profile/ShortlistToggleButto
 import { patchProfileShortlistInCaches } from '@/lib/profileListCache';
 import { useAuthStore } from '@/store/authStore';
 import type { ShortlistItem } from '@/types/profile';
+import { useOptions } from '@/hooks/useSelectOptions';
+import { optionLabel } from '@/lib/optionLabels';
 
 function ShortlistSkeleton() {
     return (
@@ -63,6 +65,8 @@ function ShortlistCard({
     isTogglingShortlist: boolean;
 }) {
     const profile = item.user;
+    const { data: maritalOptions = [] } = useOptions('marital_status');
+    const { data: educationOptions = [] } = useOptions('education_level');
     const profileUrl = profile.profile?.profile_id
         ? `/profile/${profile.profile.profile_id}`
         : '#';
@@ -118,13 +122,13 @@ function ShortlistCard({
                             </span>
                         )}
                         {profile.profile?.marital_status && (
-                            <span className="capitalize">
-                                {profile.profile.marital_status.replace(/_/g, ' ')}
+                            <span>
+                                {optionLabel(maritalOptions, profile.profile.marital_status)}
                             </span>
                         )}
                         {profile.education && (
                             <span className="truncate max-w-[120px]">
-                                {profile.education}
+                                {optionLabel(educationOptions, profile.education)}
                             </span>
                         )}
                     </div>

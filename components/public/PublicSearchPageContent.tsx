@@ -9,15 +9,27 @@ import { usePublicProfileCardAction } from '@/hooks/usePublicProfileCardAction';
 import { InfiniteScrollFooter } from '@/components/ui/InfiniteScrollFooter';
 import { usePublicInfiniteList } from '@/hooks/usePublicInfiniteList';
 import { normalizeMetaPage } from '@/lib/pagination';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { SearchableSelect } from '@/components/ui/SearchableSelect';
+import { RangeSearchableSelect } from '@/components/ui/RangeSearchableSelect';
 import {
     useOptionsBulk,
     useChildOptions,
     pickOptions,
     SEARCH_FILTER_OPTION_GROUPS,
 } from '@/hooks/useSelectOptions';
+import {
+    getLevelLabel,
+    getLocationMetadata,
+    level2Field,
+    level2ValueForChildren,
+    level3Field,
+    level3ValueForChildren,
+    usesDivisionDistrictUpazila,
+    usesRegionCity,
+} from '@/lib/locationHierarchy';
+import { ageOptions, heightOptions } from '@/lib/profileOptions';
 import { SearchIcon, FilterIcon, XIcon } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
 import {
@@ -29,15 +41,6 @@ import {
     Leaf,
     type LucideIcon,
 } from 'lucide-react';
-
-const INCOME_OPTIONS = [
-    { value: '100000', label: '1 Lakh+' },
-    { value: '300000', label: '3 Lakh+' },
-    { value: '500000', label: '5 Lakh+' },
-    { value: '1000000', label: '10 Lakh+' },
-    { value: '2000000', label: '20 Lakh+' },
-    { value: '5000000', label: '50 Lakh+' },
-];
 
 const SORT_OPTIONS = [
     { value: 'latest', label: 'Newest Members' },
@@ -55,6 +58,10 @@ function countActiveFilters(f: PublicSearchFilters): number {
 
 function toOpts(items: { value: string; label: string }[]) {
     return items;
+}
+
+function numToStr(v?: number) {
+    return v != null ? String(v) : undefined;
 }
 
 function parseUrlFilters(params: URLSearchParams): PublicSearchFilters {
@@ -138,9 +145,6 @@ function FilterSection({
         </div>
     );
 }
-
-const compactInputClass =
-    'h-9 rounded-xl border-[#E8DFCC] bg-white text-xs focus-visible:border-[#FFCF00] focus-visible:ring-[#FFCF00]/25';
 
 function FilterActions({
     onApply,
@@ -257,12 +261,30 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
     const selectedReligionId = religionOpts.find((o) => o.value === filters.religion)?.id;
     const { data: casteOpts = [] } = useChildOptions('caste', selectedReligionId);
 
-    const selectedCountryId = countryOpts.find((o) => o.value === filters.country)?.id;
+    const selectedCountryOption = countryOpts.find((o) => o.value === filters.country);
+    const selectedCountryId = selectedCountryOption?.id;
+    const locationMeta = getLocationMetadata(selectedCountryOption);
     const { data: stateOpts = [] } = useChildOptions('country', selectedCountryId);
-    const isBangladesh = filters.country === 'bangladesh';
-    const selectedBdDivisionId = stateOpts.find((o) => o.value === filters.city)?.id;
-    const { data: bdDistrictOpts = [] } = useChildOptions('country', isBangladesh ? selectedBdDivisionId : undefined);
-    const shouldHideCity = filters.country === 'united_states' || filters.country === 'canada';
+
+    const level2SelectionValue = level2ValueForChildren(selectedCountryOption, filters.city, filters.state);
+    const selectedLevel2Id = stateOpts.find((o) => o.value === level2SelectionValue)?.id;
+    const showLevel3 = usesDivisionDistrictUpazila(selectedCountryOption) || usesRegionCity(selectedCountryOption);
+    const { data: locationLevel3Opts = [] } = useChildOptions('country', showLevel3 ? selectedLevel2Id : undefined);
+
+    const level3SelectionValue = level3ValueForChildren(selectedCountryOption, filters.state);
+    const selectedLevel3Id = locationLevel3Opts.find((o) => o.value === level3SelectionValue)?.id;
+    const { data: locationLevel4Opts = [] } = useChildOptions(
+        'country',
+        usesDivisionDistrictUpazila(selectedCountryOption) ? selectedLevel3Id : undefined,
+    );
+
+    const level2Label = getLevelLabel(locationMeta, 2, 'State / Division');
+    const level3Label = getLevelLabel(locationMeta, 3, 'District / City');
+    const level4Label = getLevelLabel(locationMeta, 4, 'Upazila / Thana');
+    const level2FormField = level2Field(selectedCountryOption);
+    const level3FormField = level3Field(selectedCountryOption);
+    const level2FilterValue = level2FormField === 'city' ? filters.city : filters.state;
+    const level3FilterValue = level3FormField === 'city' ? filters.city : filters.state;
 
     return (
         <div className="space-y-2">
@@ -286,49 +308,27 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
                     ))}
                 </div>
                 <p className="text-xs font-bold uppercase tracking-wider text-meta pt-0.5">Age</p>
-                <div className="flex items-center gap-1.5">
-                    <Input
-                        type="number"
-                        placeholder="Age min"
-                        min={18}
-                        max={100}
-                        value={filters.age_min ?? ''}
-                        onChange={(e) => onUpdate('age_min', e.target.value ? Number(e.target.value) : undefined)}
-                        className={compactInputClass}
-                    />
-                    <span className="text-muted-foreground text-xs flex-shrink-0">–</span>
-                    <Input
-                        type="number"
-                        placeholder="Age max"
-                        min={18}
-                        max={100}
-                        value={filters.age_max ?? ''}
-                        onChange={(e) => onUpdate('age_max', e.target.value ? Number(e.target.value) : undefined)}
-                        className={compactInputClass}
-                    />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-meta pt-0.5">Height (cm)</p>
-                <div className="flex items-center gap-1.5">
-                    <Input
-                        type="number"
-                        placeholder="Ht min"
-                        min={140}
-                        max={220}
-                        value={filters.height_min ?? ''}
-                        onChange={(e) => onUpdate('height_min', e.target.value ? Number(e.target.value) : undefined)}
-                        className={compactInputClass}
-                    />
-                    <span className="text-muted-foreground text-xs flex-shrink-0">–</span>
-                    <Input
-                        type="number"
-                        placeholder="Ht max"
-                        min={140}
-                        max={220}
-                        value={filters.height_max ?? ''}
-                        onChange={(e) => onUpdate('height_max', e.target.value ? Number(e.target.value) : undefined)}
-                        className={compactInputClass}
-                    />
-                </div>
+                <RangeSearchableSelect
+                    idPrefix="psr-age"
+                    options={ageOptions}
+                    minValue={numToStr(filters.age_min)}
+                    maxValue={numToStr(filters.age_max)}
+                    onMinChange={(v) => onUpdate('age_min', v ? Number(v) : undefined)}
+                    onMaxChange={(v) => onUpdate('age_max', v ? Number(v) : undefined)}
+                    minPlaceholder="Min…"
+                    maxPlaceholder="Max…"
+                />
+                <p className="text-xs font-bold uppercase tracking-wider text-meta pt-0.5">Height (cm & ft&apos;in&quot;)</p>
+                <RangeSearchableSelect
+                    idPrefix="psr-ht"
+                    options={heightOptions}
+                    minValue={numToStr(filters.height_min)}
+                    maxValue={numToStr(filters.height_max)}
+                    onMinChange={(v) => onUpdate('height_min', v ? Number(v) : undefined)}
+                    onMaxChange={(v) => onUpdate('height_max', v ? Number(v) : undefined)}
+                    minPlaceholder="Min…"
+                    maxPlaceholder="Max…"
+                />
             </FilterSection>
 
             <FilterSection title="Location" icon={MapPin} defaultOpen>
@@ -341,45 +341,42 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
                             onUpdate('country', v ?? undefined);
                             onUpdate('state', undefined);
                             onUpdate('city', undefined);
+                            onUpdate('upazila', undefined);
                         }}
                         placeholder="Country…"
                     />
-                    {stateOpts.length > 0 && isBangladesh && (
+                    {stateOpts.length > 0 && level2FormField && (
                         <SearchableSelect
-                            id="psr-bd-div"
+                            id="psr-l2"
                             options={toOpts(stateOpts)}
-                            value={filters.city}
+                            value={level2FilterValue}
                             onChange={(v) => {
-                                onUpdate('city', v ?? undefined);
-                                onUpdate('state', undefined);
+                                onUpdate(level2FormField, v ?? undefined);
+                                if (level3FormField) onUpdate(level3FormField, undefined);
+                                onUpdate('upazila', undefined);
                             }}
-                            placeholder="Division…"
+                            placeholder={`${level2Label}…`}
                         />
                     )}
-                    {isBangladesh && bdDistrictOpts.length > 0 && (
+                    {locationLevel3Opts.length > 0 && level3FormField && (
                         <SearchableSelect
-                            id="psr-bd-dist"
-                            options={toOpts(bdDistrictOpts)}
-                            value={filters.state}
-                            onChange={(v) => onUpdate('state', v ?? undefined)}
-                            placeholder="District / city…"
+                            id="psr-l3"
+                            options={toOpts(locationLevel3Opts)}
+                            value={level3FilterValue}
+                            onChange={(v) => {
+                                onUpdate(level3FormField, v ?? undefined);
+                                onUpdate('upazila', undefined);
+                            }}
+                            placeholder={`${level3Label}…`}
                         />
                     )}
-                    {stateOpts.length > 0 && !isBangladesh && (
+                    {locationLevel4Opts.length > 0 && usesDivisionDistrictUpazila(selectedCountryOption) && (
                         <SearchableSelect
-                            id="psr-st"
-                            options={toOpts(stateOpts)}
-                            value={filters.state}
-                            onChange={(v) => onUpdate('state', v ?? undefined)}
-                            placeholder="State / division…"
-                        />
-                    )}
-                    {!isBangladesh && !shouldHideCity && (
-                        <Input
-                            placeholder="City"
-                            value={filters.city ?? ''}
-                            onChange={(e) => onUpdate('city', e.target.value || undefined)}
-                            className={compactInputClass}
+                            id="psr-l4"
+                            options={toOpts(locationLevel4Opts)}
+                            value={filters.upazila}
+                            onChange={(v) => onUpdate('upazila', v ?? undefined)}
+                            placeholder={`${level4Label}…`}
                         />
                     )}
                     <SearchableSelect
@@ -463,35 +460,25 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
                     <div>
                         <Label className="text-xs font-semibold text-meta block mb-1">Income (BDT)</Label>
                         <div className="flex items-center gap-1.5">
-                            <select
+                            <Input
+                                type="number"
+                                placeholder="Min"
                                 value={filters.income_min ?? ''}
                                 onChange={(e) =>
                                     onUpdate('income_min', e.target.value ? Number(e.target.value) : undefined)
                                 }
-                                className="flex-1 border border-[var(--border)] bg-[var(--input)] rounded-lg px-2 py-1.5 text-[11px] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] text-foreground"
-                            >
-                                <option value="">Min</option>
-                                {INCOME_OPTIONS.map((o) => (
-                                    <option key={o.value} value={o.value}>
-                                        {o.label}
-                                    </option>
-                                ))}
-                            </select>
+                                className="h-9 flex-1 rounded-lg text-xs"
+                            />
                             <span className="text-muted-foreground text-xs">–</span>
-                            <select
+                            <Input
+                                type="number"
+                                placeholder="Max"
                                 value={filters.income_max ?? ''}
                                 onChange={(e) =>
                                     onUpdate('income_max', e.target.value ? Number(e.target.value) : undefined)
                                 }
-                                className="flex-1 border border-[var(--border)] bg-[var(--input)] rounded-lg px-2 py-1.5 text-[11px] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] text-foreground"
-                            >
-                                <option value="">Max</option>
-                                {INCOME_OPTIONS.map((o) => (
-                                    <option key={o.value} value={o.value}>
-                                        {o.label}
-                                    </option>
-                                ))}
-                            </select>
+                                className="h-9 flex-1 rounded-lg text-xs"
+                            />
                         </div>
                     </div>
                 </div>
@@ -581,6 +568,7 @@ const FILTER_LABELS: Partial<Record<keyof PublicSearchFilters, string>> = {
     country: 'Country',
     state: 'State',
     city: 'City',
+    upazila: 'Upazila',
     nationality: 'Nationality',
     residing_status: 'Residing',
     diet: 'Diet',

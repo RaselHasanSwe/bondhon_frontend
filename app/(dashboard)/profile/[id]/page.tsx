@@ -22,6 +22,9 @@ import {CompatibilityScore} from '@/components/match/CompatibilityScore';
 import {formatAge, formatHeight} from '@/lib/utils';
 import {getApprovedPhotos, resolvePrimaryPhotoUrl} from '@/lib/profilePhotos';
 import {usePublicProfile} from '@/hooks/usePublicProfile';
+import {useOptions} from '@/hooks/useSelectOptions';
+import {optionLabel, optionLabels} from '@/lib/optionLabels';
+import {formatProfileLocationLine, useProfileLocationDisplay} from '@/hooks/useProfileLocationDisplay';
 import {ProfileAccessGate} from '@/components/profile/ProfileAccessGate';
 import {Dialog, DialogContent, DialogTitle} from '@/components/ui/dialog';
 import {Button} from '@/components/ui/button';
@@ -78,6 +81,13 @@ export default function ProfileViewPage() {
         isSubscriptionLimitError,
         subscriptionLimitMessage,
     } = usePublicProfile(params.id);
+
+    const { data: maritalOptions = [] } = useOptions('marital_status');
+    const { data: educationOptions = [] } = useOptions('education_level');
+    const { data: profileCreatedByOptions = [] } = useOptions('profile_created_by');
+    const { data: profileCreatedForOptions = [] } = useOptions('profile_created_for');
+    const locationRows = useProfileLocationDisplay(profileData?.profile);
+    const locationLine = formatProfileLocationLine(locationRows);
 
     const profileRes = profileData ? { data: profileData } : undefined;
 
@@ -293,7 +303,7 @@ export default function ProfileViewPage() {
                                 <div className="h-px w-8 bg-[#FFCF00]"/>
                                 <span className="text-[#FFCF00] text-xs tracking-[0.25em] uppercase font-sans"
                                       style={{fontFamily: 'system-ui, sans-serif'}}>
-                                    {p.profile?.profile_created_for?.replace('_', ' ') ?? ' Profile'}
+                                    {optionLabel(profileCreatedForOptions, p.profile?.profile_created_for) ?? 'Profile'}
                                 </span>
                             </div>
 
@@ -315,10 +325,10 @@ export default function ProfileViewPage() {
                                         {formatAge(p.profile.dob)}
                                     </span>
                                 )}
-                                {p.profile?.city && (
+                                {locationLine && (
                                     <span className="text-white/60 text-sm flex items-center gap-1" style={{fontFamily: 'system-ui, sans-serif'}}>
                                         <svg className="w-3 h-3 text-[#FFCF00]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/></svg>
-                                        {p.profile.city}{p.profile.country ? `, ${p.profile.country}` : ''}
+                                        {locationLine}
                                     </span>
                                 )}
                             </div>
@@ -326,9 +336,11 @@ export default function ProfileViewPage() {
                             {/* Quick trait pills */}
                             <div className="mt-5 flex flex-wrap gap-2">
                                 {p.profile?.height_cm && <GoldPill label={formatHeight(p.profile.height_cm)} />}
-                                {p.profile?.marital_status && <GoldPill label={p.profile.marital_status.replace('_', ' ')} />}
+                                {p.profile?.marital_status && <GoldPill label={optionLabel(maritalOptions, p.profile.marital_status) ?? ''} />}
                                 {p.religious_detail?.religion && <GoldPill label={p.religious_detail.religion} />}
-                                {p.education_career?.profession && <GoldPill label={p.education_career.profession} />}
+                                {p.education_career?.highest_education && (
+                                    <GoldPill label={optionLabel(educationOptions, p.education_career.highest_education) ?? ''} />
+                                )}
                                 {p.family_detail?.family_type && <GoldPill label={`${p.family_detail.family_type} Family`} />}
                             </div>
 
@@ -538,10 +550,11 @@ export default function ProfileViewPage() {
                         }>
                             <Row label="Profile ID" value={p.profile.profile_id}/>
                             <Row label="Nick Name" value={p.profile.nick_name}/>
-                            <Row label="Created For" value={p.profile.profile_created_for?.replace('_', ' ')}/>
+                            <Row label="Profile Created By" value={optionLabel(profileCreatedByOptions, p.profile_created_by)}/>
+                            <Row label="Created For" value={optionLabel(profileCreatedForOptions, p.profile.profile_created_for)}/>
                             <Row label="Looking For" value={p.profile.looking_for?.replace('_', ' ')}/>
                             <Row label="Age" value={p.profile.dob ? formatAge(p.profile.dob) : null}/>
-                            <Row label="Marital Status" value={p.profile.marital_status?.replace('_', ' ')}/>
+                            <Row label="Marital Status" value={optionLabel(maritalOptions, p.profile.marital_status)}/>
                             <Row label="Mother Tongue" value={p.profile.mother_tongue}/>
                         </PremiumCard>
                     )}
@@ -592,7 +605,7 @@ export default function ProfileViewPage() {
 
                     {p.education_career && (
                         <PremiumCard title="Education & Career" icon={<GraduationCapIcon size={16} strokeWidth={1.8}/>}>
-                            <Row label="Education" value={p.education_career.highest_education}/>
+                            <Row label="Education" value={optionLabel(educationOptions, p.education_career.highest_education)}/>
                             <Row label="University" value={p.education_career.college_university}/>
                             <Row label="Institution" value={p.education_career.institution_name_year}/>
                             <Row label="Profession" value={p.education_career.profession}/>
@@ -645,16 +658,17 @@ export default function ProfileViewPage() {
                         <PremiumCard title="Location & Status" icon={
                             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                         }>
-                            <Row label="Country" value={p.profile.country}/>
-                            <Row label="State" value={p.profile.state}/>
-                            <Row label="City" value={p.profile.city}/>
+                            {locationRows.map((row) => (
+                                <Row key={row.label} label={row.label} value={row.value}/>
+                            ))}
                             <Row label="Postal Code" value={p.profile.postal_code}/>
                             <Row label="Residing Status" value={p.profile.residing_status?.replace('_', ' ')}/>
                             <Row label="Nationality" value={p.profile.nationality}/>
                             <Row label="Mother Tongue" value={p.profile.mother_tongue}/>
                             <Row label="Disability" value={p.profile.disability}/>
-                            <Row label="Marital Status" value={p.profile.marital_status?.replace('_', ' ')}/>
-                            <Row label="Profile Created For" value={p.profile.profile_created_for?.replace('_', ' ')}/>
+                            <Row label="Marital Status" value={optionLabel(maritalOptions, p.profile.marital_status)}/>
+                            <Row label="Profile Created By" value={optionLabel(profileCreatedByOptions, p.profile_created_by)}/>
+                            <Row label="Profile Created For" value={optionLabel(profileCreatedForOptions, p.profile.profile_created_for)}/>
                         </PremiumCard>
                     )}
 
@@ -696,7 +710,7 @@ export default function ProfileViewPage() {
                                 <PreferenceGroupTitle>Background & Values</PreferenceGroupTitle>
                                 <Row label="Religion(s)" value={p.partner_preference.religion?.join(', ') ?? null}/>
                                 <Row label="Caste(s)" value={p.partner_preference.caste?.join(', ') ?? null}/>
-                                <Row label="Marital Status" value={p.partner_preference.marital_status?.join(', ') ?? null}/>
+                                <Row label="Marital Status" value={optionLabels(maritalOptions, p.partner_preference.marital_status)}/>
                                 <Row label="Family Type" value={p.partner_preference.family_type?.join(', ') ?? null}/>
                                 <Row label="Diet(s)" value={p.partner_preference.diet?.join(', ') ?? null}/>
                                 <Row label="Smoking Acceptable" value={p.partner_preference.smoking_acceptable ? 'Yes' : 'No'}/>
