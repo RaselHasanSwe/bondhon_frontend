@@ -59,12 +59,122 @@ export function formatAge(dob: string | null | undefined): string {
     return `${age} yrs`;
 }
 
+function heightParts(cm: number): { feet: number; inches: number } {
+    const totalInches = Math.round(cm / 2.54);
+    return {
+        feet: Math.floor(totalInches / 12),
+        inches: totalInches % 12,
+    };
+}
+
+export const HEIGHT_CM_MIN = 120;
+export const HEIGHT_CM_MAX = 210;
+
+export type HeightGroup = {
+    key: string;
+    minCm: number;
+    maxCm: number;
+};
+
+let cachedHeightGroups: HeightGroup[] | null = null;
+
+/** Group cm values by identical ft/in label; keep min + max cm per group. */
+export function getHeightGroups(): HeightGroup[] {
+    if (cachedHeightGroups) return cachedHeightGroups;
+
+    const map = new Map<string, HeightGroup>();
+
+    for (let cm = HEIGHT_CM_MIN; cm <= HEIGHT_CM_MAX; cm++) {
+        const key = formatHeightImperial(cm);
+        const existing = map.get(key);
+
+        if (!existing) {
+            map.set(key, { key, minCm: cm, maxCm: cm });
+            continue;
+        }
+
+        existing.maxCm = cm;
+    }
+
+    cachedHeightGroups = Array.from(map.values()).sort((a, b) => a.minCm - b.minCm);
+    return cachedHeightGroups;
+}
+
+/** One dropdown row per ft/in bucket, labelled with the highest cm in that bucket. */
+export function buildHeightOptions(): { value: string; label: string }[] {
+    return getHeightGroups().map((group) => ({
+        value: String(group.maxCm),
+        label: `${group.key} (${group.maxCm} cm)`,
+    }));
+}
+
+export function heightGroupForCm(cm: number): HeightGroup | undefined {
+    return getHeightGroups().find((group) => cm >= group.minCm && cm <= group.maxCm);
+}
+
+export function heightGroupMinCm(cm: number): number {
+    return heightGroupForCm(cm)?.minCm ?? cm;
+}
+
+export function heightGroupMaxCm(cm: number): number {
+    return heightGroupForCm(cm)?.maxCm ?? cm;
+}
+
+/** Map any stored cm to the select option value (max cm in its ft/in group). */
+export function resolveHeightOptionValue(cm: number | string | null | undefined): string | undefined {
+    if (cm === null || cm === undefined || cm === '') return undefined;
+    const cmNum = Number(cm);
+    if (Number.isNaN(cmNum)) return undefined;
+    return String(heightGroupMaxCm(cmNum));
+}
+
+export function applyHeightFiltersForApi<T extends { height_min?: number; height_max?: number }>(
+    filters: T,
+): T {
+    return {
+        ...filters,
+        height_min: filters.height_min != null ? heightGroupMinCm(filters.height_min) : undefined,
+        height_max: filters.height_max != null ? heightGroupMaxCm(filters.height_max) : undefined,
+    };
+}
+
+/** Feet/inches part — skips redundant "0 in". */
+export function formatHeightImperial(cm: number | null | undefined): string {
+    if (!cm) return 'N/A';
+    const { feet, inches } = heightParts(cm);
+    if (inches === 0) return `${feet} ft`;
+    return `${feet} ft ${inches} in`;
+}
+
+/** Full display: ft/in + cm in brackets once (e.g. 4 ft 1 in (150 cm)). */
 export function formatHeight(cm: number | null | undefined): string {
     if (!cm) return 'N/A';
-    const totalInches = Math.round(cm / 2.54);
-    const feet = Math.floor(totalInches / 12);
-    const inches = totalInches % 12;
-    return `${feet}'${inches}" (${cm} cm)`;
+    return `${formatHeightImperial(cm)} (${cm} cm)`;
+}
+
+/** Height range with a single cm suffix. */
+export function formatHeightRange(minCm: number, maxCm: number): string {
+    const minLabel = formatHeightImperial(minCm);
+    const maxLabel = formatHeightImperial(maxCm);
+    const imperial = minCm === maxCm ? minLabel : `${minLabel} – ${maxLabel}`;
+    const cm = minCm === maxCm ? `${minCm} cm` : `${minCm}–${maxCm} cm`;
+    return `${imperial} (${cm})`;
+}
+
+/** Format search-filter values for display in active filter badges. */
+export function formatSearchFilterValue(key: string, value: unknown): string {
+    if ((key === 'height_min' || key === 'height_max') && value !== undefined && value !== null && value !== '') {
+        const cm = Number(value);
+        if (!Number.isNaN(cm)) {
+            const group = heightGroupForCm(cm);
+            if (group) {
+                return `${group.key} (${group.maxCm} cm)`;
+            }
+            return formatHeight(cm);
+        }
+    }
+
+    return String(value);
 }
 
 export function formatScore(score: number): string {

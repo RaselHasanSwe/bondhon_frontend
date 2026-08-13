@@ -19,6 +19,11 @@ const LEVELS = [
     { key: 'level_4' as const, level: 4 as const, fallback: 'Area' },
 ];
 
+function configuredLevels(metadata: ReturnType<typeof getLocationMetadata>): typeof LEVELS {
+    const maxLevels = metadata.max_levels ?? (metadata.hierarchy_type === 'division_district_upazila' ? 4 : 3);
+    return LEVELS.slice(0, Math.max(0, maxLevels - 1));
+}
+
 /** Build metadata-aware location rows for profile display. */
 export function buildProfileLocationRows(
     profile: ProfileLocation | null | undefined,
@@ -37,7 +42,7 @@ export function buildProfileLocationRows(
     const fieldMap = metadata.field_map ?? {};
     let parentId = countryOption.id;
 
-    for (const { key, level, fallback } of LEVELS) {
+    for (const { key, level, fallback } of configuredLevels(metadata)) {
         const profileField = fieldMap[key];
         if (!profileField || !parentId) continue;
 
@@ -52,8 +57,9 @@ export function buildProfileLocationRows(
             value: option?.label ?? storedValue.replace(/_/g, ' '),
         });
 
-        parentId = option?.id ?? 0;
-        if (!parentId) break;
+        if (!option?.id) break;
+
+        parentId = option.id;
     }
 
     return rows;

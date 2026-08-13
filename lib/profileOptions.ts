@@ -1,5 +1,7 @@
 // All dropdown options for profile fields
 
+import { buildHeightOptions } from '@/lib/utils';
+
 export type SelectOption = { value: string; label: string };
 
 // ─── Profile Created By ───────────────────────────────────────────────────────
@@ -66,16 +68,8 @@ export const incomeOptions: SelectOption[] = [
     { value: '10000000', label: '1 Crore+' },
 ];
 
-// ─── Height (cm) ─────────────────────────────────────────────────────────────
-export const heightOptions: SelectOption[] = [
-    ...Array.from({ length: 91 }, (_, i) => {
-        const cm = 120 + i;
-        const totalInches = Math.round(cm / 2.54);
-        const feet = Math.floor(totalInches / 12);
-        const inches = totalInches % 12;
-        return { value: String(cm), label: `${cm} cm (${feet}'${inches}")` };
-    }),
-];
+// ─── Height (cm) — one option per ft/in bucket (max cm in group) ─────────────
+export const heightOptions: SelectOption[] = buildHeightOptions();
 
 // ─── Weight (kg) ─────────────────────────────────────────────────────────────
 export const weightOptions: SelectOption[] = Array.from({ length: 121 }, (_, i) => {

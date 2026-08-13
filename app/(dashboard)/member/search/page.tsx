@@ -24,13 +24,12 @@ import {
     level2ValueForChildren,
     level3Field,
     level3ValueForChildren,
-    usesDivisionDistrictUpazila,
-    usesRegionCity,
+    level4Field,
 } from '@/lib/locationHierarchy';
 import { ageOptions, heightOptions } from '@/lib/profileOptions';
 import { useAuthStore } from '@/store/authStore';
 import { SearchIcon, FilterIcon, XIcon } from '@/components/ui/icons';
-import { cn } from '@/lib/utils';
+import { applyHeightFiltersForApi, cn, formatSearchFilterValue, resolveHeightOptionValue } from '@/lib/utils';
 import {
     Users,
     Heart,
@@ -249,23 +248,28 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
 
     const level2SelectionValue = level2ValueForChildren(selectedCountryOption, filters.city, filters.state);
     const selectedLevel2Id = stateOpts.find(o => o.value === level2SelectionValue)?.id;
-    const showLevel3 = usesDivisionDistrictUpazila(selectedCountryOption) || usesRegionCity(selectedCountryOption);
-    const { data: locationLevel3Opts = [] } = useChildOptions('country', showLevel3 ? selectedLevel2Id : undefined);
+    const { data: locationLevel3Opts = [] } = useChildOptions('country', selectedLevel2Id);
 
-    const level3SelectionValue = level3ValueForChildren(selectedCountryOption, filters.state);
-    const selectedLevel3Id = locationLevel3Opts.find(o => o.value === level3SelectionValue)?.id;
-    const { data: locationLevel4Opts = [] } = useChildOptions(
-        'country',
-        usesDivisionDistrictUpazila(selectedCountryOption) ? selectedLevel3Id : undefined,
+    const level3SelectionValue = level3ValueForChildren(
+        selectedCountryOption,
+        filters.state,
+        filters.city,
+        filters.upazila,
     );
+    const selectedLevel3Id = locationLevel3Opts.find(o => o.value === level3SelectionValue)?.id;
+    const { data: locationLevel4Opts = [] } = useChildOptions('country', selectedLevel3Id);
 
     const level2Label = getLevelLabel(locationMeta, 2, 'State / Division');
     const level3Label = getLevelLabel(locationMeta, 3, 'District / City');
     const level4Label = getLevelLabel(locationMeta, 4, 'Upazila / Thana');
     const level2FormField = level2Field(selectedCountryOption);
     const level3FormField = level3Field(selectedCountryOption);
-    const level2FilterValue = level2FormField === 'city' ? filters.city : filters.state;
-    const level3FilterValue = level3FormField === 'city' ? filters.city : filters.state;
+    const level4FormField = level4Field(selectedCountryOption);
+    const level2FilterValue = level2FormField ? filters[level2FormField] : undefined;
+    const level3FilterValue = level3FormField ? filters[level3FormField] : undefined;
+    const level4FilterValue = level4FormField ? filters[level4FormField] : undefined;
+    const heightMinValue = filters.height_min != null ? resolveHeightOptionValue(filters.height_min) : undefined;
+    const heightMaxValue = filters.height_max != null ? resolveHeightOptionValue(filters.height_max) : undefined;
 
     return (
         <div className="space-y-2">
@@ -299,12 +303,12 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
                     minPlaceholder="Min…"
                     maxPlaceholder="Max…"
                 />
-                <p className="text-xs font-bold uppercase tracking-wider text-meta pt-0.5">Height (cm & ft&apos;in&quot;)</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-meta pt-0.5">Height (ft &amp; in)</p>
                 <RangeSearchableSelect
                     idPrefix="sr-ht"
                     options={heightOptions}
-                    minValue={numToStr(filters.height_min)}
-                    maxValue={numToStr(filters.height_max)}
+                    minValue={heightMinValue}
+                    maxValue={heightMaxValue}
                     onMinChange={v => onUpdate('height_min', v ? Number(v) : undefined)}
                     onMaxChange={v => onUpdate('height_max', v ? Number(v) : undefined)}
                     minPlaceholder="Min…"
@@ -323,9 +327,10 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
                             options={toOpts(stateOpts)}
                             value={level2FilterValue}
                             onChange={v => {
+                                if (!level2FormField) return;
                                 onUpdate(level2FormField, v ?? undefined);
                                 if (level3FormField) onUpdate(level3FormField, undefined);
-                                onUpdate('upazila', undefined);
+                                if (level4FormField) onUpdate(level4FormField, undefined);
                             }}
                             placeholder={`${level2Label}…`}
                         />
@@ -335,16 +340,20 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
                             id="sr-l3"
                             options={toOpts(locationLevel3Opts)}
                             value={level3FilterValue}
-                            onChange={v => { onUpdate(level3FormField, v ?? undefined); onUpdate('upazila', undefined); }}
+                            onChange={v => {
+                                if (!level3FormField) return;
+                                onUpdate(level3FormField, v ?? undefined);
+                                if (level4FormField) onUpdate(level4FormField, undefined);
+                            }}
                             placeholder={`${level3Label}…`}
                         />
                     )}
-                    {locationLevel4Opts.length > 0 && usesDivisionDistrictUpazila(selectedCountryOption) && (
+                    {locationLevel4Opts.length > 0 && level4FormField && (
                         <SearchableSelect
                             id="sr-l4"
                             options={toOpts(locationLevel4Opts)}
-                            value={filters.upazila}
-                            onChange={v => onUpdate('upazila', v ?? undefined)}
+                            value={level4FilterValue}
+                            onChange={v => level4FormField && onUpdate(level4FormField, v ?? undefined)}
                             placeholder={`${level4Label}…`}
                         />
                     )}
@@ -465,7 +474,7 @@ function ActiveBadges({ filters, onRemove }: { filters: SearchFilters; onRemove:
             {entries.map(([key, val]) => (
                 <span key={key}
                     className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border border-[var(--primary)]/40 bg-[var(--accent)] text-[#1A1208] font-medium">
-                    {FILTER_LABELS[key] ?? String(key)}: <span className="font-semibold">{String(val)}</span>
+                    {FILTER_LABELS[key] ?? String(key)}: <span className="font-semibold">{formatSearchFilterValue(key, val)}</span>
                     <button onClick={() => onRemove(key)} className="ml-0.5 hover:text-red-400 transition-colors">
                         <XIcon size={10} strokeWidth={3} />
                     </button>
@@ -518,7 +527,7 @@ export default function SearchPage() {
     } = useInfiniteList({
         queryKey: ['search', appliedFilters],
         queryFn: (page) =>
-            matchService.search({ ...appliedFilters, page }).then((r) => normalizeMetaPage(r.data.data, page)),
+            matchService.search(applyHeightFiltersForApi({ ...appliedFilters, page })).then((r) => normalizeMetaPage(r.data.data, page)),
         retry: false,
     });
 
