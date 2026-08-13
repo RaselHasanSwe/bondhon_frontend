@@ -29,7 +29,7 @@ import {
 import { ageOptions, heightOptions } from '@/lib/profileOptions';
 import { useAuthStore } from '@/store/authStore';
 import { SearchIcon, FilterIcon, XIcon } from '@/components/ui/icons';
-import { cn } from '@/lib/utils';
+import { applyHeightFiltersForApi, cn, formatSearchFilterValue, resolveHeightOptionValue } from '@/lib/utils';
 import {
     Users,
     Heart,
@@ -268,6 +268,8 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
     const level2FilterValue = level2FormField ? filters[level2FormField] : undefined;
     const level3FilterValue = level3FormField ? filters[level3FormField] : undefined;
     const level4FilterValue = level4FormField ? filters[level4FormField] : undefined;
+    const heightMinValue = filters.height_min != null ? resolveHeightOptionValue(filters.height_min) : undefined;
+    const heightMaxValue = filters.height_max != null ? resolveHeightOptionValue(filters.height_max) : undefined;
 
     return (
         <div className="space-y-2">
@@ -301,12 +303,12 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
                     minPlaceholder="Min…"
                     maxPlaceholder="Max…"
                 />
-                <p className="text-xs font-bold uppercase tracking-wider text-meta pt-0.5">Height (cm & ft&apos;in&quot;)</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-meta pt-0.5">Height (ft &amp; in)</p>
                 <RangeSearchableSelect
                     idPrefix="sr-ht"
                     options={heightOptions}
-                    minValue={numToStr(filters.height_min)}
-                    maxValue={numToStr(filters.height_max)}
+                    minValue={heightMinValue}
+                    maxValue={heightMaxValue}
                     onMinChange={v => onUpdate('height_min', v ? Number(v) : undefined)}
                     onMaxChange={v => onUpdate('height_max', v ? Number(v) : undefined)}
                     minPlaceholder="Min…"
@@ -472,7 +474,7 @@ function ActiveBadges({ filters, onRemove }: { filters: SearchFilters; onRemove:
             {entries.map(([key, val]) => (
                 <span key={key}
                     className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border border-[var(--primary)]/40 bg-[var(--accent)] text-[#1A1208] font-medium">
-                    {FILTER_LABELS[key] ?? String(key)}: <span className="font-semibold">{String(val)}</span>
+                    {FILTER_LABELS[key] ?? String(key)}: <span className="font-semibold">{formatSearchFilterValue(key, val)}</span>
                     <button onClick={() => onRemove(key)} className="ml-0.5 hover:text-red-400 transition-colors">
                         <XIcon size={10} strokeWidth={3} />
                     </button>
@@ -525,7 +527,7 @@ export default function SearchPage() {
     } = useInfiniteList({
         queryKey: ['search', appliedFilters],
         queryFn: (page) =>
-            matchService.search({ ...appliedFilters, page }).then((r) => normalizeMetaPage(r.data.data, page)),
+            matchService.search(applyHeightFiltersForApi({ ...appliedFilters, page })).then((r) => normalizeMetaPage(r.data.data, page)),
         retry: false,
     });
 

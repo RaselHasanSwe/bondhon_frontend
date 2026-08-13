@@ -19,7 +19,7 @@ import {
     invalidateProfileQueries,
 } from '@/lib/cacheInvalidation';
 import {CompatibilityScore} from '@/components/match/CompatibilityScore';
-import {formatAge, formatHeight} from '@/lib/utils';
+import {formatAge, formatHeight, formatHeightRange} from '@/lib/utils';
 import {getApprovedPhotos, resolvePrimaryPhotoUrl} from '@/lib/profilePhotos';
 import {usePublicProfile} from '@/hooks/usePublicProfile';
 import {useOptions} from '@/hooks/useSelectOptions';
@@ -701,7 +701,7 @@ export default function ProfileViewPage() {
                             <div className="space-y-1 md:pr-6 md:border-r border-[#e8d59a]/60">
                                 <PreferenceGroupTitle>Appearance</PreferenceGroupTitle>
                                 <Row label="Age Range" value={p.partner_preference.age_min && p.partner_preference.age_max ? `${p.partner_preference.age_min} – ${p.partner_preference.age_max} years` : null}/>
-                                <Row label="Height Range" value={p.partner_preference.height_min_cm && p.partner_preference.height_max_cm ? `${formatHeight(p.partner_preference.height_min_cm)} – ${formatHeight(p.partner_preference.height_max_cm)}` : null}/>
+                                <Row label="Height Range" value={p.partner_preference.height_min_cm && p.partner_preference.height_max_cm ? formatHeightRange(p.partner_preference.height_min_cm, p.partner_preference.height_max_cm) : null}/>
                                 <Row label="Body Types" value={p.partner_preference.body_type?.join(', ') ?? null}/>
                                 <Row label="Complexion" value={p.partner_preference.complexion?.join(', ') ?? null}/>
                                 <Row label="Income Range" value={p.partner_preference.income_min_bdt && p.partner_preference.income_max_bdt ? `₹${p.partner_preference.income_min_bdt.toLocaleString()} – ₹${p.partner_preference.income_max_bdt.toLocaleString()}` : null}/>

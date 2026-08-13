@@ -13,7 +13,7 @@ import {useSearchParams} from 'next/navigation';
 import {profileService} from '@/services/profileService';
 import {authService} from '@/services/authService';
 import { showSuccessToast, showErrorToast, getErrorMessage } from '@/lib/toast';
-import { resolveProfilePhotoUrl } from '@/lib/utils';
+import { heightGroupMaxCm, heightGroupMinCm, resolveHeightOptionValue, resolveProfilePhotoUrl } from '@/lib/utils';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -437,7 +437,8 @@ function ProfileEditInner() {
                 profile_created_by:(profile as any).profile_created_by??'',
                 profile_created_for:p.profile_created_for??'', looking_for:p.looking_for??'',
                 dob:dobParts, marital_status:p.marital_status??'',
-                height_cm:p.height_cm?.toString()??'', weight_kg:p.weight_kg?.toString()??'',
+                height_cm: resolveHeightOptionValue(p.height_cm?.toString()) ?? p.height_cm?.toString() ?? '',
+                weight_kg:p.weight_kg?.toString()??'',
                 body_type:p.body_type??'', eye_color:p.eye_color??'', hair_color:p.hair_color??'',
                 complexion:p.complexion??'', blood_group:p.blood_group??'', disability:p.disability??'',
                 mother_tongue:p.mother_tongue??'', about_me:p.about_me??'', what_looking_for:p.what_looking_for??'',
@@ -490,7 +491,8 @@ function ProfileEditInner() {
             const pp = profile.partner_preference;
             preferencesForm.reset({
                 age_min:pp.age_min?.toString()??'', age_max:pp.age_max?.toString()??'',
-                height_min_cm:pp.height_min_cm?.toString()??'', height_max_cm:pp.height_max_cm?.toString()??'',
+                height_min_cm: resolveHeightOptionValue(pp.height_min_cm?.toString()) ?? pp.height_min_cm?.toString() ?? '',
+                height_max_cm: resolveHeightOptionValue(pp.height_max_cm?.toString()) ?? pp.height_max_cm?.toString() ?? '',
                 pref_marital_status:pp.marital_status??[], pref_diet:pp.diet??[], pref_education:pp.education??[],
                 pref_religion:pp.religion??[], pref_caste:pp.caste?.join(', ')??'',
                 pref_profession:pp.profession??[], income_min_bdt:pp.income_min_bdt?.toString()??'',
@@ -554,7 +556,8 @@ function ProfileEditInner() {
         const toArr=(v:string[]|undefined):string[]|null=>v&&v.length>0?v:null;
         const payload={
             age_min:data.age_min?Number(data.age_min):null, age_max:data.age_max?Number(data.age_max):null,
-            height_min_cm:data.height_min_cm?Number(data.height_min_cm):null, height_max_cm:data.height_max_cm?Number(data.height_max_cm):null,
+            height_min_cm:data.height_min_cm?heightGroupMinCm(Number(data.height_min_cm)):null,
+            height_max_cm:data.height_max_cm?heightGroupMaxCm(Number(data.height_max_cm)):null,
             marital_status:toArr(data.pref_marital_status), diet:toArr(data.pref_diet), education:toArr(data.pref_education),
             religion:toArr(data.pref_religion), caste:toArray(data.pref_caste), profession:toArr(data.pref_profession),
             country:toArr(data.pref_country),
@@ -727,7 +730,7 @@ function ProfileEditInner() {
                         <div className="grid sm:grid-cols-2 gap-4">
                             <FieldRow label="Height" required>
                                 <Controller name="height_cm" control={basicForm.control} render={({field})=>(
-                                    <SearchableSelect id="ht" options={heightOptions} value={field.value} onChange={v=>field.onChange(v??'')} placeholder="Select height…"/>
+                                    <SearchableSelect id="ht" options={heightOptions} value={resolveHeightOptionValue(field.value) ?? field.value ?? ''} onChange={v=>field.onChange(v??'')} placeholder="Select height…"/>
                                 )}/>
                             </FieldRow>
                             <FieldRow label="Weight">
@@ -1185,14 +1188,14 @@ function ProfileEditInner() {
                                     {preferencesForm.formState.errors.age_min && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.age_min.message}</p>}
                                     {preferencesForm.formState.errors.age_max && <p className="text-xs text-red-500 mt-1">{preferencesForm.formState.errors.age_max.message}</p>}
                                 </FieldRow>
-                                <FieldRow label={'Height Range (cm & ft\'in")'}>
+                                <FieldRow label={'Height Range (ft & in)'}>
                                     <div className="flex gap-2 items-center min-w-0">
                                         <div className="min-w-0 flex-1">
                                             <Controller name="height_min_cm" control={preferencesForm.control} render={({ field }) => (
                                                 <SearchableSelect
                                                     id="pref-ht-min"
                                                     options={heightOptions}
-                                                    value={field.value || undefined}
+                                                    value={resolveHeightOptionValue(field.value) ?? field.value ?? undefined}
                                                     onChange={v => field.onChange(v ?? '')}
                                                     placeholder="Min"
                                                     compact
@@ -1205,7 +1208,7 @@ function ProfileEditInner() {
                                                 <SearchableSelect
                                                     id="pref-ht-max"
                                                     options={heightOptions}
-                                                    value={field.value || undefined}
+                                                    value={resolveHeightOptionValue(field.value) ?? field.value ?? undefined}
                                                     onChange={v => field.onChange(v ?? '')}
                                                     placeholder="Max"
                                                     compact
