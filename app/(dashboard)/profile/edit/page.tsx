@@ -35,6 +35,7 @@ import {
     PROFILE_EDIT_OPTION_GROUPS,
 } from '@/hooks/useSelectOptions';
 import {
+    clearDeeperLocationFields,
     clearLocationFields,
     getLevelLabel,
     getLocationMetadata,
@@ -42,8 +43,7 @@ import {
     level2ValueForChildren,
     level3Field,
     level3ValueForChildren,
-    usesDivisionDistrictUpazila,
-    usesRegionCity,
+    level4Field,
 } from '@/lib/locationHierarchy';
 
 // ─── Tab order for auto-advance after save ───────────────────────────────────
@@ -327,6 +327,7 @@ function ProfileEditInner() {
     const watchedCountry = locationForm.watch('country');
     const watchedCity = locationForm.watch('city');
     const watchedState = locationForm.watch('state');
+    const watchedUpazila = locationForm.watch('upazila');
 
     // ── Dynamic select options from API (single bulk request) ───────────────
     const { data: bulkOptions } = useOptionsBulk(PROFILE_EDIT_OPTION_GROUPS);
@@ -380,21 +381,18 @@ function ProfileEditInner() {
 
     const level2SelectionValue = level2ValueForChildren(selectedCountryOption, watchedCity, watchedState);
     const selectedLevel2Id = locationLevel2Opts.find(o => o.value === level2SelectionValue)?.id;
-    const showLevel3 = usesDivisionDistrictUpazila(selectedCountryOption) || usesRegionCity(selectedCountryOption);
-    const { data: locationLevel3Opts = [] } = useChildOptions('country', showLevel3 ? selectedLevel2Id : undefined);
+    const { data: locationLevel3Opts = [] } = useChildOptions('country', selectedLevel2Id);
 
-    const level3SelectionValue = level3ValueForChildren(selectedCountryOption, watchedState);
+    const level3SelectionValue = level3ValueForChildren(selectedCountryOption, watchedState, watchedCity, watchedUpazila);
     const selectedLevel3Id = locationLevel3Opts.find(o => o.value === level3SelectionValue)?.id;
-    const { data: locationLevel4Opts = [] } = useChildOptions(
-        'country',
-        usesDivisionDistrictUpazila(selectedCountryOption) ? selectedLevel3Id : undefined,
-    );
+    const { data: locationLevel4Opts = [] } = useChildOptions('country', selectedLevel3Id);
 
     const level2Label = getLevelLabel(locationMeta, 2, 'State / Division');
     const level3Label = getLevelLabel(locationMeta, 3, 'District / City');
     const level4Label = getLevelLabel(locationMeta, 4, 'Upazila / Thana');
     const level2FormField = level2Field(selectedCountryOption);
     const level3FormField = level3Field(selectedCountryOption);
+    const level4FormField = level4Field(selectedCountryOption);
 
     // ── Preferences Location Hierarchy ────────────────────────────────────────
     const watchedPrefCountries = preferencesForm.watch('pref_country');
@@ -821,8 +819,7 @@ function ProfileEditInner() {
                                             value={field.value}
                                             onChange={v=>{
                                                 field.onChange(v??'');
-                                                if (level3FormField) locationForm.setValue(level3FormField, '');
-                                                locationForm.setValue('upazila', '');
+                                                clearDeeperLocationFields(locationMeta, 2, locationForm.setValue);
                                             }}
                                             placeholder={`Select ${level2Label.toLowerCase()}…`}
                                         />
@@ -838,16 +835,16 @@ function ProfileEditInner() {
                                             value={field.value}
                                             onChange={v=>{
                                                 field.onChange(v??'');
-                                                locationForm.setValue('upazila', '');
+                                                clearDeeperLocationFields(locationMeta, 3, locationForm.setValue);
                                             }}
                                             placeholder={`Select ${level3Label.toLowerCase()}…`}
                                         />
                                     )}/>
                                 </FieldRow>
                             )}
-                            {locationLevel4Opts.length > 0 && usesDivisionDistrictUpazila(selectedCountryOption) && (
+                            {locationLevel4Opts.length > 0 && level4FormField && (
                                 <FieldRow label={level4Label}>
-                                    <Controller name="upazila" control={locationForm.control} render={({field})=>(
+                                    <Controller name={level4FormField} control={locationForm.control} render={({field})=>(
                                         <SearchableSelect id="loc-l4" options={locationLevel4Opts} value={field.value} onChange={v=>field.onChange(v??'')} placeholder={`Select ${level4Label.toLowerCase()}…`}/>
                                     )}/>
                                 </FieldRow>

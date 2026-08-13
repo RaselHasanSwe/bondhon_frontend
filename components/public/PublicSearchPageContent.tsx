@@ -26,8 +26,7 @@ import {
     level2ValueForChildren,
     level3Field,
     level3ValueForChildren,
-    usesDivisionDistrictUpazila,
-    usesRegionCity,
+    level4Field,
 } from '@/lib/locationHierarchy';
 import { ageOptions, heightOptions } from '@/lib/profileOptions';
 import { SearchIcon, FilterIcon, XIcon } from '@/components/ui/icons';
@@ -268,23 +267,26 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
 
     const level2SelectionValue = level2ValueForChildren(selectedCountryOption, filters.city, filters.state);
     const selectedLevel2Id = stateOpts.find((o) => o.value === level2SelectionValue)?.id;
-    const showLevel3 = usesDivisionDistrictUpazila(selectedCountryOption) || usesRegionCity(selectedCountryOption);
-    const { data: locationLevel3Opts = [] } = useChildOptions('country', showLevel3 ? selectedLevel2Id : undefined);
+    const { data: locationLevel3Opts = [] } = useChildOptions('country', selectedLevel2Id);
 
-    const level3SelectionValue = level3ValueForChildren(selectedCountryOption, filters.state);
-    const selectedLevel3Id = locationLevel3Opts.find((o) => o.value === level3SelectionValue)?.id;
-    const { data: locationLevel4Opts = [] } = useChildOptions(
-        'country',
-        usesDivisionDistrictUpazila(selectedCountryOption) ? selectedLevel3Id : undefined,
+    const level3SelectionValue = level3ValueForChildren(
+        selectedCountryOption,
+        filters.state,
+        filters.city,
+        filters.upazila,
     );
+    const selectedLevel3Id = locationLevel3Opts.find((o) => o.value === level3SelectionValue)?.id;
+    const { data: locationLevel4Opts = [] } = useChildOptions('country', selectedLevel3Id);
 
     const level2Label = getLevelLabel(locationMeta, 2, 'State / Division');
     const level3Label = getLevelLabel(locationMeta, 3, 'District / City');
     const level4Label = getLevelLabel(locationMeta, 4, 'Upazila / Thana');
     const level2FormField = level2Field(selectedCountryOption);
     const level3FormField = level3Field(selectedCountryOption);
-    const level2FilterValue = level2FormField === 'city' ? filters.city : filters.state;
-    const level3FilterValue = level3FormField === 'city' ? filters.city : filters.state;
+    const level4FormField = level4Field(selectedCountryOption);
+    const level2FilterValue = level2FormField ? filters[level2FormField] : undefined;
+    const level3FilterValue = level3FormField ? filters[level3FormField] : undefined;
+    const level4FilterValue = level4FormField ? filters[level4FormField] : undefined;
 
     return (
         <div className="space-y-2">
@@ -351,9 +353,10 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
                             options={toOpts(stateOpts)}
                             value={level2FilterValue}
                             onChange={(v) => {
+                                if (!level2FormField) return;
                                 onUpdate(level2FormField, v ?? undefined);
                                 if (level3FormField) onUpdate(level3FormField, undefined);
-                                onUpdate('upazila', undefined);
+                                if (level4FormField) onUpdate(level4FormField, undefined);
                             }}
                             placeholder={`${level2Label}…`}
                         />
@@ -364,18 +367,19 @@ function FilterPanel({ filters, onUpdate }: FilterPanelProps) {
                             options={toOpts(locationLevel3Opts)}
                             value={level3FilterValue}
                             onChange={(v) => {
+                                if (!level3FormField) return;
                                 onUpdate(level3FormField, v ?? undefined);
-                                onUpdate('upazila', undefined);
+                                if (level4FormField) onUpdate(level4FormField, undefined);
                             }}
                             placeholder={`${level3Label}…`}
                         />
                     )}
-                    {locationLevel4Opts.length > 0 && usesDivisionDistrictUpazila(selectedCountryOption) && (
+                    {locationLevel4Opts.length > 0 && level4FormField && (
                         <SearchableSelect
                             id="psr-l4"
                             options={toOpts(locationLevel4Opts)}
-                            value={filters.upazila}
-                            onChange={(v) => onUpdate('upazila', v ?? undefined)}
+                            value={level4FilterValue}
+                            onChange={(v) => level4FormField && onUpdate(level4FormField, v ?? undefined)}
                             placeholder={`${level4Label}…`}
                         />
                     )}

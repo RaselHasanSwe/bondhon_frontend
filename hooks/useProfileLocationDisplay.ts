@@ -5,9 +5,9 @@ import {
     type LocationDisplayRow,
 } from '@/lib/profileLocationDisplay';
 import {
+    getLocationMetadata,
     level2Field,
     level3Field,
-    usesDivisionDistrictUpazila,
 } from '@/lib/locationHierarchy';
 
 type ProfileLocation = {
@@ -33,7 +33,7 @@ export function useProfileLocationDisplay(
     const level2Value = useMemo(() => {
         if (!profile || !countryOption) return undefined;
         const field = level2Field(countryOption);
-        return profile[field] ?? undefined;
+        return field ? profile[field] ?? undefined : undefined;
     }, [countryOption, profile]);
 
     const level2Option = useMemo(
@@ -55,10 +55,7 @@ export function useProfileLocationDisplay(
         [level3Options, level3Value],
     );
 
-    const { data: level4Options = [] } = useChildOptions(
-        'country',
-        usesDivisionDistrictUpazila(countryOption) ? level3Option?.id : undefined,
-    );
+    const { data: level4Options = [] } = useChildOptions('country', level3Option?.id);
 
     return useMemo(() => {
         if (!profile?.country || !countryOption) {
