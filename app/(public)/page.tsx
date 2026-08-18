@@ -370,9 +370,15 @@ export default async function HomePage() {
                                         boxShadow: '0 4px 20px rgba(255,207,0,0.15)',
                                     }}>
                                     <span
-                                        className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-2xl text-4xl transition-transform duration-200 group-hover:scale-110"
-                                        style={{background: 'rgba(255,207,0,0.2)'}}>
-                                        👰
+                                        className="flex h-[4.5rem] w-[4.5rem] items-end justify-center overflow-hidden rounded-full transition-transform duration-200 group-hover:scale-110"
+                                        style={{background: '#FFFFFF', border: '2px solid rgba(255,207,0,0.6)'}}>
+                                        <Image
+                                            src="/images/home/browse-bride.svg"
+                                            alt=""
+                                            width={60}
+                                            height={72}
+                                            className="h-[3.9rem] w-auto"
+                                        />
                                     </span>
                                     <span className="font-bold text-white text-base">Browse Bride Profiles</span>
                                 </Link>
@@ -385,9 +391,15 @@ export default async function HomePage() {
                                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
                                     }}>
                                     <span
-                                        className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-2xl text-4xl transition-transform duration-200 group-hover:scale-110"
-                                        style={{background: 'rgba(255,255,255,0.08)'}}>
-                                        🤵
+                                        className="flex h-[4.5rem] w-[4.5rem] items-end justify-center overflow-hidden rounded-full transition-transform duration-200 group-hover:scale-110"
+                                        style={{background: '#FFFFFF', border: '2px solid rgba(255,255,255,0.7)'}}>
+                                        <Image
+                                            src="/images/home/browse-groom.svg"
+                                            alt=""
+                                            width={60}
+                                            height={72}
+                                            className="h-[3.9rem] w-auto"
+                                        />
                                     </span>
                                     <span className="font-bold text-white text-base">Browse Groom Profiles</span>
                                 </Link>
